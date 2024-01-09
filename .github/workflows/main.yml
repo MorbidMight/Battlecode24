@@ -1,0 +1,65 @@
+#credit to 4 musketeers (https://battlecode.org/assets/files/postmortem-2023-4-musketeers.pdf)
+name: Run Matches
+on: [workflow_dispatch, pull_request]
+permissions: write-all
+concurrency:
+  group: pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+jobs:
+  test_private_action_job:
+    name: Run Matches
+    runs-on: ubuntu-latest
+    steps:
+      # checkout this repo
+      - name: Checkout Repo
+        uses: actions/checkout@v3
+      # run python/java to play against precompiled programs - pipe results to file
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+          architecture: 'x64'
+      - name : Download Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin' # See 'Supported distributions' for available options
+          java-version: '8'
+      - name: Java Version
+        run: java -version
+      - name: Make Executable
+        run: chmod +x gradlew
+      - name: Gradle Update
+        run: ./gradlew update
+      - name: Build with Gradle
+        run: ./gradlew build
+      - name: List Tasks
+        run: ./gradlew tasks
+      - name: Run Match
+        run: python run_matches.py
+      # upload match files as artifact
+      - name: Archive Match Files
+        uses: actions/upload-artifact@v2
+        with:
+          name: matches
+          path: matches
+          retention-days: 90
+      # upload summary as artifact
+      - name: Archive Summary
+        uses: actions/upload-artifact@v2
+        with:
+          name: matches-summary
+          path: matches-summary.txt
+          retention-days: 90
+      - name: Rename Summary
+        run : mv matches-summary.txt matches-summary${{ github.run_number }}.txt
+      # send summary to repo
+      - name: Add and Commit Match Summary
+        run: |
+          git add matches-summary${{ github.run_number }}.txt
+          git config --local user.email "action@github.com"
+          git config --local user.name "github-actions"
+          git commit -m "Match Summary for Workflow Run (#${{ github.run_number }})"
+      - name: Push Match Summary
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
