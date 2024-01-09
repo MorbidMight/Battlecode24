@@ -57,11 +57,11 @@ public strictfp class RobotPlayer {
     @SuppressWarnings("unused")
     public static void run(RobotController rc) throws GameActionException {
         //changes explorers to soldiers at round 200
-        if(rc.getRoundNum() == 200 && role == roles.explorer){
+        if(rc.getRoundNum() == GameConstants.SETUP_ROUNDS && role == roles.explorer){
             role = roles.soldier;
         }
         //if can buy upgrade, buy an upgrade
-        if(rc.getRoundNum() == 750 || rc.getRoundNum() == 1500){
+        if(rc.getRoundNum() == GameConstants.GLOBAL_UPGRADE_ROUNDS || rc.getRoundNum() == GameConstants.GLOBAL_UPGRADE_ROUNDS * 2){
             if(rc.canBuyGlobal(GlobalUpgrade.ACTION)){
                 rc.buyGlobal(GlobalUpgrade.ACTION);
             }
