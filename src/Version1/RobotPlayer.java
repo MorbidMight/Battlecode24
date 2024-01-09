@@ -91,35 +91,38 @@ public strictfp class RobotPlayer {
                  SpawnLocations = rc.getAllySpawnLocations();
                 }
                 if (!rc.isSpawned()){
+                    // try to spawn in every location asap
                     MapLocation[] spawnLocs = rc.getAllySpawnLocations();
-                    // Pick a random spawn location to attempt spawning in.
-                    MapLocation randomLoc = spawnLocs[rng.nextInt(spawnLocs.length)];
-                    if (rc.canSpawn(randomLoc)) {
-                        rc.spawn(randomLoc);
-                        //if third to last bit is 0, become a soldier/explorer and figure out which bit to flip
-                        if(!Utilities.readBitSharedArray(rc, 1021)){
-                            if(rc.getRoundNum() > 200)
-                                role = roles.soldier;
-                            else
-                                role = roles.explorer;
-                            if(Utilities.readBitSharedArray(rc, 1023)){
-                                Utilities.editBitSharedArray(rc, 1023, true);
-                            }
-                            else if(Utilities.readBitSharedArray(rc, 1022)){
-                                Utilities.editBitSharedArray(rc, 1022, true);
-                            }
-                            else{
-                                Utilities.editBitSharedArray(rc,1021, true);
-                            }
-                        }
-                        //become a builder, set last three bits to 0
-                        else{
-                            role = roles.builder;
-                            Utilities.editBitSharedArray(rc, 1021, false);
-                            Utilities.editBitSharedArray(rc, 1022, false);
-                            Utilities.editBitSharedArray(rc, 1023, false);
-                        }
+                    int spawnIndex = 0;
+                    while(spawnIndex < 26 && !rc.canSpawn(spawnLocs[spawnIndex])) {
+                        spawnIndex++;
                     }
+                        if (rc.canSpawn(spawnLocs[spawnIndex]) && spawnIndex <= 26) {
+                            rc.spawn(spawnLocs[spawnIndex]);
+                            //if third to last bit is 0, become a soldier/explorer and figure out which bit to flip
+                            if(!Utilities.readBitSharedArray(rc, 1021)){
+                                if(rc.getRoundNum() > 200)
+                                    role = roles.soldier;
+                                else
+                                    role = roles.explorer;
+                                if(Utilities.readBitSharedArray(rc, 1023)){
+                                    Utilities.editBitSharedArray(rc, 1023, true);
+                                }
+                                else if(Utilities.readBitSharedArray(rc, 1022)){
+                                    Utilities.editBitSharedArray(rc, 1022, true);
+                                }
+                                else{
+                                    Utilities.editBitSharedArray(rc,1021, true);
+                                }
+                            }
+                            //become a builder, set last three bits to 0
+                            else{
+                                role = roles.builder;
+                                Utilities.editBitSharedArray(rc, 1021, false);
+                                Utilities.editBitSharedArray(rc, 1022, false);
+                                Utilities.editBitSharedArray(rc, 1023, false);
+                            }
+                        }
                 }
                 else{
                     switch(role){
