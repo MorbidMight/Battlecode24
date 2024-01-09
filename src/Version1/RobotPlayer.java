@@ -76,21 +76,7 @@ public strictfp class RobotPlayer {
                 // Make sure you spawn your robot in before you attempt to take any actions!
                 // Robots not spawned in do not have vision of any tiles and cannot perform any actions.
                 if(turnCount==1) {//first turn fill the spawn location into the array ranked
-                    MapLocation center = new MapLocation(rc.getMapWidth()/2,rc.getMapHeight()/2);
-                    ArrayList<int[]> temp = new ArrayList<int[]>(); //Array list of two numbers that have index and distance
-                    MapLocation[] locs = rc.getAllySpawnLocations();
-                    temp.add(new int[] {0,locs[0].distanceSquaredTo(center)});
-                    for(int t = 1;t<27;t++){
-                        int distance = locs[t].distanceSquaredTo(center);
-                        for (int tt=0;tt<temp.size();tt++){
-                            if(distance<temp.get(tt)[2])
-                                temp.add(tt,new int[] {t,distance});
-
-                        }
-                    }
-                    for(int t = 0;t<27;t++){
-                        SpawnLocations[t] = locs[temp.get(t)[0]];
-                    }
+                 SpawnLocations = rc.getAllySpawnLocations();
                 }
                 if (!rc.isSpawned()){
                     MapLocation[] spawnLocs = rc.getAllySpawnLocations();
@@ -113,14 +99,13 @@ public strictfp class RobotPlayer {
                         if (rc.canMove(dir)) rc.move(dir);
                     }
                     // Move and attack randomly if no objective.
+                    move(rc);
                     Direction dir = directions[rng.nextInt(directions.length)];
                     MapLocation nextLoc = rc.getLocation().add(dir);
-                    if (rc.canMove(dir)){
-                        rc.move(dir);
-                    }
-                    else if (rc.canAttack(nextLoc)){
+
+                    if (rc.canAttack(nextLoc)){
                         rc.attack(nextLoc);
-                        System.out.println("Take that! Damaged an enemy that was in our way!");
+                        //System.out.println("Take that! Damaged an enemy that was in our way!");
                     }
 
                     // Rarely attempt placing traps behind the robot.
@@ -173,4 +158,31 @@ public strictfp class RobotPlayer {
             int x = rc.readSharedArray(1);
         }
     }
+
+    static void move(RobotController rc) throws GameActionException {
+        if(LocIsSpawnLocation(rc.getLocation())) {
+            for (Direction d : directions) {
+                for (MapLocation l : SpawnLocations) {
+                    if (!rc.getLocation().add(d).equals(l) && rc.canMove(d))
+                        rc.move(d);
+                }
+            }
+        }
+        int t = rng.nextInt(directions.length);
+        for(int i = 0;i<8;i++){
+            Direction dir = directions[(t+i)%8];
+            if(!LocIsSpawnLocation(rc.getLocation().add(dir)) && rc.canMove(dir)){
+                rc.move(dir);
+            }
+        }
+    }
+    static boolean LocIsSpawnLocation(MapLocation l){
+        for(MapLocation d:SpawnLocations){
+            if(l.equals(d))
+                return true;
+        }
+        return false;
+    }
 }
+
+
