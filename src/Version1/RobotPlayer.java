@@ -2,6 +2,7 @@ package Version1;
 
 import battlecode.common.*;
 
+import java.awt.*;
 import java.util.*;
 
 /**
@@ -96,7 +97,6 @@ public strictfp class RobotPlayer {
                         for (int tt=0;tt<temp.size();tt++){
                             if(distance<temp.get(tt)[2])
                                 temp.add(tt,new int[] {t,distance});
-
                         }
                     }
                     for(int t = 0;t<27;t++){
@@ -135,6 +135,20 @@ public strictfp class RobotPlayer {
                     }
                 }
                 else{
+                    switch(role){
+                        case builder:
+                            runBuilder(rc);
+                            break;
+                        case explorer:
+                            runExplorer(rc);
+                            break;
+                        case healer:
+                            runHealer(rc);
+                            break;
+                        case soldier:
+                            runSoldier(rc);
+                            break;
+                    }
                     if (rc.canPickupFlag(rc.getLocation())){
                         rc.pickupFlag(rc.getLocation());
                         rc.setIndicatorString("Holding a flag!");
@@ -190,6 +204,22 @@ public strictfp class RobotPlayer {
 
         // Your code should never reach here (unless it's intentional)! Self-destruction imminent...
     }
+    public static void runBuilder(RobotController rc) throws GameActionException{
+
+    }
+
+    public static void runHealer(RobotController rc) throws GameActionException{
+
+    }
+
+    public static void runSoldier(RobotController rc) throws GameActionException{
+
+    }
+
+    public static void runExplorer(RobotController rc) throws GameActionException{
+
+    }
+
     public static void updateEnemyRobots(RobotController rc) throws GameActionException{
         // Sensing methods can be passed in a radius of -1 to automatically 
         // use the largest possible value.
