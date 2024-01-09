@@ -152,14 +152,12 @@ public strictfp class RobotPlayer {
                         Direction dir = rc.getLocation().directionTo(firstLoc);
                         if (rc.canMove(dir)) rc.move(dir);
                     }
-                    // Move and attack randomly if no objective.
                     move(rc);
                     Direction dir = directions[rng.nextInt(directions.length)];
                     MapLocation nextLoc = rc.getLocation().add(dir);
-
-                    if (rc.canAttack(nextLoc)){
-                        rc.attack(nextLoc);
-                        //System.out.println("Take that! Damaged an enemy that was in our way!");
+                    RobotInfo[] enemyRobots = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
+                    if (enemyRobots.length > 0 && rc.canAttack(enemyRobots[0].location)){
+                        rc.attack(enemyRobots[0].location);
                     }
 
                     // Rarely attempt placing traps behind the robot.
@@ -167,7 +165,7 @@ public strictfp class RobotPlayer {
                     if (rc.canBuild(TrapType.EXPLOSIVE, prevLoc) && rng.nextInt() % 37 == 1)
                         rc.build(TrapType.EXPLOSIVE, prevLoc);
                     // We can also move our code into different methods or classes to better organize it!
-                    updateEnemyRobots(rc);
+                    //updateEnemyRobots(rc);
                 }
 
             } catch (GameActionException e) {
