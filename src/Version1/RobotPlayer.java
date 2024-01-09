@@ -149,6 +149,7 @@ public strictfp class RobotPlayer {
                 rc.writeSharedArray(0, enemyRobots.length);
                 int numEnemies = rc.readSharedArray(0);
             }
+            int x = rc.readSharedArray(1);
         }
     }
 }
