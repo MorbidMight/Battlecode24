@@ -59,7 +59,7 @@ public class Utilities {
         int value = convertLocationToInt(mapLocation);
         value = value | (used << 13);
         value = value | (duckType << 14);
-        value = value | (duckType << 15);
+        value = value | (isComing << 15);
         rc.writeSharedArray(arrayIndex, value);
     }
 
