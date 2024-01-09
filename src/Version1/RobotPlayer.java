@@ -2,7 +2,6 @@ package Version1;
 
 import battlecode.common.*;
 
-import java.awt.*;
 import java.util.*;
 
 /**
@@ -57,11 +56,11 @@ public strictfp class RobotPlayer {
     @SuppressWarnings("unused")
     public static void run(RobotController rc) throws GameActionException {
         //changes explorers to soldiers at round 200
-        if(rc.getRoundNum() == GameConstants.SETUP_ROUNDS && role == roles.explorer){
+        if(rc.getRoundNum() == 200 && role == roles.explorer){
             role = roles.soldier;
         }
         //if can buy upgrade, buy an upgrade
-        if(rc.getRoundNum() == GameConstants.GLOBAL_UPGRADE_ROUNDS || rc.getRoundNum() == GameConstants.GLOBAL_UPGRADE_ROUNDS * 2){
+        if(rc.getRoundNum() == 750 || rc.getRoundNum() == 1500){
             if(rc.canBuyGlobal(GlobalUpgrade.ACTION)){
                 rc.buyGlobal(GlobalUpgrade.ACTION);
             }
@@ -69,7 +68,12 @@ public strictfp class RobotPlayer {
                 rc.buyGlobal(GlobalUpgrade.HEALING);
             }
         }
+        // Hello world! Standard output is very useful for debugging.
+        // Everything you say here will be directly viewable in your terminal when you run a match!
+        System.out.println("I'm alive");
 
+        // You can also use indicators to save debug notes in replays.
+        rc.setIndicatorString("Hello world!");
 
         while (true) {
             // This code runs during the entire lifespan of the robot, which is why it is in an infinite
@@ -83,57 +87,54 @@ public strictfp class RobotPlayer {
                 // Make sure you spawn your robot in before you attempt to take any actions!
                 // Robots not spawned in do not have vision of any tiles and cannot perform any actions.
                 if(turnCount==1) {//first turn fill the spawn location into the array ranked
-                 SpawnLocations = rc.getAllySpawnLocations();
+                    MapLocation center = new MapLocation(rc.getMapWidth()/2,rc.getMapHeight()/2);
+                    ArrayList<int[]> temp = new ArrayList<int[]>(); //Array list of two numbers that have index and distance
+                    MapLocation[] locs = rc.getAllySpawnLocations();
+                    temp.add(new int[] {0,locs[0].distanceSquaredTo(center)});
+                    for(int t = 1;t<27;t++){
+                        int distance = locs[t].distanceSquaredTo(center);
+                        for (int tt=0;tt<temp.size();tt++){
+                            if(distance<temp.get(tt)[2])
+                                temp.add(tt,new int[] {t,distance});
+
+                        }
+                    }
+                    for(int t = 0;t<27;t++){
+                        SpawnLocations[t] = locs[temp.get(t)[0]];
+                    }
                 }
                 if (!rc.isSpawned()){
-                    // try to spawn in every location asap
                     MapLocation[] spawnLocs = rc.getAllySpawnLocations();
-                    int spawnIndex = 0;
-                    while(spawnIndex < 26 && !rc.canSpawn(spawnLocs[spawnIndex])) {
-                        spawnIndex++;
-                    }
-                        if (rc.canSpawn(spawnLocs[spawnIndex]) && spawnIndex <= 26) {
-                            rc.spawn(spawnLocs[spawnIndex]);
-                            //if third to last bit is 0, become a soldier/explorer and figure out which bit to flip
-                            if(!Utilities.readBitSharedArray(rc, 1021)){
-                                if(rc.getRoundNum() > 200)
-                                    role = roles.soldier;
-                                else
-                                    role = roles.explorer;
-                                if(Utilities.readBitSharedArray(rc, 1023)){
-                                    Utilities.editBitSharedArray(rc, 1023, true);
-                                }
-                                else if(Utilities.readBitSharedArray(rc, 1022)){
-                                    Utilities.editBitSharedArray(rc, 1022, true);
-                                }
-                                else{
-                                    Utilities.editBitSharedArray(rc,1021, true);
-                                }
+                    // Pick a random spawn location to attempt spawning in.
+                    MapLocation randomLoc = spawnLocs[rng.nextInt(spawnLocs.length)];
+                    if (rc.canSpawn(randomLoc)) {
+                        rc.spawn(randomLoc);
+                        //if third to last bit is 0, become a soldier/explorer and figure out which bit to flip
+                        if(!Utilities.readBitSharedArray(rc, 1021)){
+                            if(rc.getRoundNum() > 200)
+                                role = roles.soldier;
+                            else
+                                role = roles.explorer;
+                            if(Utilities.readBitSharedArray(rc, 1023)){
+                                Utilities.editBitSharedArray(rc, 1023, true);
                             }
-                            //become a builder, set last three bits to 0
+                            else if(Utilities.readBitSharedArray(rc, 1022)){
+                                Utilities.editBitSharedArray(rc, 1022, true);
+                            }
                             else{
-                                role = roles.builder;
-                                Utilities.editBitSharedArray(rc, 1021, false);
-                                Utilities.editBitSharedArray(rc, 1022, false);
-                                Utilities.editBitSharedArray(rc, 1023, false);
+                                Utilities.editBitSharedArray(rc,1021, true);
                             }
                         }
+                        //become a builder, set last three bits to 0
+                        else{
+                            role = roles.builder;
+                            Utilities.editBitSharedArray(rc, 1021, false);
+                            Utilities.editBitSharedArray(rc, 1022, false);
+                            Utilities.editBitSharedArray(rc, 1023, false);
+                        }
+                    }
                 }
                 else{
-                    switch(role){
-                        case builder:
-                            runBuilder(rc);
-                            break;
-                        case explorer:
-                            runExplorer(rc);
-                            break;
-                        case healer:
-                            runHealer(rc);
-                            break;
-                        case soldier:
-                            runSoldier(rc);
-                            break;
-                    }
                     if (rc.canPickupFlag(rc.getLocation())){
                         rc.pickupFlag(rc.getLocation());
                         rc.setIndicatorString("Holding a flag!");
@@ -147,18 +148,23 @@ public strictfp class RobotPlayer {
                         Direction dir = rc.getLocation().directionTo(firstLoc);
                         if (rc.canMove(dir)) rc.move(dir);
                     }
-                    move(rc);
+                    // Move and attack randomly if no objective.
                     Direction dir = directions[rng.nextInt(directions.length)];
                     MapLocation nextLoc = rc.getLocation().add(dir);
-                    RobotInfo[] enemyRobots = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
-                    if (enemyRobots.length > 0 && rc.canAttack(enemyRobots[0].location)){
-                        rc.attack(enemyRobots[0].location);
+                    if (rc.canMove(dir)){
+                        rc.move(dir);
+                    }
+                    else if (rc.canAttack(nextLoc)){
+                        rc.attack(nextLoc);
+                        System.out.println("Take that! Damaged an enemy that was in our way!");
                     }
 
                     // Rarely attempt placing traps behind the robot.
                     MapLocation prevLoc = rc.getLocation().subtract(dir);
                     if (rc.canBuild(TrapType.EXPLOSIVE, prevLoc) && rng.nextInt() % 37 == 1)
                         rc.build(TrapType.EXPLOSIVE, prevLoc);
+                    // We can also move our code into different methods or classes to better organize it!
+                    updateEnemyRobots(rc);
                 }
 
             } catch (GameActionException e) {
@@ -184,28 +190,12 @@ public strictfp class RobotPlayer {
 
         // Your code should never reach here (unless it's intentional)! Self-destruction imminent...
     }
-
-    public static void runBuilder(RobotController rc) throws GameActionException{
-
-    }
-
-    public static void runHealer(RobotController rc) throws GameActionException{
-
-    }
-
-    public static void runSoldier(RobotController rc) throws GameActionException{
-
-    }
-
-    public static void runExplorer(RobotController rc) throws GameActionException{
-
-    }
-
     public static void updateEnemyRobots(RobotController rc) throws GameActionException{
         // Sensing methods can be passed in a radius of -1 to automatically 
         // use the largest possible value.
         RobotInfo[] enemyRobots = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
         if (enemyRobots.length != 0){
+            rc.setIndicatorString("There are nearby enemy robots! Scary!");
             // Save an array of locations with enemy robots in them for future use.
             MapLocation[] enemyLocations = new MapLocation[enemyRobots.length];
             for (int i = 0; i < enemyRobots.length; i++){
@@ -218,30 +208,5 @@ public strictfp class RobotPlayer {
             }
             int x = rc.readSharedArray(1);
         }
-    }
-
-    static void move(RobotController rc) throws GameActionException {
-        if(LocIsSpawnLocation(rc.getLocation())) {
-            for (Direction d : directions) {
-                for (MapLocation l : SpawnLocations) {
-                    if (!rc.getLocation().add(d).equals(l) && rc.canMove(d))
-                        rc.move(d);
-                }
-            }
-        }
-        int t = rng.nextInt(directions.length);
-        for(int i = 0;i<8;i++){
-            Direction dir = directions[(t+i)%8];
-            if(!LocIsSpawnLocation(rc.getLocation().add(dir)) && rc.canMove(dir)){
-                rc.move(dir);
-            }
-        }
-    }
-    static boolean LocIsSpawnLocation(MapLocation l){
-        for(MapLocation d:SpawnLocations){
-            if(l.equals(d))
-                return true;
-        }
-        return false;
     }
 }

@@ -54,13 +54,31 @@ public class Utilities {
         return ((1 << bitInArrayIndex) & readArrayValue) != 0;
     }
 
-    public static void storeLocationAtBitIndexShared(MapLocation mapLocation)
+    public static void setTaskSharedArray(RobotController rc, MapLocation mapLocation, int used, int duckType, int isComing, int arrayIndex) throws GameActionException
     {
-
-
+        int value = convertLocationToInt(mapLocation);
+        value = value | (used << 13);
+        value = value | (duckType << 14);
+        value = value | (duckType << 15);
+        rc.writeSharedArray(arrayIndex, value);
     }
 
-    //Takes a MapLocation and converts it to an Int
+    public static void storeLocationAtBitIndexShared(MapLocation mapLocation, int bitIndex)
+    {
+        boolean willUseMultipleIndices = (bitIndex % 16 + 12) > 16;
+        int toStore = convertLocationToInt(mapLocation);
+        for(int x = bitIndex; x < bitIndex + 12; x++)
+        {
+
+        }
+    }
+
+    public static boolean getBitAtPosition(int value, int position)
+    {
+        return (value & ( 1 << position )) >> position != 0;
+    }
+
+    //Takes a MapLocation and converts it to an Int (12 bits)
     public static int convertLocationToInt(MapLocation mapLocation)
     {
         return (mapLocation.x << 6) | mapLocation.y;
