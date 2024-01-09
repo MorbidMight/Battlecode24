@@ -147,7 +147,7 @@ public strictfp class RobotPlayer {
                         Direction dir = rc.getLocation().directionTo(firstLoc);
                         if (rc.canMove(dir)) rc.move(dir);
                     }
-                    move(rc);
+                    MoveAwayFromSpawnLocations(rc);
                     Direction dir = directions[rng.nextInt(directions.length)];
                     MapLocation nextLoc = rc.getLocation().add(dir);
                     RobotInfo[] enemyRobots = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
@@ -187,6 +187,7 @@ public strictfp class RobotPlayer {
 
     public static void runBuilder(RobotController rc) throws GameActionException{
 
+
     }
 
     public static void runHealer(RobotController rc) throws GameActionException{
@@ -220,7 +221,7 @@ public strictfp class RobotPlayer {
         }
     }
 
-    static void move(RobotController rc) throws GameActionException {
+    static void MoveAwayFromSpawnLocations(RobotController rc) throws GameActionException {
         if(LocIsSpawnLocation(rc.getLocation())) {
             for (Direction d : directions) {
                 for (MapLocation l : SpawnLocations) {
