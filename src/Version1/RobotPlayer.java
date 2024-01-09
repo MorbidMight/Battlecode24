@@ -2,7 +2,7 @@ package Version1;
 
 import battlecode.common.*;
 
-import java.lang.reflect.Array;
+import java.awt.*;
 import java.util.*;
 
 /**
@@ -19,6 +19,8 @@ public strictfp class RobotPlayer {
      */
     static int turnCount = 0;
     static MapLocation[] SpawnLocations = new MapLocation[27]; //All the spawn locations. low:close to center high:away from center
+
+    static roles role;
 
     /**
      * A random number generator.
@@ -40,6 +42,11 @@ public strictfp class RobotPlayer {
         Direction.NORTHWEST,
     };
 
+    static enum roles {
+        explorer, soldier, builder, healer
+    }
+
+
     /**
      * run() is the method that is called when a robot is instantiated in the Battlecode world.
      * It is like the main function for your robot. If this method returns, the robot dies!
@@ -49,20 +56,25 @@ public strictfp class RobotPlayer {
      **/
     @SuppressWarnings("unused")
     public static void run(RobotController rc) throws GameActionException {
-
+        //changes explorers to soldiers at round 200
+        if(rc.getRoundNum() == 200 && role == roles.explorer){
+            role = roles.soldier;
+        }
         //if can buy upgrade, buy an upgrade
         if(rc.getRoundNum() == 750 || rc.getRoundNum() == 1500){
-            if(rc.canBuyGlobal(GlobalUpgrade.HEALING)){
-                rc.buyGlobal(GlobalUpgrade.HEALING);
-            }
-            else if(rc.canBuyGlobal(GlobalUpgrade.ACTION)){
+            if(rc.canBuyGlobal(GlobalUpgrade.ACTION)){
                 rc.buyGlobal(GlobalUpgrade.ACTION);
+            }
+            else if(rc.canBuyGlobal(GlobalUpgrade.HEALING)){
+                rc.buyGlobal(GlobalUpgrade.HEALING);
             }
         }
         // Hello world! Standard output is very useful for debugging.
         // Everything you say here will be directly viewable in your terminal when you run a match!
+        System.out.println("I'm alive");
 
         // You can also use indicators to save debug notes in replays.
+        rc.setIndicatorString("Hello world!");
 
         while (true) {
             // This code runs during the entire lifespan of the robot, which is why it is in an infinite
@@ -82,9 +94,48 @@ public strictfp class RobotPlayer {
                     MapLocation[] spawnLocs = rc.getAllySpawnLocations();
                     // Pick a random spawn location to attempt spawning in.
                     MapLocation randomLoc = spawnLocs[rng.nextInt(spawnLocs.length)];
-                    if (rc.canSpawn(randomLoc)) rc.spawn(randomLoc);
+                    if (rc.canSpawn(randomLoc)) {
+                        rc.spawn(randomLoc);
+                        //if third to last bit is 0, become a soldier/explorer and figure out which bit to flip
+                        if(!Utilities.readBitSharedArray(rc, 1021)){
+                            if(rc.getRoundNum() > 200)
+                                role = roles.soldier;
+                            else
+                                role = roles.explorer;
+                            if(Utilities.readBitSharedArray(rc, 1023)){
+                                Utilities.editBitSharedArray(rc, 1023, true);
+                            }
+                            else if(Utilities.readBitSharedArray(rc, 1022)){
+                                Utilities.editBitSharedArray(rc, 1022, true);
+                            }
+                            else{
+                                Utilities.editBitSharedArray(rc,1021, true);
+                            }
+                        }
+                        //become a builder, set last three bits to 0
+                        else{
+                            role = roles.builder;
+                            Utilities.editBitSharedArray(rc, 1021, false);
+                            Utilities.editBitSharedArray(rc, 1022, false);
+                            Utilities.editBitSharedArray(rc, 1023, false);
+                        }
+                    }
                 }
                 else{
+                    switch(role){
+                        case builder:
+                            runBuilder(rc);
+                            break;
+                        case explorer:
+                            runExplorer(rc);
+                            break;
+                        case healer:
+                            runHealer(rc);
+                            break;
+                        case soldier:
+                            runSoldier(rc);
+                            break;
+                    }
                     if (rc.canPickupFlag(rc.getLocation())){
                         rc.pickupFlag(rc.getLocation());
                         rc.setIndicatorString("Holding a flag!");
@@ -139,6 +190,22 @@ public strictfp class RobotPlayer {
 
         // Your code should never reach here (unless it's intentional)! Self-destruction imminent...
     }
+    public static void runBuilder(RobotController rc) throws GameActionException{
+
+    }
+
+    public static void runHealer(RobotController rc) throws GameActionException{
+
+    }
+
+    public static void runSoldier(RobotController rc) throws GameActionException{
+
+    }
+
+    public static void runExplorer(RobotController rc) throws GameActionException{
+
+    }
+
     public static void updateEnemyRobots(RobotController rc) throws GameActionException{
         // Sensing methods can be passed in a radius of -1 to automatically 
         // use the largest possible value.
@@ -184,5 +251,3 @@ public strictfp class RobotPlayer {
         return false;
     }
 }
-
-
