@@ -2,12 +2,7 @@ package Version1;
 
 import battlecode.common.*;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Random;
-import java.util.Set;
+import java.util.*;
 
 /**
  * RobotPlayer is the class that describes your main robot strategy.
@@ -22,6 +17,7 @@ public strictfp class RobotPlayer {
      * these variables are static, in Battlecode they aren't actually shared between your robots.
      */
     static int turnCount = 0;
+    static MapLocation[] SpawnLocations = new MapLocation[27]; //All the spawn locations. low:close to center high:away from center
 
     static roles role;
 
@@ -72,6 +68,12 @@ public strictfp class RobotPlayer {
                 rc.buyGlobal(GlobalUpgrade.HEALING);
             }
         }
+        // Hello world! Standard output is very useful for debugging.
+        // Everything you say here will be directly viewable in your terminal when you run a match!
+        System.out.println("I'm alive");
+
+        // You can also use indicators to save debug notes in replays.
+        rc.setIndicatorString("Hello world!");
 
         while (true) {
             // This code runs during the entire lifespan of the robot, which is why it is in an infinite
@@ -84,6 +86,23 @@ public strictfp class RobotPlayer {
             try {
                 // Make sure you spawn your robot in before you attempt to take any actions!
                 // Robots not spawned in do not have vision of any tiles and cannot perform any actions.
+                if(turnCount==1) {//first turn fill the spawn location into the array ranked
+                    MapLocation center = new MapLocation(rc.getMapWidth()/2,rc.getMapHeight()/2);
+                    ArrayList<int[]> temp = new ArrayList<int[]>(); //Array list of two numbers that have index and distance
+                    MapLocation[] locs = rc.getAllySpawnLocations();
+                    temp.add(new int[] {0,locs[0].distanceSquaredTo(center)});
+                    for(int t = 1;t<27;t++){
+                        int distance = locs[t].distanceSquaredTo(center);
+                        for (int tt=0;tt<temp.size();tt++){
+                            if(distance<temp.get(tt)[2])
+                                temp.add(tt,new int[] {t,distance});
+
+                        }
+                    }
+                    for(int t = 0;t<27;t++){
+                        SpawnLocations[t] = locs[temp.get(t)[0]];
+                    }
+                }
                 if (!rc.isSpawned()){
                     MapLocation[] spawnLocs = rc.getAllySpawnLocations();
                     // Pick a random spawn location to attempt spawning in.
