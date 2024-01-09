@@ -32,7 +32,7 @@ public class Utilities {
     /*Edits the Nth bit from a passed array (size 64 and max value 2^16) and sets it to value.
     bitIndex must be between 0 and 1023.
     */
-    public static void editBitPassedArray(RobotController rc, int bitIndex, boolean value, int[] array) throws GameActionException
+    public static void editBitPassedArray(int bitIndex, boolean value, int[] array)
     {
         int bitValue = value ? 1 : 0;
         int arrayIndex = bitIndex / 16;
@@ -45,7 +45,7 @@ public class Utilities {
     /*Reads the Nth bit from a passed array (size 64 and max value 2^16).
     bitIndex must be between 0 and 1023.
     */
-    public static boolean readBitPassedArray(RobotController rc, int bitIndex, int[] array) throws GameActionException
+    public static boolean readBitPassedArray(int bitIndex, int[] array)
     {
         int arrayIndex = bitIndex / 16;
         int bitInArrayIndex = bitIndex % 16;
