@@ -244,4 +244,5 @@ public strictfp class RobotPlayer {
         }
         return false;
     }
+
 }
