@@ -159,8 +159,6 @@ public strictfp class RobotPlayer {
                     MapLocation prevLoc = rc.getLocation().subtract(dir);
                     if (rc.canBuild(TrapType.EXPLOSIVE, prevLoc) && rng.nextInt() % 37 == 1)
                         rc.build(TrapType.EXPLOSIVE, prevLoc);
-                    // We can also move our code into different methods or classes to better organize it!
-                    //updateEnemyRobots(rc);
                 }
 
             } catch (GameActionException e) {
@@ -186,6 +184,7 @@ public strictfp class RobotPlayer {
 
         // Your code should never reach here (unless it's intentional)! Self-destruction imminent...
     }
+
     public static void runBuilder(RobotController rc) throws GameActionException{
 
 
