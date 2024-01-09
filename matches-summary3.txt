@@ -1,0 +1,7 @@
+|  | examplefuncsplayer | examplefuncsplayer |
+| :---: | :---: | :---: |
+| DefaultSmall | :grimacing: (2000, 2000) | :grimacing: (2000, 2000) |
+| DefaultMedium | :grimacing: (2000, 2000) | :grimacing: (2000, 2000) |
+| DefaultLarge | :grimacing: (2000, 2000) | :grimacing: (2000, 2000) |
+| DefaultHuge | :grimacing: (2000, 2000) | :grimacing: (2000, 2000) |
+
