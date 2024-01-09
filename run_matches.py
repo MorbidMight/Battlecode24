@@ -1,7 +1,7 @@
 from itertools import product
 import subprocess
 
-emojiMode = True
+emojiMode = False
 emojiMap = {
     'Won': ':heavy_check_mark:',
     'Lost': ':x:',
