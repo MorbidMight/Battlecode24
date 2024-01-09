@@ -1,6 +1,7 @@
 package Version1;
 
 import battlecode.common.GameActionException;
+import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
 
 public class Utilities {
@@ -52,4 +53,13 @@ public class Utilities {
         int readArrayValue = array[arrayIndex];
         return ((1 << bitInArrayIndex) & readArrayValue) != 0;
     }
+
+    public static void storeLocationAtBitIndexShared(MapLocation mapLocation)
+    {
+        int x = mapLocation.x;
+        int y = mapLocation.y;
+
+
+    }
+
 }

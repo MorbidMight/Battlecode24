@@ -50,6 +50,15 @@ public strictfp class RobotPlayer {
     @SuppressWarnings("unused")
     public static void run(RobotController rc) throws GameActionException {
 
+        //if can buy upgrade, buy an upgrade
+        if(rc.getRoundNum() == 750 || rc.getRoundNum() == 1500){
+            if(rc.canBuyGlobal(GlobalUpgrade.HEALING)){
+                rc.buyGlobal(GlobalUpgrade.HEALING);
+            }
+            else if(rc.canBuyGlobal(GlobalUpgrade.ACTION)){
+                rc.buyGlobal(GlobalUpgrade.ACTION);
+            }
+        }
         // Hello world! Standard output is very useful for debugging.
         // Everything you say here will be directly viewable in your terminal when you run a match!
 
