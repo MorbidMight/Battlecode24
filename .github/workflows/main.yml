@@ -48,7 +48,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: matches-summary
-          path: matches-summary.txt
+          path: testing-results/matches-summary.txt
           retention-days: 90
       - name: Rename Summary
         run : mv matches-summary.txt matches-summary${{ github.run_number }}.txt
