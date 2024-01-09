@@ -56,10 +56,20 @@ public class Utilities {
 
     public static void storeLocationAtBitIndexShared(MapLocation mapLocation)
     {
-        int x = mapLocation.x;
-        int y = mapLocation.y;
 
 
+    }
+
+    //Takes a MapLocation and converts it to an Int
+    public static int convertLocationToInt(MapLocation mapLocation)
+    {
+        return (mapLocation.x << 6) | mapLocation.y;
+    }
+
+    //Takes an Int and converts it to a MapLocation
+    public static MapLocation convertIntToLocation(int intLocation)
+    {
+        return new MapLocation((intLocation & 4032) >> 6, (intLocation & 63));
     }
 
 }
