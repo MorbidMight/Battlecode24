@@ -10,7 +10,7 @@ emojiMap = {
     'Error': ':heavy_exclamation_mark:'
 }
 errors = []
-currentBot = 'legendaryeagle'
+currentBot = 'examplefuncsplayer'
 
 bots = ['examplefuncsplayer', 'examplefuncsplayer']
 botsSet = set(bots)
