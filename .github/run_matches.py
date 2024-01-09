@@ -15,7 +15,7 @@ currentBot = 'legendaryeagle'
 bots = ['examplefuncsplayer', 'examplefuncsplayer']
 botsSet = set(bots)
 # maps = ['maptestsmall', 'eckleburg', 'intersection', 'Barrier', 'BarrierWithLead', 'Circles', 'CloseArchons', 'colosseum', 'fortress', 'jellyfish', 'MoveYourArchons', 'MultiplePortableArchonsMoreLead', 'nottestsmall', 'progress', 'rivers', 'sandwich', 'squer', 'uncomfortable', 'underground', 'valley', 'Z']
-maps = ['maptestsmall', 'eckleburg', 'intersection', 'colosseum', 'fortress', 'jellyfish', 'nottestsmall', 'progress', 'rivers', 'sandwich', 'squer', 'uncomfortable', 'underground', 'valley', 'chessboard', 'collaboration', 'dodgeball', 'equals', 'highway', 'nyancat', 'panda', 'pillars', 'snowflake', 'spine', 'stronghold', 'tower']
+maps = ['DefaultSmall', 'DefaultMedium', 'DefaultLarge', 'DefaultHuge']
 mapsSet = set(maps)
 
 matches = set(product(bots, maps))
