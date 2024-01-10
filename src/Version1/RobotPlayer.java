@@ -19,7 +19,8 @@ public strictfp class RobotPlayer {
      */
     static int turnCount = 0;
     static MapLocation[] SpawnLocations = new MapLocation[27]; //All the spawn locations. low:close to center high:away from center
-
+    static Direction preferredDirection = null; //For scouts it's the direction their intending to go in
+    static ArrayList<MapLocation> PlacesHaveBeen = new ArrayList<MapLocation>(); //To prevent scouts from backtracking
     static roles role;
 
     /**
@@ -186,6 +187,10 @@ public strictfp class RobotPlayer {
     }
 
     public static void runBuilder(RobotController rc) throws GameActionException{
+        //Go to flag from array
+        //Dig water around the flag
+        //build water traps around the flag
+        //Head towards the dam to be on standby
 
 
     }
@@ -199,7 +204,46 @@ public strictfp class RobotPlayer {
     }
 
     public static void runExplorer(RobotController rc) throws GameActionException{
+        int cornerToGoTo = rc.getID()%4; //0 is bottom left, increases clockwise
+        PlacesHaveBeen.add(rc.getLocation());
+        if (turnCount < 5) {
+            if (cornerToGoTo == 0)
+                preferredDirection = Direction.SOUTHWEST;
+            else if (cornerToGoTo == 1)
+                preferredDirection = Direction.NORTHWEST;
+            else if (cornerToGoTo == 2)
+                preferredDirection = Direction.NORTHEAST;
+            else if (cornerToGoTo == 3)
+                preferredDirection = Direction.SOUTHEAST;
+        }
 
+
+        Direction tempDir = preferredDirection;
+        MapLocation[] LocationsWithCrumbs = rc.senseNearbyCrumbs(GameConstants.VISION_RADIUS_SQUARED);
+        if(LocationsWithCrumbs.length!=0){
+            tempDir = rc.getLocation().directionTo(LocationsWithCrumbs[0]);
+        }
+        boolean MovedThisTurn = false;
+        outerLoop:
+        for(int i = 0; i<8;i++){
+            for(MapLocation L:PlacesHaveBeen){
+                if(L.equals(rc.getLocation().add(tempDir)))
+                    System.out.println(L);
+                    continue outerLoop;
+            }
+            if(rc.canMove(tempDir)){
+                rc.move(tempDir);
+                MovedThisTurn = true;
+                break;
+            }
+            tempDir = tempDir.rotateLeft();
+        }
+
+        if(!MovedThisTurn){//unable to move anymmore
+            preferredDirection = preferredDirection.rotateLeft();
+            preferredDirection = preferredDirection.rotateLeft();
+            preferredDirection = preferredDirection.rotateLeft();
+        }
     }
 
     public static void updateEnemyRobots(RobotController rc) throws GameActionException{
