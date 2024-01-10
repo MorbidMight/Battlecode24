@@ -340,8 +340,8 @@ public strictfp class RobotPlayer {
             rc.pickupFlag(rc.getLocation());
         }
         //attack
-        RobotInfo[] enemyRobots = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
-        RobotInfo[] allyRobots = rc.senseNearbyRobots(-1, rc.getTeam());
+        RobotInfo[] enemyRobots = rc.senseNearbyRobots(4, rc.getTeam().opponent());
+        RobotInfo[] allyRobots = rc.senseNearbyRobots(4, rc.getTeam());
         if (enemyRobots.length > 0){
             MapLocation toAttack = lowestHealth(enemyRobots);
             if(rc.canAttack(toAttack))
