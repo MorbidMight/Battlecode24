@@ -22,6 +22,7 @@ public strictfp class RobotPlayer {
     static Direction preferredDirection = null; //For scouts it's the direction their intending to go in
     static ArrayList<MapLocation> PlacesHaveBeen = new ArrayList<MapLocation>(); //To prevent scouts from backtracking
     static roles role;
+    static final int MoatRadius = 9; //Radius of the moat squared
 
     static boolean flagPlacer = false;
     //used for flagPlacer to target where they would like to place their flag
@@ -252,10 +253,50 @@ public strictfp class RobotPlayer {
 
     public static void runBuilder(RobotController rc) throws GameActionException{
         //Go to flag from array
-        //Dig water around the flag
-        //build water traps around the flag
-        //Head towards the dam to be on standby
 
+
+        if(DistanceFromNearestFlag(rc.getLocation(),rc)>6/*&&code to make them go somewhere else at a certain point*/){
+            //URAV PATHFINDING
+
+        }
+        else {//Dig water around the flag
+            FlagInfo[] BreadLocation = rc.senseNearbyFlags(GameConstants.VISION_RADIUS_SQUARED);
+            if (BreadLocation.length != 0) {
+                MapInfo[] actionableTiles = rc.senseNearbyMapInfos(2);
+
+                for (MapInfo i : actionableTiles) {
+                    if (DistanceFromNearestFlag(i.getMapLocation(), rc) <= MoatRadius && rc.canDig(i.getMapLocation())) {
+                        rc.dig(i.getMapLocation());
+                    } else if (DistanceFromNearestFlag(i.getMapLocation(), rc) == MoatRadius + 1 && rc.canBuild(TrapType.WATER, i.getMapLocation())) {
+                        rc.build(TrapType.WATER, i.getMapLocation());
+                    }
+                }
+            }else { //builder can't do any moves on it's actionble tiles so it needs to move
+                //Urav Pathfinding towards dead center of map (Away from the corner)
+            }
+        }
+    }
+
+    private static int DistanceFromNearestFlag(MapLocation i,RobotController rc) throws GameActionException {
+        MapLocation[] f = new MapLocation[3]; // locations of all the flags
+        int[] cornerFlag = calculateFlagDestination(rc);
+        f[0] = new MapLocation(cornerFlag[0],cornerFlag[1]);
+        if(f[0].x==0)
+            f[1] = new MapLocation(6,0);
+        else
+            f[1] = new MapLocation(rc.getMapWidth()-7,0);
+
+        if(f[0].y==0)
+            f[2] = new MapLocation(0,6);
+        else
+            f[1] = new MapLocation(0,rc.getMapHeight()-7);
+
+        int[] distancesToEach = new int[3];
+        distancesToEach[0]=f[0].distanceSquaredTo(i);
+        distancesToEach[1]=f[1].distanceSquaredTo(i);
+        distancesToEach[2]=f[2].distanceSquaredTo(i);
+        int temp =  Math.min(distancesToEach[0],distancesToEach[1]);
+        return Math.min(temp,distancesToEach[2]);
 
     }
 
