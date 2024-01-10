@@ -61,22 +61,20 @@ public strictfp class RobotPlayer {
      **/
     @SuppressWarnings("unused")
     public static void run(RobotController rc) throws GameActionException {
-        //changes explorers to soldiers at round 200
-        if(rc.getRoundNum() == GameConstants.SETUP_ROUNDS && role == roles.explorer){
-            role = roles.soldier;
-        }
-        //if can buy upgrade, buy an upgrade
-        if(rc.getRoundNum() == GameConstants.GLOBAL_UPGRADE_ROUNDS || rc.getRoundNum() == GameConstants.GLOBAL_UPGRADE_ROUNDS * 2){
-            if(rc.canBuyGlobal(GlobalUpgrade.ACTION)){
-                rc.buyGlobal(GlobalUpgrade.ACTION);
-            }
-            else if(rc.canBuyGlobal(GlobalUpgrade.HEALING)){
-                rc.buyGlobal(GlobalUpgrade.HEALING);
-            }
-        }
 
 
         while (true) {
+            //changes explorers to soldiers at round 200
+            if(rc.getRoundNum() == GameConstants.SETUP_ROUNDS && role == roles.explorer){
+                role = roles.soldier;
+            }
+            //if can buy upgrade, buy an upgrade
+            if(rc.canBuyGlobal(GlobalUpgrade.ACTION)){
+                rc.buyGlobal(GlobalUpgrade.ACTION);
+            }
+            else if(rc.canBuyGlobal(GlobalUpgrade.HEALING)) {
+                rc.buyGlobal(GlobalUpgrade.HEALING);
+            }
             // This code runs during the entire lifespan of the robot, which is why it is in an infinite
             // loop. If we ever leave this loop and return from run(), the robot dies! At the end of the
             // loop, we call Clock.yield(), signifying that we've done everything we want to do.
