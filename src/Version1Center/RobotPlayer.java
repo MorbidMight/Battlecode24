@@ -98,8 +98,8 @@ public strictfp class RobotPlayer {
                         if (rc.canSpawn(spawnLocs[spawnIndex]) && spawnIndex <= 26) {
                             rc.spawn(spawnLocs[spawnIndex]);
                             //if third to last bit is 0, become a soldier/explorer and figure out which bit to flip
-                            if(!Utilities.readBitSharedArray(rc, 1021)){
-                                if(rc.getRoundNum() > 200)
+                            if(!Utilities.readBitSharedArray(rc, 1020)){
+                                if(rc.getRoundNum() >= 200)
                                     role = roles.soldier;
                                 else
                                     role = roles.explorer;
@@ -109,13 +109,17 @@ public strictfp class RobotPlayer {
                                 else if(Utilities.readBitSharedArray(rc, 1022)){
                                     Utilities.editBitSharedArray(rc, 1022, true);
                                 }
-                                else{
+                                else if(Utilities.readBitSharedArray(rc, 1021)){
                                     Utilities.editBitSharedArray(rc,1021, true);
+                                }
+                                else{
+                                    Utilities.editBitSharedArray(rc,1020, true);
                                 }
                             }
                             //become a builder, set last three bits to 0
                             else{
                                 role = roles.builder;
+                                Utilities.editBitSharedArray(rc, 1020, false);
                                 Utilities.editBitSharedArray(rc, 1021, false);
                                 Utilities.editBitSharedArray(rc, 1022, false);
                                 Utilities.editBitSharedArray(rc, 1023, false);
@@ -260,36 +264,93 @@ public strictfp class RobotPlayer {
     }
 
     public static void runSoldier(RobotController rc) throws GameActionException{
-        FlagInfo[] nearbyFlags = rc.senseNearbyFlags(-1, rc.getTeam().opponent());
-        if(nearbyFlags.length > 0) {
-            int closestDist = rc.getLocation().distanceSquaredTo(nearbyFlags[0].getLocation());
-            int closestIndex = 0;
-            for (int i = 1; i < nearbyFlags.length; i++) {
-                if (rc.getLocation().distanceSquaredTo(nearbyFlags[i].getLocation()) < closestDist) {
-                    closestIndex = i;
-                    closestDist = rc.getLocation().distanceSquaredTo(nearbyFlags[i].getLocation());
+        boolean hasDirection = false;
+        //blank declaration, will be set by something
+        Direction dir = Direction.CENTER;
+        //if we have an enemy flag, bring it to the closest area
+        if (rc.hasFlag() && rc.getRoundNum() >= GameConstants.SETUP_ROUNDS){
+            MapLocation[] spawnLocs = rc.getAllySpawnLocations();
+            MapLocation targetLoc;
+            int distance_1 = rc.getLocation().distanceSquaredTo(spawnLocs[5]);
+            int distance_2 = rc.getLocation().distanceSquaredTo(spawnLocs[14]);
+            int distance_3 = rc.getLocation().distanceSquaredTo(spawnLocs[23]);
+            if(distance_1 < distance_2){
+                if(distance_1 < distance_3){
+                    targetLoc = spawnLocs[5];
+                }
+                else{
+                    targetLoc = spawnLocs[23];
                 }
             }
-            Direction direction = rc.getLocation().directionTo(nearbyFlags[closestIndex].getLocation());
-            if(rc.canMove(direction)){
-                rc.move(direction);
+            else{
+                targetLoc = spawnLocs[14];
             }
-            return;
+            dir = rc.getLocation().directionTo(targetLoc);
+            if (rc.canMove(dir)) {
+                rc.move(dir);
+                hasDirection = true;
+            }
         }
-        //first, find the closest enemy broadcasted flag
-        MapLocation[] locations = rc.senseBroadcastFlagLocations();
-        if(locations.length > 0){
-            int closestDist = rc.getLocation().distanceSquaredTo(locations[0]);
-            int closestIndex = 0;
-            for(int i = 1; i < locations.length; i++){
-                if(rc.getLocation().distanceSquaredTo(locations[i]) < closestDist){
-                    closestIndex = i;
-                    closestDist = rc.getLocation().distanceSquaredTo(locations[i]);
+        if(!hasDirection) {
+            //if we can see a flag, go towards it
+            FlagInfo[] nearbyFlags = rc.senseNearbyFlags(-1, rc.getTeam().opponent());
+            if (nearbyFlags.length > 0) {
+                int closestDist = rc.getLocation().distanceSquaredTo(nearbyFlags[0].getLocation());
+                int closestIndex = 0;
+                for (int i = 1; i < nearbyFlags.length; i++) {
+                    if (rc.getLocation().distanceSquaredTo(nearbyFlags[i].getLocation()) < closestDist) {
+                        closestIndex = i;
+                        closestDist = rc.getLocation().distanceSquaredTo(nearbyFlags[i].getLocation());
+                    }
+                }
+                dir = rc.getLocation().directionTo(nearbyFlags[closestIndex].getLocation());
+                if (rc.canMove(dir)) {
+                    hasDirection = true;
                 }
             }
-            Direction direction = rc.getLocation().directionTo(locations[closestIndex]);
-            if(rc.canMove(direction)){
-                rc.move(direction);
+        }
+        if(!hasDirection) {
+            //finally, find the closest enemy broadcasted flag
+            MapLocation[] locations = rc.senseBroadcastFlagLocations();
+            if (locations.length > 0) {
+                int closestDist = rc.getLocation().distanceSquaredTo(locations[0]);
+                int closestIndex = 0;
+                for (int i = 1; i < locations.length; i++) {
+                    if (rc.getLocation().distanceSquaredTo(locations[i]) < closestDist) {
+                        closestIndex = i;
+                        closestDist = rc.getLocation().distanceSquaredTo(locations[i]);
+                    }
+                }
+                dir = rc.getLocation().directionTo(locations[closestIndex]);
+                if (rc.canMove(dir)) {
+                    hasDirection = true;
+                }
+            }
+        }
+        if(hasDirection && rc.senseNearbyRobots(-1, rc.getTeam()).length > rc.senseNearbyRobots(-1, rc.getTeam().opponent()).length){
+            if(rc.canMove(dir))
+                rc.move(dir);
+        }
+        else if(hasDirection){
+            if(rc.canMove(dir.opposite()))
+                rc.move(dir.opposite());
+        }
+        //pickup enemy flag if we can
+        if (rc.canPickupFlag(rc.getLocation()) && rc.getRoundNum() > GameConstants.SETUP_ROUNDS){
+            rc.pickupFlag(rc.getLocation());
+        }
+        //attack
+        RobotInfo[] enemyRobots = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
+        RobotInfo[] allyRobots = rc.senseNearbyRobots(-1, rc.getTeam());
+        if (enemyRobots.length > 0 && rc.canAttack(enemyRobots[0].location)){
+            rc.attack(enemyRobots[0].location);
+        }
+        if(enemyRobots.length == 0 && allyRobots.length > 0){
+            for (RobotInfo allyRobot : allyRobots) {
+                if (rc.canHeal(allyRobot.getLocation())) {
+                    rc.heal(allyRobot.getLocation());
+                    break;
+                }
             }
         }
     }
