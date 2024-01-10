@@ -223,6 +223,7 @@ public strictfp class RobotPlayer {
 
     static void MoveAwayFromSpawnLocations(RobotController rc) throws GameActionException {
         if(LocIsSpawnLocation(rc.getLocation())) {
+            //remove loop for efficiency later
             for (Direction d : directions) {
                 for (MapLocation l : SpawnLocations) {
                     if (!rc.getLocation().add(d).equals(l) && rc.canMove(d))
@@ -231,6 +232,7 @@ public strictfp class RobotPlayer {
             }
         }
         int t = rng.nextInt(directions.length);
+        //remove loop for efficiency later
         for(int i = 0;i<8;i++){
             Direction dir = directions[(t+i)%8];
             if(!LocIsSpawnLocation(rc.getLocation().add(dir)) && rc.canMove(dir)){
