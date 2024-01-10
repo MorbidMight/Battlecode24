@@ -343,10 +343,11 @@ public strictfp class RobotPlayer {
         RobotInfo[] enemyRobots = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
         RobotInfo[] allyRobots = rc.senseNearbyRobots(-1, rc.getTeam());
         //try to implement smarter attack micro
-        if (enemyRobots.length > 0 && rc.canAttack(enemyRobots[0].location)){
-            if(enemyRobots.length < allyRobots.length && rc.canAttack(enemyRobots[0].location))
+        if (enemyRobots.length > 0){
+            MapLocation toAttack = lowestHealth(enemyRobots);
+            if(enemyRobots.length < allyRobots.length && rc.canAttack(toAttack))
             {
-                rc.attack(enemyRobots[0].location);
+                rc.attack(toAttack);
             }
         }
         if(enemyRobots.length == 0 && allyRobots.length > 0){
@@ -460,7 +461,7 @@ public strictfp class RobotPlayer {
                         rc.move(dir);
                     }
                 }
-            }
+           }
         }
     }
     static boolean LocIsSpawnLocation(MapLocation l){
@@ -509,6 +510,18 @@ public strictfp class RobotPlayer {
         }
         int[] coords = {(int)x, (int)y};
         return coords;
+    }
+
+    public static MapLocation lowestHealth(RobotInfo[] enemies){
+        int lowHealth = enemies[0].health;
+        MapLocation toAttack = enemies[0].getLocation();
+        for(RobotInfo enemy : enemies){
+            if(enemy.health < lowHealth){
+                lowHealth = enemy.health;
+                toAttack = enemy.location;
+            }
+        }
+        return toAttack;
     }
 
 }
