@@ -338,21 +338,21 @@ public strictfp class RobotPlayer {
             }
         }
         int t = rng.nextInt(directions.length);
-        //make ducks go to center
-        MapLocation centerOfMap = new MapLocation(rc.getMapWidth()/2, rc.getMapHeight()/2);
-        Direction directionTowardsCenter = rc.getLocation().directionTo(centerOfMap);
-        if(rc.canMove(directionTowardsCenter))
-        {
-            rc.move(directionTowardsCenter);
-        }
-        else
-        {
+//        //make ducks go to center
+//        MapLocation centerOfMap = new MapLocation(rc.getMapWidth()/2, rc.getMapHeight()/2);
+//        Direction directionTowardsCenter = rc.getLocation().directionTo(centerOfMap);
+//        if(rc.canMove(directionTowardsCenter))
+//        {
+//            rc.move(directionTowardsCenter);
+//        }
+//        else
+//        {
             for(int i = 0;i<8;i++) {
                 Direction dir = directions[(t + i) % 8];
                 if (!LocIsSpawnLocation(rc.getLocation().add(dir)) && rc.canMove(dir)) {
                     rc.move(dir);
                 }
-            }
+           // }
         }
     }
     static boolean LocIsSpawnLocation(MapLocation l){
