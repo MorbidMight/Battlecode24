@@ -260,7 +260,38 @@ public strictfp class RobotPlayer {
     }
 
     public static void runSoldier(RobotController rc) throws GameActionException{
-
+        FlagInfo[] nearbyFlags = rc.senseNearbyFlags(-1, rc.getTeam().opponent());
+        if(nearbyFlags.length > 0) {
+            int closestDist = rc.getLocation().distanceSquaredTo(nearbyFlags[0].getLocation());
+            int closestIndex = 0;
+            for (int i = 1; i < nearbyFlags.length; i++) {
+                if (rc.getLocation().distanceSquaredTo(nearbyFlags[i].getLocation()) < closestDist) {
+                    closestIndex = i;
+                    closestDist = rc.getLocation().distanceSquaredTo(nearbyFlags[i].getLocation());
+                }
+            }
+            Direction direction = rc.getLocation().directionTo(nearbyFlags[closestIndex].getLocation());
+            if(rc.canMove(direction)){
+                rc.move(direction);
+            }
+            return;
+        }
+        //first, find the closest enemy broadcasted flag
+        MapLocation[] locations = rc.senseBroadcastFlagLocations();
+        if(locations.length > 0){
+            int closestDist = rc.getLocation().distanceSquaredTo(locations[0]);
+            int closestIndex = 0;
+            for(int i = 1; i < locations.length; i++){
+                if(rc.getLocation().distanceSquaredTo(locations[i]) < closestDist){
+                    closestIndex = i;
+                    closestDist = rc.getLocation().distanceSquaredTo(locations[i]);
+                }
+            }
+            Direction direction = rc.getLocation().directionTo(locations[closestIndex]);
+            if(rc.canMove(direction)){
+                rc.move(direction);
+            }
+        }
     }
 
     public static void runExplorer(RobotController rc) throws GameActionException{
