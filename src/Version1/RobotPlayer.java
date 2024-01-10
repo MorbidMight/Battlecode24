@@ -245,5 +245,15 @@ public strictfp class RobotPlayer {
         }
         return false;
     }
+    //finds first open index to write a task too, returns -1 if all 45 slots are filled
+    static int openTaskIndex(RobotController rc) throws GameActionException {
+        int index = 6;
+        for(int i = index; i < index + 45; i++){
+            if(!Utilities.readBitSharedArray(rc, 12)){
+                return i;
+            }
+        }
+        return -1;
+    }
 
 }
