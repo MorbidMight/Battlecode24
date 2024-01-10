@@ -431,6 +431,7 @@ public strictfp class RobotPlayer {
         }
         int t = rng.nextInt(directions.length);
         //make ducks go to center
+        //maybe implement keeping distance
         MapLocation centerOfMap = new MapLocation(rc.getMapWidth()/2, rc.getMapHeight()/2);
         Direction directionTowardsCenter = rc.getLocation().directionTo(centerOfMap);
         if(rc.canMove(directionTowardsCenter) && turnCount < 50)
@@ -439,10 +440,23 @@ public strictfp class RobotPlayer {
         }
         else
         {
-            for(int i = 0;i<8;i++) {
-                Direction dir = directions[(t + i) % 8];
-                if (!LocIsSpawnLocation(rc.getLocation().add(dir)) && rc.canMove(dir)) {
-                    rc.move(dir);
+            //change direction taken based off robotID
+            if(rc.getId() % 2 == 0)
+            {
+                for(int i = 0;i<8;i++) {
+                    Direction dir = directions[(t + i) % 8];
+                    if (!LocIsSpawnLocation(rc.getLocation().add(dir)) && rc.canMove(dir)) {
+                        rc.move(dir);
+                    }
+                }
+            }
+            else
+            {
+                for(int i = 0;i<8;i++) {
+                    Direction dir = directions[8 - ((t + i) % 8)];
+                    if (!LocIsSpawnLocation(rc.getLocation().add(dir)) && rc.canMove(dir)) {
+                        rc.move(dir);
+                    }
                 }
            }
         }
