@@ -441,7 +441,7 @@ public strictfp class RobotPlayer {
         else
         {
             //change direction taken based off robotID
-            if(rc.getId() % 2 == 0)
+            if(rc.getID() % 2 == 0)
             {
                 for(int i = 0;i<8;i++) {
                     Direction dir = directions[(t + i) % 8];
