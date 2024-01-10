@@ -19,8 +19,13 @@ public strictfp class RobotPlayer {
      */
     static int turnCount = 0;
     static MapLocation[] SpawnLocations = new MapLocation[27]; //All the spawn locations. low:close to center high:away from center
-
+    static Direction preferredDirection = null; //For scouts it's the direction their intending to go in
+    static ArrayList<MapLocation> PlacesHaveBeen = new ArrayList<MapLocation>(); //To prevent scouts from backtracking
     static roles role;
+
+    static boolean flagPlacer = false;
+    //used for flagPlacer to target where they would like to place their flag
+    static int[] flagDestination;
 
     /**
      * A random number generator.
@@ -134,17 +139,75 @@ public strictfp class RobotPlayer {
                             runSoldier(rc);
                             break;
                     }
-                    if (rc.canPickupFlag(rc.getLocation())){
+                    //if spawn on the flag, pick it up and try to get it to the best corner
+                    if (rc.canPickupFlag(rc.getLocation()) && rc.getRoundNum() <= 2){
                         rc.pickupFlag(rc.getLocation());
-                        rc.setIndicatorString("Holding a flag!");
+                        flagPlacer = true;
+                        flagDestination = calculateFlagDestination(rc);
                     }
-                    // If we are holding an enemy flag, singularly focus on moving towards
-                    // an ally spawn zone to capture it! We use the check roundNum >= SETUP_ROUNDS
-                    // to make sure setup phase has ended.
+                    //runs a turn trying to place the flag or find a good place to do so
+                    if(flagPlacer){
+                        FlagInfo[] nearbyFlags = rc.senseNearbyFlags(-1);
+                        for(FlagInfo flag : nearbyFlags){
+                            if(flag.getLocation() == rc.getLocation())
+                                continue;
+                            if(flag.getLocation().x == flagDestination[0] && flag.getLocation().y == flagDestination[1]){
+                                if(flagDestination[0] == rc.getMapWidth() - 1 || flagDestination[0] == 0){
+                                    if(flagDestination[0] == 0){
+                                        flagDestination[0] = 7;
+                                    }
+                                    else{
+                                        flagDestination[0] = flagDestination[0] - 7;
+                                    }
+                                }
+                                else{
+                                    if(flagDestination[0] == 7){
+                                        flagDestination[0] = 0;
+                                    }
+                                    else{
+                                        flagDestination[0] = rc.getMapWidth()-1;
+                                    }
+                                    if(flagDestination[1] == 0){
+                                        flagDestination[1] = 7;
+                                    }
+                                    else{
+                                        flagDestination[1] = flagDestination[1] - 7;
+                                    }
+                                }
+                            }
+                        }
+                        Direction direction = rc.getLocation().directionTo(new MapLocation(flagDestination[0], flagDestination[1]));
+                        if(rc.canMove(direction)){
+                            rc.move(direction);
+                        }
+                        if(Objects.equals(rc.getLocation(), new MapLocation(flagDestination[0], flagDestination[1])) && rc.canDropFlag(new MapLocation(flagDestination[0], flagDestination[1]))){
+                            rc.dropFlag(new MapLocation(flagDestination[0], flagDestination[1]));
+                            flagPlacer = false;
+                        }
+                    }
+                    //pickup enemy flag after setup phase ends
+                    if (rc.canPickupFlag(rc.getLocation()) && rc.getRoundNum() > GameConstants.SETUP_ROUNDS){
+                        rc.pickupFlag(rc.getLocation());
+                    }
+                    //if we have an enemy flag, bring it to the closest area
                     if (rc.hasFlag() && rc.getRoundNum() >= GameConstants.SETUP_ROUNDS){
                         MapLocation[] spawnLocs = rc.getAllySpawnLocations();
-                        MapLocation firstLoc = spawnLocs[0];
-                        Direction dir = rc.getLocation().directionTo(firstLoc);
+                        MapLocation targetLoc;
+                        int distance_1 = rc.getLocation().distanceSquaredTo(spawnLocs[5]);
+                        int distance_2 = rc.getLocation().distanceSquaredTo(spawnLocs[14]);
+                        int distance_3 = rc.getLocation().distanceSquaredTo(spawnLocs[23]);
+                        if(distance_1 < distance_2){
+                            if(distance_1 < distance_3){
+                                targetLoc = spawnLocs[5];
+                            }
+                            else{
+                                targetLoc = spawnLocs[23];
+                            }
+                        }
+                        else{
+                            targetLoc = spawnLocs[14];
+                        }
+                        Direction dir = rc.getLocation().directionTo(targetLoc);
                         if (rc.canMove(dir)) rc.move(dir);
                     }
                     MoveAwayFromSpawnLocations(rc);
@@ -186,6 +249,10 @@ public strictfp class RobotPlayer {
     }
 
     public static void runBuilder(RobotController rc) throws GameActionException{
+        //Go to flag from array
+        //Dig water around the flag
+        //build water traps around the flag
+        //Head towards the dam to be on standby
 
 
     }
@@ -199,7 +266,46 @@ public strictfp class RobotPlayer {
     }
 
     public static void runExplorer(RobotController rc) throws GameActionException{
+        int cornerToGoTo = rc.getID()%4; //0 is bottom left, increases clockwise
+        PlacesHaveBeen.add(rc.getLocation());
+        if (turnCount < 5) {
+            if (cornerToGoTo == 0)
+                preferredDirection = Direction.SOUTHWEST;
+            else if (cornerToGoTo == 1)
+                preferredDirection = Direction.NORTHWEST;
+            else if (cornerToGoTo == 2)
+                preferredDirection = Direction.NORTHEAST;
+            else if (cornerToGoTo == 3)
+                preferredDirection = Direction.SOUTHEAST;
+        }
 
+
+        Direction tempDir = preferredDirection;
+        MapLocation[] LocationsWithCrumbs = rc.senseNearbyCrumbs(GameConstants.VISION_RADIUS_SQUARED);
+        if(LocationsWithCrumbs.length!=0){
+            tempDir = rc.getLocation().directionTo(LocationsWithCrumbs[0]);
+        }
+        boolean MovedThisTurn = false;
+        outerLoop:
+        for(int i = 0; i<8;i++){
+            for(MapLocation L:PlacesHaveBeen){
+                if(L.equals(rc.getLocation().add(tempDir)))
+                    System.out.println(L);
+                    continue outerLoop;
+            }
+            if(rc.canMove(tempDir)){
+                rc.move(tempDir);
+                MovedThisTurn = true;
+                break;
+            }
+            tempDir = tempDir.rotateLeft();
+        }
+
+        if(!MovedThisTurn){//unable to move anymmore
+            preferredDirection = preferredDirection.rotateLeft();
+            preferredDirection = preferredDirection.rotateLeft();
+            preferredDirection = preferredDirection.rotateLeft();
+        }
     }
 
     public static void updateEnemyRobots(RobotController rc) throws GameActionException{
@@ -259,12 +365,42 @@ public strictfp class RobotPlayer {
     //finds first open index to write a task too, returns -1 if all 45 slots are filled
     static int openTaskIndex(RobotController rc) throws GameActionException {
         int index = 6;
+        //eventually - codegen into list of instructions
         for(int i = index; i < index + 45; i++){
             if(!Utilities.readBitSharedArray(rc, 12)){
                 return i;
             }
         }
         return -1;
+    }
+
+    //takes the average of the three flag locations, and then returns the coords of the nearest corner
+    static int[] calculateFlagDestination(RobotController rc){
+        MapLocation[] spawnLocs = rc.getAllySpawnLocations();
+        MapLocation[] flagOrigins = new MapLocation[3];
+        flagOrigins[0] = spawnLocs[5];
+        flagOrigins[1] = spawnLocs[14];
+        flagOrigins[2] = spawnLocs[23];
+        float x = (float) (flagOrigins[0].x + flagOrigins[1].x + flagOrigins[2].x) / 3;
+        float y = (float) (flagOrigins[0].y + flagOrigins[1].y + flagOrigins[2].y) / 3;
+        int mapSizeX = rc.getMapWidth();
+        int mapSizeY = rc.getMapHeight();
+        //if x is to the right of the middle, desired x will be equal to mapsize X - else, 0
+        if(x > (float) mapSizeX / 2){
+            x = mapSizeX-1;
+        }
+        else{
+            x = 0;
+        }
+        // see above, but for y
+        if(y > (float)mapSizeY / 2){
+          y = mapSizeY-1;
+        }
+        else{
+            y = 0;
+        }
+        int[] coords = {(int)x, (int)y};
+        return coords;
     }
 
 }
