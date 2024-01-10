@@ -2,6 +2,7 @@ package Version1Center;
 
 import battlecode.common.*;
 
+import javax.swing.*;
 import java.awt.*;
 import java.util.*;
 
@@ -27,6 +28,8 @@ public strictfp class RobotPlayer {
     static boolean flagPlacer = false;
     //used for flagPlacer to target where they would like to place their flag
     static int[] flagDestination;
+
+    static final int BombFrequency = 5; //number of turns between defensive builders trying to place a mine
 
     /**
      * A random number generator.
@@ -255,11 +258,11 @@ public strictfp class RobotPlayer {
         //Go to flag from array
 
 
-        if(DistanceFromNearestFlag(rc.getLocation(),rc)>6/*&&code to make them go somewhere else at a certain point*/){
+        if(DistanceFromNearestFlag(rc.getLocation(),rc)>6){
             //URAV PATHFINDING
 
         }
-        else {//Dig water around the flag
+        else if(true)/*conditional to make them stop and do something else)*/  {//Dig water around the flag
             FlagInfo[] BreadLocation = rc.senseNearbyFlags(GameConstants.VISION_RADIUS_SQUARED);
             if (BreadLocation.length != 0) {
                 MapInfo[] actionableTiles = rc.senseNearbyMapInfos(2);
@@ -274,6 +277,42 @@ public strictfp class RobotPlayer {
             }else { //builder can't do any moves on it's actionble tiles so it needs to move
                 //Urav Pathfinding towards dead center of map (Away from the corner)
             }
+        }else{
+            //Find Average value of all nearby friendlys and walk away from them
+            RobotInfo[] NearbyFriendlys = rc.senseNearbyRobots(GameConstants.VISION_RADIUS_SQUARED,rc.getTeam());
+            int x = 0;
+            int y = 0;
+            Direction d = directions[rng.nextInt(8)];
+
+            if(NearbyFriendlys.length!=0) {
+                for (RobotInfo i : NearbyFriendlys) {
+                    x += i.getLocation().x;
+                    y += i.getLocation().y;
+                }
+                x /= NearbyFriendlys.length;
+                y /= NearbyFriendlys.length;
+                MapLocation AvgOfNearbyFriends = new MapLocation((int) x, (int) y);
+                d = AvgOfNearbyFriends.directionTo(rc.getLocation()).rotateRight();
+            }
+            for(int i = 0;i<8;i++){
+                if(rc.canMove(d)) {
+                    rc.move(d);
+                    break;
+                }else{
+                   d = d.rotateLeft();
+                }
+            }
+
+            if(rc.getRoundNum()%BombFrequency==0){
+                MapLocation[] ActionableTiles = rc.getAllLocationsWithinRadiusSquared(rc.getLocation(),GameConstants.INTERACT_RADIUS_SQUARED);
+                for(MapLocation m: ActionableTiles){
+                    if(rc.canBuild(TrapType.EXPLOSIVE,m))
+                        rc.build(TrapType.EXPLOSIVE,m);//Don't break because they can place two bombs/turn
+
+                }
+            }
+
+
         }
     }
 
