@@ -35,6 +35,9 @@ public strictfp class RobotPlayer {
 
     static final int BombFrequency = 5; //number of turns between defensive builders trying to place a mine
 
+    //used for flag placer only
+    static ArrayList<MapLocation> prevDestinations;
+
     /**
      * A random number generator.
      * We will use this RNG to make some random moves. The Random class is provided by the java.util.Random
@@ -149,32 +152,29 @@ public strictfp class RobotPlayer {
                             Soldier.runSoldier(rc);
                             break;
                     }
+                    /* this code below is for flag movement, which we no longer do
                     //if spawn on the flag, pick it up and try to get it to the best corner
                     if (rc.canPickupFlag(rc.getLocation()) && rc.getRoundNum() <= 2)
                     {
                         rc.pickupFlag(rc.getLocation());
                         flagPlacer = true;
                         flagDestination = calculateFlagDestination(rc);
+                        prevDestinations.add(flagDestination);
                     }
                     //runs a turn trying to place the flag or find a good place to do so
                     if(flagPlacer){
-                        FlagInfo[] nearbyFlags = rc.senseNearbyFlags(-1);
-                        for(FlagInfo flag : nearbyFlags){
-                            if(flag.getLocation() == rc.getLocation())
-                                continue;
-                            if(flag.getLocation() == flagDestination || (rc.canSenseLocation(flagDestination) && rc.senseLegalStartingFlagPlacement(flagDestination))){
-
-                            }
+                        //if not a legal place, try other places
+                        if(rc.canSenseLocation(flagDestination) && !rc.senseLegalStartingFlagPlacement(flagDestination)){
+                            flagDestination = findNextBestFlagDestination(rc, flagDestination, prevDestinations);
                         }
-                        Direction direction = rc.getLocation().directionTo(flagDestination);
-                        if(rc.canMove(direction)){
-                            rc.move(direction);
-                        }
-                        if(Objects.equals(rc.getLocation(), flagDestination) && rc.canDropFlag(flagDestination)){
+                        Pathfinding.tryToMove(rc,flagDestination);
+                        if(Objects.equals(rc.getLocation(), flagDestination) && rc.canDropFlag(flagDestination) && rc.senseLegalStartingFlagPlacement(flagDestination)){
                             rc.dropFlag(flagDestination);
                             flagPlacer = false;
                         }
                     }
+
+                     */
                     //pickup enemy flag after setup phase ends
                     if (rc.canPickupFlag(rc.getLocation()) && rc.getRoundNum() > GameConstants.SETUP_ROUNDS){
                         rc.pickupFlag(rc.getLocation());
@@ -452,6 +452,11 @@ public strictfp class RobotPlayer {
         {
             seenLocations.put(info.getMapLocation(), info);
         }
+    }
+
+    //takes in a failed flag destination, and tries to find a good one around it - deprecated method
+    public static MapLocation findNextBestFlagDestination(RobotController rc, MapLocation currDestination, ArrayList<MapLocation> prevDestinations) throws GameActionException {
+        return new MapLocation(0, 0);
     }
 
 }
