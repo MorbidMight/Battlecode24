@@ -28,7 +28,7 @@ public strictfp class RobotPlayer {
     static HashMap<MapLocation, MapInfo> seenLocations = new HashMap<MapLocation, MapInfo>();
     static boolean flagPlacer = false;
     //used for flagPlacer to target where they would like to place their flag
-    static int[] flagDestination;
+    static MapLocation flagDestination;
 
     static final int BombFrequency = 5; //number of turns between defensive builders trying to place a mine
 
@@ -159,37 +159,16 @@ public strictfp class RobotPlayer {
                         for(FlagInfo flag : nearbyFlags){
                             if(flag.getLocation() == rc.getLocation())
                                 continue;
-                            if(flag.getLocation().x == flagDestination[0] && flag.getLocation().y == flagDestination[1]){
-                                if(flagDestination[0] == rc.getMapWidth() - 1 || flagDestination[0] == 0){
-                                    if(flagDestination[0] == 0){
-                                        flagDestination[0] = 7;
-                                    }
-                                    else{
-                                        flagDestination[0] = flagDestination[0] - 7;
-                                    }
-                                }
-                                else{
-                                    if(flagDestination[0] == 7){
-                                        flagDestination[0] = 0;
-                                    }
-                                    else{
-                                        flagDestination[0] = rc.getMapWidth()-1;
-                                    }
-                                    if(flagDestination[1] == 0){
-                                        flagDestination[1] = 7;
-                                    }
-                                    else{
-                                        flagDestination[1] = flagDestination[1] - 7;
-                                    }
-                                }
+                            if(flag.getLocation() == flagDestination || (rc.canSenseLocation(flagDestination) && rc.senseLegalStartingFlagPlacement(flagDestination))){
+
                             }
                         }
-                        Direction direction = rc.getLocation().directionTo(new MapLocation(flagDestination[0], flagDestination[1]));
+                        Direction direction = rc.getLocation().directionTo(flagDestination);
                         if(rc.canMove(direction)){
                             rc.move(direction);
                         }
-                        if(Objects.equals(rc.getLocation(), new MapLocation(flagDestination[0], flagDestination[1])) && rc.canDropFlag(new MapLocation(flagDestination[0], flagDestination[1]))){
-                            rc.dropFlag(new MapLocation(flagDestination[0], flagDestination[1]));
+                        if(Objects.equals(rc.getLocation(), flagDestination) && rc.canDropFlag(flagDestination)){
+                            rc.dropFlag(flagDestination);
                             flagPlacer = false;
                         }
                     }
@@ -259,8 +238,8 @@ public strictfp class RobotPlayer {
 
     public static int DistanceFromNearestFlag(MapLocation i,RobotController rc) throws GameActionException {
         MapLocation[] f = new MapLocation[3]; // locations of all the flags
-        int[] cornerFlag = calculateFlagDestination(rc);
-        f[0] = new MapLocation(cornerFlag[0],cornerFlag[1]);
+        MapLocation cornerFlag = calculateFlagDestination(rc);
+        f[0] = cornerFlag;
         if(f[0].x==0)
             f[1] = new MapLocation(6,0);
         else
@@ -423,7 +402,7 @@ public strictfp class RobotPlayer {
     }
 
     //takes the average of the three flag locations, and then returns the coords of the nearest corner
-    static int[] calculateFlagDestination(RobotController rc){
+    static MapLocation calculateFlagDestination(RobotController rc){
         MapLocation[] spawnLocs = rc.getAllySpawnLocations();
         MapLocation[] flagOrigins = new MapLocation[3];
         flagOrigins[0] = spawnLocs[5];
@@ -447,8 +426,7 @@ public strictfp class RobotPlayer {
         else{
             y = 0;
         }
-        int[] coords = {(int)x, (int)y};
-        return coords;
+        return new MapLocation((int)x, (int)y);
     }
 
     public static MapLocation lowestHealth(RobotInfo[] enemies){
