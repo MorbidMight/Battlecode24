@@ -283,7 +283,6 @@ public strictfp class RobotPlayer {
             int x = 0;
             int y = 0;
             Direction d = directions[rng.nextInt(8)];
-
             if(NearbyFriendlys.length!=0) {
                 for (RobotInfo i : NearbyFriendlys) {
                     x += i.getLocation().x;
@@ -302,17 +301,13 @@ public strictfp class RobotPlayer {
                    d = d.rotateLeft();
                 }
             }
-
             if(rc.getRoundNum()%BombFrequency==0){
                 MapLocation[] ActionableTiles = rc.getAllLocationsWithinRadiusSquared(rc.getLocation(),GameConstants.INTERACT_RADIUS_SQUARED);
                 for(MapLocation m: ActionableTiles){
                     if(rc.canBuild(TrapType.EXPLOSIVE,m))
                         rc.build(TrapType.EXPLOSIVE,m);//Don't break because they can place two bombs/turn
-
                 }
             }
-
-
         }
     }
 
