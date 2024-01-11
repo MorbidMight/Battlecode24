@@ -1,8 +1,6 @@
 package Version2;
 
-import battlecode.common.GameActionException;
-import battlecode.common.MapLocation;
-import battlecode.common.RobotController;
+import battlecode.common.*;
 
 public class Utilities {
 
@@ -100,5 +98,8 @@ public class Utilities {
     {
         return new MapLocation((intLocation & 4032) >> 6, (intLocation & 63));
     }
+
+
+
 
 }

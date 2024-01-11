@@ -20,12 +20,15 @@ public strictfp class RobotPlayer {
      */
     static int turnCount = 0;
     static MapLocation[] SpawnLocations = new MapLocation[27]; //All the spawn locations. low:close to center high:away from center
-    static Direction preferredDirection = null; //For scouts it's the direction their intending to go in
+    static Direction preferredDirection = null; //For scouts, it's the direction their intending to go in
     static ArrayList<MapLocation> PlacesHaveBeen = new ArrayList<MapLocation>(); //To prevent scouts from backtracking
     static roles role;
     static final int MoatRadius = 9; //Radius of the moat squared
 
     static HashMap<MapLocation, MapInfo> seenLocations = new HashMap<MapLocation, MapInfo>();
+
+    static HashSet<MapLocation> alreadyBeen = new HashSet<>();
+
     static boolean flagPlacer = false;
     //used for flagPlacer to target where they would like to place their flag
     static int[] flagDestination;
