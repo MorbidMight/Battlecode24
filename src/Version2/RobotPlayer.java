@@ -139,19 +139,21 @@ public strictfp class RobotPlayer {
                 else{
                     updateSeenLocations(rc);
                     alreadyBeen.add(rc.getLocation());
-                    switch(role){
-                        case builder:
-                            Builder.runBuilder(rc);
-                            break;
-                        case explorer:
-                            Explorer.runExplorer(rc);
-                            break;
-                        case healer:
-                            Healer.runHealer(rc);
-                            break;
-                        case soldier:
-                            Soldier.runSoldier(rc);
-                            break;
+                    if(!rc.hasFlag()) {
+                        switch (role) {
+                            case builder:
+                                Builder.runBuilder(rc);
+                                break;
+                            case explorer:
+                                Explorer.runExplorer(rc);
+                                break;
+                            case healer:
+                                Healer.runHealer(rc);
+                                break;
+                            case soldier:
+                                Soldier.runSoldier(rc);
+                                break;
+                        }
                     }
                     /* this code below is for flag movement, which we no longer do
                     //if spawn on the flag, pick it up and try to get it to the best corner
