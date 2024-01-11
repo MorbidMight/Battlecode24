@@ -198,7 +198,7 @@ public strictfp class RobotPlayer {
                             targetLoc = spawnLocs[14];
                         }
                         Direction dir = rc.getLocation().directionTo(targetLoc);
-                        if (rc.canMove(dir)) rc.move(dir);
+                        Pathfinding.tryToMove(rc, targetLoc);
                     }
                     MoveAwayFromSpawnLocations(rc);
                     Direction dir = directions[rng.nextInt(directions.length)];
@@ -358,7 +358,7 @@ public strictfp class RobotPlayer {
         //maybe implement keeping distance
         MapLocation centerOfMap = new MapLocation(rc.getMapWidth()/2, rc.getMapHeight()/2);
         Direction directionTowardsCenter = rc.getLocation().directionTo(centerOfMap);
-        if(rc.canMove(directionTowardsCenter) && turnCount < 50)
+        if(rc.canMove(directionTowardsCenter) && turnCount >150 && turnCount < 200)
         {
             rc.move(directionTowardsCenter);
         }

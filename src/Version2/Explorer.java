@@ -21,6 +21,10 @@ public class Explorer
                 preferredDirection = Direction.SOUTHEAST;
         }
 
+        if(rc.senseNearbyCrumbs(-1).length != 0){
+            if(rc.senseMapInfo(rc.senseNearbyCrumbs(-1)[0]).isPassable())
+                Pathfinding.tryToMove(rc, rc.senseNearbyCrumbs(-1)[0]);
+        }
 
         Direction tempDir = preferredDirection;
         MapLocation[] LocationsWithCrumbs = rc.senseNearbyCrumbs(GameConstants.VISION_RADIUS_SQUARED);
