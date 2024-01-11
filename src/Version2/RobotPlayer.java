@@ -269,7 +269,7 @@ public strictfp class RobotPlayer {
         if(f[0].y==0)
             f[2] = new MapLocation(0,6);
         else
-            f[1] = new MapLocation(0,rc.getMapHeight()-7);
+            f[2] = new MapLocation(0,rc.getMapHeight()-7);
 
         int[] distancesToEach = new int[3];
         distancesToEach[0]=f[0].distanceSquaredTo(i);
