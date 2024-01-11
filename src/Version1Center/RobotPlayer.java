@@ -22,7 +22,7 @@ public strictfp class RobotPlayer {
     static Direction preferredDirection = null; //For scouts it's the direction their intending to go in
     static ArrayList<MapLocation> PlacesHaveBeen = new ArrayList<MapLocation>(); //To prevent scouts from backtracking
     static roles role;
-
+    static HashMap<MapLocation, MapInfo> seenLocations = new HashMap<MapLocation, MapInfo>();
     static boolean flagPlacer = false;
     //used for flagPlacer to target where they would like to place their flag
     static int[] flagDestination;
@@ -61,7 +61,6 @@ public strictfp class RobotPlayer {
      **/
     @SuppressWarnings("unused")
     public static void run(RobotController rc) throws GameActionException {
-
 
         while (true) {
             //changes explorers to soldiers at round 200
@@ -127,6 +126,7 @@ public strictfp class RobotPlayer {
                         }
                 }
                 else{
+                    updateSeenLocations(rc);
                     switch(role){
                         case builder:
                             runBuilder(rc);
@@ -342,12 +342,14 @@ public strictfp class RobotPlayer {
         //attack
         RobotInfo[] enemyRobots = rc.senseNearbyRobots(4, rc.getTeam().opponent());
         RobotInfo[] allyRobots = rc.senseNearbyRobots(4, rc.getTeam());
-        if (enemyRobots.length > 0){
+        if (enemyRobots.length > 0)
+        {
             MapLocation toAttack = lowestHealth(enemyRobots);
             if(rc.canAttack(toAttack))
                 rc.attack(toAttack);
         }
-        if(enemyRobots.length == 0 && allyRobots.length > 0){
+        if(enemyRobots.length == 0 && allyRobots.length > 0)
+        {
             for (RobotInfo allyRobot : allyRobots) {
                 if (rc.canHeal(allyRobot.getLocation())) {
                     rc.heal(allyRobot.getLocation());
@@ -519,6 +521,16 @@ public strictfp class RobotPlayer {
             }
         }
         return toAttack;
+    }
+
+    static void updateSeenLocations(RobotController rc)
+    {
+        MapInfo[] locations = rc.senseNearbyMapInfos();
+        //this might be inefficient maybe switch to for loop
+        for (MapInfo info: locations)
+        {
+            seenLocations.put(info.getMapLocation(), info);
+        }
     }
 
 }
