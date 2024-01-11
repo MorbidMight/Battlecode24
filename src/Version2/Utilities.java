@@ -54,13 +54,24 @@ public class Utilities {
         return ((1 << bitInArrayIndex) & readArrayValue) != 0;
     }
 
-    public static void setTaskSharedArray(RobotController rc, MapLocation mapLocation, int used, int duckType, int isComing, int arrayIndex) throws GameActionException
+    public static void setTaskSharedArray(RobotController rc, Task task, int arrayIndex) throws GameActionException
     {
-        int value = convertLocationToInt(mapLocation);
-        value = value | (used << 13);
-        value = value | (duckType << 14);
-        value = value | (isComing << 15);
+        int value = convertLocationToInt(task.location);
+        value = (value | ((task.used) ? 1: 0) << 13);
+        value = (value | ((task.duckType) ? 1: 0) << 14);
+        value = (value | ((task.isComing) ? 1: 0) << 15);
         rc.writeSharedArray(arrayIndex, value);
+    }
+
+    public static Task readTaskSharedArray(RobotController rc, int arrayIndex) throws GameActionException
+    {
+        int value = rc.readSharedArray(arrayIndex);
+        Task task = new Task();
+        task.location = convertIntToLocation(value & 4095);
+        task.used = (value & 8192) != 0;
+        task.duckType = (value & 16384) != 0;
+        task.isComing = (value & 32768) != 0;
+        return task;
     }
 
     public static void storeLocationAtBitIndexShared(MapLocation mapLocation, int bitIndex)
