@@ -1,4 +1,4 @@
-package Version1Center;
+package Version2;
 
 import battlecode.common.*;
 
@@ -134,20 +134,21 @@ public strictfp class RobotPlayer {
                     updateSeenLocations(rc);
                     switch(role){
                         case builder:
-                            runBuilder(rc);
+                            Builder.runBuilder(rc);
                             break;
                         case explorer:
-                            runExplorer(rc);
+                            Explorer.runExplorer(rc);
                             break;
                         case healer:
-                            runHealer(rc);
+                            Healer.runHealer(rc);
                             break;
                         case soldier:
-                            runSoldier(rc);
+                            Soldier.runSoldier(rc);
                             break;
                     }
                     //if spawn on the flag, pick it up and try to get it to the best corner
-                    if (rc.canPickupFlag(rc.getLocation()) && rc.getRoundNum() <= 2){
+                    if (rc.canPickupFlag(rc.getLocation()) && rc.getRoundNum() <= 2)
+                    {
                         rc.pickupFlag(rc.getLocation());
                         flagPlacer = true;
                         flagDestination = calculateFlagDestination(rc);
@@ -255,64 +256,8 @@ public strictfp class RobotPlayer {
         // Your code should never reach here (unless it's intentional)! Self-destruction imminent...
     }
 
-    public static void runBuilder(RobotController rc) throws GameActionException{
-        //Go to flag from array
 
-
-        if(DistanceFromNearestFlag(rc.getLocation(),rc)>6){
-            //URAV PATHFINDING
-
-        }
-        else if(true)/*conditional to make them stop and do something else)*/  {//Dig water around the flag
-            FlagInfo[] BreadLocation = rc.senseNearbyFlags(GameConstants.VISION_RADIUS_SQUARED);
-            if (BreadLocation.length != 0) {
-                MapInfo[] actionableTiles = rc.senseNearbyMapInfos(2);
-
-                for (MapInfo i : actionableTiles) {
-                    if (DistanceFromNearestFlag(i.getMapLocation(), rc) <= MoatRadius && rc.canDig(i.getMapLocation())) {
-                        rc.dig(i.getMapLocation());
-                    } else if (DistanceFromNearestFlag(i.getMapLocation(), rc) == MoatRadius + 1 && rc.canBuild(TrapType.WATER, i.getMapLocation())) {
-                        rc.build(TrapType.WATER, i.getMapLocation());
-                    }
-                }
-            }else { //builder can't do any moves on it's actionble tiles so it needs to move
-                //Urav Pathfinding towards dead center of map (Away from the corner)
-            }
-        }else{
-            //Find Average value of all nearby friendlys and walk away from them
-            RobotInfo[] NearbyFriendlys = rc.senseNearbyRobots(GameConstants.VISION_RADIUS_SQUARED,rc.getTeam());
-            int x = 0;
-            int y = 0;
-            Direction d = directions[rng.nextInt(8)];
-            if(NearbyFriendlys.length!=0) {
-                for (RobotInfo i : NearbyFriendlys) {
-                    x += i.getLocation().x;
-                    y += i.getLocation().y;
-                }
-                x /= NearbyFriendlys.length;
-                y /= NearbyFriendlys.length;
-                MapLocation AvgOfNearbyFriends = new MapLocation((int) x, (int) y);
-                d = AvgOfNearbyFriends.directionTo(rc.getLocation()).rotateRight();
-            }
-            for(int i = 0;i<8;i++){
-                if(rc.canMove(d)) {
-                    rc.move(d);
-                    break;
-                }else{
-                   d = d.rotateLeft();
-                }
-            }
-            if(rc.getRoundNum()%BombFrequency==0){
-                MapLocation[] ActionableTiles = rc.getAllLocationsWithinRadiusSquared(rc.getLocation(),GameConstants.INTERACT_RADIUS_SQUARED);
-                for(MapLocation m: ActionableTiles){
-                    if(rc.canBuild(TrapType.EXPLOSIVE,m))
-                        rc.build(TrapType.EXPLOSIVE,m);//Don't break because they can place two bombs/turn
-                }
-            }
-        }
-    }
-
-    private static int DistanceFromNearestFlag(MapLocation i,RobotController rc) throws GameActionException {
+    public static int DistanceFromNearestFlag(MapLocation i,RobotController rc) throws GameActionException {
         MapLocation[] f = new MapLocation[3]; // locations of all the flags
         int[] cornerFlag = calculateFlagDestination(rc);
         f[0] = new MapLocation(cornerFlag[0],cornerFlag[1]);
@@ -332,10 +277,6 @@ public strictfp class RobotPlayer {
         distancesToEach[2]=f[2].distanceSquaredTo(i);
         int temp =  Math.min(distancesToEach[0],distancesToEach[1]);
         return Math.min(temp,distancesToEach[2]);
-
-    }
-
-    public static void runHealer(RobotController rc) throws GameActionException{
 
     }
 
@@ -398,109 +339,6 @@ public strictfp class RobotPlayer {
         }
         else{
             return null;
-        }
-    }
-    public static void runSoldier(RobotController rc) throws GameActionException{
-        boolean hasDirection = false;
-        //blank declaration, will be set by something
-        Direction dir = Direction.CENTER;
-        //if we have an enemy flag, bring it to the closest area
-        MapLocation closestSpawnLoc = findClosestSpawnLocation(rc);
-        if(closestSpawnLoc != null){
-            dir = rc.getLocation().directionTo(closestSpawnLoc);
-            if(rc.canMove(dir)) {
-                rc.move(dir);
-                hasDirection = true;
-            }
-        }
-        if(!hasDirection) {
-            //if we can see a flag, go towards it
-            MapLocation closestFlagLoc = findClosestSpawnLocation(rc);
-            if(closestFlagLoc != null){
-                dir = rc.getLocation().directionTo(closestFlagLoc);
-                hasDirection = true;
-            }
-        }
-        if(!hasDirection) {
-            //finally, find the closest enemy broadcasted flag
-            MapLocation closestBroadcasted = findClosestBroadcastFlags(rc);
-            if(closestBroadcasted != null){
-                dir = rc.getLocation().directionTo(closestBroadcasted);
-                hasDirection = true;
-            }
-        }
-        if(hasDirection && rc.senseNearbyRobots(-1, rc.getTeam()).length > rc.senseNearbyRobots(-1, rc.getTeam().opponent()).length){
-            if(rc.canMove(dir))
-                rc.move(dir);
-        }
-        else if(hasDirection){
-            if(rc.canMove(dir.opposite()))
-                rc.move(dir.opposite());
-        }
-        //pickup enemy flag if we can
-        if (rc.canPickupFlag(rc.getLocation()) && rc.getRoundNum() > GameConstants.SETUP_ROUNDS){
-            rc.pickupFlag(rc.getLocation());
-        }
-        //attack
-        RobotInfo[] enemyRobots = rc.senseNearbyRobots(4, rc.getTeam().opponent());
-        RobotInfo[] allyRobots = rc.senseNearbyRobots(4, rc.getTeam());
-        if (enemyRobots.length > 0)
-        {
-            MapLocation toAttack = lowestHealth(enemyRobots);
-            if(rc.canAttack(toAttack))
-                rc.attack(toAttack);
-        }
-        if(enemyRobots.length == 0 && allyRobots.length > 0)
-        {
-            for (RobotInfo allyRobot : allyRobots) {
-                if (rc.canHeal(allyRobot.getLocation())) {
-                    rc.heal(allyRobot.getLocation());
-                    break;
-                }
-            }
-        }
-    }
-
-    public static void runExplorer(RobotController rc) throws GameActionException{
-        int cornerToGoTo = rc.getID()%4; //0 is bottom left, increases clockwise
-        PlacesHaveBeen.add(rc.getLocation());
-        if (turnCount < 5) {
-            if (cornerToGoTo == 0)
-                preferredDirection = Direction.SOUTHWEST;
-            else if (cornerToGoTo == 1)
-                preferredDirection = Direction.NORTHWEST;
-            else if (cornerToGoTo == 2)
-                preferredDirection = Direction.NORTHEAST;
-            else if (cornerToGoTo == 3)
-                preferredDirection = Direction.SOUTHEAST;
-        }
-
-
-        Direction tempDir = preferredDirection;
-        MapLocation[] LocationsWithCrumbs = rc.senseNearbyCrumbs(GameConstants.VISION_RADIUS_SQUARED);
-        if(LocationsWithCrumbs.length!=0){
-            tempDir = rc.getLocation().directionTo(LocationsWithCrumbs[0]);
-        }
-        boolean MovedThisTurn = false;
-        outerLoop:
-        for(int i = 0; i<8;i++){
-            for(MapLocation L:PlacesHaveBeen){
-                if(L.equals(rc.getLocation().add(tempDir)))
-                    System.out.println(L);
-                    continue outerLoop;
-            }
-            if(rc.canMove(tempDir)){
-                rc.move(tempDir);
-                MovedThisTurn = true;
-                break;
-            }
-            tempDir = tempDir.rotateLeft();
-        }
-
-        if(!MovedThisTurn){//unable to move anymmore
-            preferredDirection = preferredDirection.rotateLeft();
-            preferredDirection = preferredDirection.rotateLeft();
-            preferredDirection = preferredDirection.rotateLeft();
         }
     }
 
