@@ -7,6 +7,7 @@ import static Version2.RobotPlayer.*;
 public class Explorer
 {
     public static void runExplorer(RobotController rc) throws GameActionException {
+        preferredDirection = Direction.NORTH;
         int cornerToGoTo = rc.getID()%4; //0 is bottom left, increases clockwise
         PlacesHaveBeen.add(rc.getLocation());
         if (turnCount < 5) {
@@ -16,7 +17,7 @@ public class Explorer
                 preferredDirection = Direction.NORTHWEST;
             else if (cornerToGoTo == 2)
                 preferredDirection = Direction.NORTHEAST;
-            else if (cornerToGoTo == 3)
+            else
                 preferredDirection = Direction.SOUTHEAST;
         }
 
