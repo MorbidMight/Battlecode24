@@ -138,6 +138,7 @@ public strictfp class RobotPlayer {
                 }
                 else{
                     updateSeenLocations(rc);
+                    alreadyBeen.add(rc.getLocation());
                     switch(role){
                         case builder:
                             Builder.runBuilder(rc);

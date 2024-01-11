@@ -61,6 +61,12 @@ public class Utilities {
         rc.writeSharedArray(arrayIndex, value);
     }
 
+    /*public static void addTask(RobotController rc, Task task) throws GameActionException
+    {
+
+        rc.writeSharedArray(arrayIndex, (((convertLocationToInt(task.location) | ((task.used) ? 1: 0) << 13) | ((task.duckType) ? 1: 0) << 14) | ((task.isComing) ? 1: 0) << 15));
+    }*/
+
     public static Task readTaskSharedArray(RobotController rc, int arrayIndex) throws GameActionException
     {
         int value = rc.readSharedArray(arrayIndex);
@@ -97,6 +103,21 @@ public class Utilities {
     public static MapLocation convertIntToLocation(int intLocation)
     {
         return new MapLocation((intLocation & 4032) >> 6, (intLocation & 63));
+    }
+
+    public static int openTaskIndex(RobotController rc, boolean duckType) throws GameActionException {
+        //builders have tasks 6-28, soldiers have tasks 28 - 51
+        int index = duckType ? 6 : 28;
+        int finalIndex = duckType ? 28 : 51;
+        //eventually - codegen into list of instructions
+        for(int i = index; i < finalIndex ; i++)
+        {
+            if(!Utilities.readBitSharedArray(rc, index * 16 + 12))
+            {
+                return i;
+            }
+        }
+        return -1;
     }
 
 

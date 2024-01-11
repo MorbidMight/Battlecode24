@@ -9,9 +9,9 @@ public class Task
     public boolean duckType;
     public boolean isComing;
 
-    public Task(MapLocation location, boolean used, boolean duckType, boolean isComing) {
+    public Task(MapLocation location, boolean taskActive, boolean duckType, boolean isComing) {
         this.location = location;
-        this.used = used;
+        this.used = taskActive;
         this.duckType = duckType;
         this.isComing = isComing;
     }
