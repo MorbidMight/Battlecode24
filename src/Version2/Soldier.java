@@ -42,7 +42,7 @@ public class Soldier
                             break;
                         }
                     }
-
+                    Pathfinding.tryToMove(rc, Utilities.newGetClosestEnemy(rc));
                 }
             }
             //enemy in view
