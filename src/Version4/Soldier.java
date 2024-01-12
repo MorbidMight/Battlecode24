@@ -29,6 +29,11 @@ public class Soldier
         RobotInfo[] enemyRobotsAttackRange = rc.senseNearbyRobots(GameConstants.ATTACK_RADIUS_SQUARED, rc.getTeam().opponent());
         RobotInfo[] allyRobots = rc.senseNearbyRobots(GameConstants.VISION_RADIUS_SQUARED, rc.getTeam());
         RobotInfo[] allyRobotsHealRange = rc.senseNearbyRobots(GameConstants.HEAL_RADIUS_SQUARED, rc.getTeam());
+        RobotInfo toHeal = bestHeal(rc, allyRobotsHealRange);
+        //immediately try to heal if they have a flag
+        if(toHeal != null && toHeal.hasFlag() && rc.canHeal(toHeal.getLocation())){
+            rc.heal(toHeal.getLocation());
+        }
         //no enemy in view
         if (enemyRobots.length == 0) {
             //Task System/ Broadcast locations
@@ -41,11 +46,8 @@ public class Soldier
             {
                 rc.setIndicatorString("trying to heal");
                 //Heal Allies if possible
-                for (RobotInfo allyRobot : allyRobots) {
-                    if (rc.canHeal(allyRobot.getLocation())) {
-                        rc.heal(allyRobot.getLocation());
-                        break;
-                    }
+                if(toHeal != null && rc.canHeal(toHeal.getLocation())){
+                    rc.heal(toHeal.getLocation());
                 }
                 Pathfinding.tryToMove(rc, Utilities.newGetClosestEnemy(rc));
             }
@@ -76,11 +78,8 @@ public class Soldier
                     //Can Heal
                     if (allyRobotsHealRange.length > 0) {
                         rc.setIndicatorString("try to heal allies if no enemies to attack");
-                        for (RobotInfo allyRobot : allyRobots) {
-                            if (rc.canHeal(allyRobot.getLocation())) {
-                                rc.heal(allyRobot.getLocation());
-                                break;
-                            }
+                        if(toHeal != null && rc.canHeal(toHeal.getLocation())){
+                            rc.heal(toHeal.getLocation());
                         }
                     }
                 }
@@ -96,6 +95,32 @@ public class Soldier
                     rc.move(rc.getLocation().directionTo(toAttack));
             }
         }
+
+
+        }
+        //returns the lowest health nearby ally
+    //returns null if empty array
+    public static RobotInfo bestHeal(RobotController rc, RobotInfo[] possibleHeals) {
+        if(possibleHeals.length == 0){
+            return null;
+        }
+        int lowHealth = possibleHeals[0].health;
+        int lowIndex = 0;
+        if(possibleHeals[0].hasFlag()){
+            return possibleHeals[0];
+        }
+        for(int i = 1; i < possibleHeals.length; i++){
+            if(possibleHeals[i].hasFlag()){
+                return possibleHeals[i];
+            }
+            if(possibleHeals[i].health < lowHealth){
+                lowIndex = i;
+                lowHealth = possibleHeals[i].getHealth();
+            }
+        }
+        return possibleHeals[lowIndex];
+    }
+
         /*
         if (enemyRobots.length > allyRobots.length)
         {
@@ -113,5 +138,4 @@ public class Soldier
             }
         }
          */
-    }
 }
