@@ -9,105 +9,74 @@ public class Soldier
     public static void runSoldier(RobotController rc) throws GameActionException {
         boolean hasDirection = false;
         //blank declaration, will be set by something
-        Direction dir =  Pathfinding.basicPathfinding(rc, new MapLocation(rc.getMapWidth()/2, rc.getMapHeight()/2), false);
+        Direction dir = Pathfinding.basicPathfinding(rc, new MapLocation(rc.getMapWidth() / 2, rc.getMapHeight() / 2), false);
         //if we have an enemy flag, bring it to the closest area
         MapLocation closestSpawnLoc = findClosestSpawnLocation(rc);
-        if(closestSpawnLoc != null){
+        if (closestSpawnLoc != null) {
             dir = rc.getLocation().directionTo(closestSpawnLoc);
-            if(rc.canMove(dir)) {
+            if (rc.canMove(dir)) {
                 rc.move(dir);
                 hasDirection = true;
             }
-        }
-        if(!hasDirection) {
-            //if we can see a flag, go towards it
-            MapLocation closestFlagLoc = findClosestSpawnLocation(rc);
-            if(closestFlagLoc != null){
-                dir = rc.getLocation().directionTo(closestFlagLoc);
-                hasDirection = true;
-            }
-        }
-        if(!hasDirection) {
-            //finally, find the closest enemy broadcasted flag
-            MapLocation closestBroadcasted = findClosestBroadcastFlags(rc);
-            if(closestBroadcasted != null){
-                dir = rc.getLocation().directionTo(closestBroadcasted);
-                hasDirection = true;
-            }
-        }
-        if(hasDirection && rc.senseNearbyRobots(-1, rc.getTeam()).length > rc.senseNearbyRobots(-1, rc.getTeam().opponent()).length){
-            if(rc.canMove(dir))
-                rc.move(dir);
-        }
-        else if(hasDirection){
-            if(rc.canMove(dir.opposite()))
-                rc.move(dir.opposite());
-        }
-        //pickup enemy flag if we can
-        if (rc.canPickupFlag(rc.getLocation()) && rc.getRoundNum() > GameConstants.SETUP_ROUNDS){
-            rc.pickupFlag(rc.getLocation());
-        }
-        //attack
-        RobotInfo[] enemyRobots = rc.senseNearbyRobots(GameConstants.VISION_RADIUS_SQUARED, rc.getTeam().opponent());
-        RobotInfo[] enemyRobotsAttackRange = rc.senseNearbyRobots(GameConstants.ATTACK_RADIUS_SQUARED, rc.getTeam().opponent());
-        RobotInfo[] allyRobots = rc.senseNearbyRobots(GameConstants.VISION_RADIUS_SQUARED, rc.getTeam());
-        RobotInfo[] allyRobotsHealRange = rc.senseNearbyRobots(GameConstants.HEAL_RADIUS_SQUARED, rc.getTeam());
-        //no enemy in view
-        if (enemyRobots.length == 0)
-        {
-            //Task System/ Broadcast locations
-            if(allyRobots.length == 0)
-            {
-                MapLocation closestBroadcasted = findClosestBroadcastFlags(rc);
-                if(closestBroadcasted != null) {
-                    Pathfinding.tryToMove(rc, closestBroadcasted);
-                }
-            }
-            else
-            {
-                //Heal Allies if possible
-                for (RobotInfo allyRobot : allyRobots) {
-                    if (rc.canHeal(allyRobot.getLocation())) {
-                        rc.heal(allyRobot.getLocation());
-                        break;
-                    }
-                }
 
+            //pickup enemy flag if we can
+            if (rc.canPickupFlag(rc.getLocation()) && rc.getRoundNum() > GameConstants.SETUP_ROUNDS) {
+                rc.pickupFlag(rc.getLocation());
             }
-        }
-        //enemy in view
-        else {
-            //More Enemies
-            if(enemyRobots.length > allyRobots.length) {
-                //Can Attack
-                MapLocation toAttack = lowestHealth(enemyRobotsAttackRange);
-                if(toAttack != null && rc.canAttack(toAttack))
-                    rc.attack(toAttack);
-                //Can't Attack
-                else
-                {
-                    //Move
-                    if(allyRobotsHealRange.length == 0)
-                    {
-                        //Task System/ Broadcast locations
-                        MapLocation closestBroadcasted = findClosestBroadcastFlags(rc);
-                        if(closestBroadcasted != null) {
-                            Pathfinding.tryToMove(rc, closestBroadcasted);
+            //attack
+            RobotInfo[] enemyRobots = rc.senseNearbyRobots(GameConstants.VISION_RADIUS_SQUARED, rc.getTeam().opponent());
+            RobotInfo[] enemyRobotsAttackRange = rc.senseNearbyRobots(GameConstants.ATTACK_RADIUS_SQUARED, rc.getTeam().opponent());
+            RobotInfo[] allyRobots = rc.senseNearbyRobots(GameConstants.VISION_RADIUS_SQUARED, rc.getTeam());
+            RobotInfo[] allyRobotsHealRange = rc.senseNearbyRobots(GameConstants.HEAL_RADIUS_SQUARED, rc.getTeam());
+            //no enemy in view
+            if (enemyRobots.length == 0) {
+                //Task System/ Broadcast locations
+                if (allyRobots.length == 0) {
+                    MapLocation closestBroadcasted = findClosestBroadcastFlags(rc);
+                    if (closestBroadcasted != null) {
+                        Pathfinding.tryToMove(rc, closestBroadcasted);
+                    }
+                } else {
+                    //Heal Allies if possible
+                    for (RobotInfo allyRobot : allyRobots) {
+                        if (rc.canHeal(allyRobot.getLocation())) {
+                            rc.heal(allyRobot.getLocation());
+                            break;
                         }
                     }
-                    //Can Heal
-                    else
-                    {
-                        for (RobotInfo allyRobot : allyRobots) {
-                            if (rc.canHeal(allyRobot.getLocation())) {
-                                rc.heal(allyRobot.getLocation());
-                                break;
+
+                }
+            }
+            //enemy in view
+            else {
+                //More Enemies
+                if (enemyRobots.length < allyRobots.length) {
+                    //Can Attack
+                    MapLocation toAttack = lowestHealth(enemyRobotsAttackRange);
+                    if (toAttack != null && rc.canAttack(toAttack))
+                        rc.attack(toAttack);
+                        //Can't Attack
+                    else {
+                        //Move
+                        if (allyRobotsHealRange.length == 0) {
+                            //Task System/ Broadcast locations
+                            MapLocation closestBroadcasted = findClosestBroadcastFlags(rc);
+                            if (closestBroadcasted != null) {
+                                Pathfinding.tryToMove(rc, closestBroadcasted);
+                            }
+                        }
+                        //Can Heal
+                        if (allyRobotsHealRange.length > 0) {
+                            for (RobotInfo allyRobot : allyRobots) {
+                                if (rc.canHeal(allyRobot.getLocation())) {
+                                    rc.heal(allyRobot.getLocation());
+                                    break;
+                                }
                             }
                         }
                     }
                 }
             }
-        }
         /*
         if (enemyRobots.length > allyRobots.length)
         {
@@ -125,5 +94,6 @@ public class Soldier
             }
         }
          */
+        }
     }
 }
