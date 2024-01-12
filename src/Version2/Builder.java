@@ -53,7 +53,8 @@ public class Builder
                 }
             }
 
-            if(rc.getRoundNum() % BombFrequency==0){
+            if(rc.getRoundNum() % BombFrequency==0)
+            {
                 MapLocation[] ActionableTiles = rc.getAllLocationsWithinRadiusSquared(rc.getLocation(),GameConstants.INTERACT_RADIUS_SQUARED);
                 for(MapLocation m: ActionableTiles){
                     if(rc.canBuild(TrapType.EXPLOSIVE,m))

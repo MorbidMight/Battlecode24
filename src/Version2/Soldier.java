@@ -42,14 +42,13 @@ public class Soldier
                             break;
                         }
                     }
+                    Pathfinding.tryToMove(rc, Utilities.newGetClosestEnemy(rc));
                 }
-
-
             }
             //enemy in view
             else {
                 //More Enemies
-                if (enemyRobots.length > allyRobots.length) {
+                if (enemyRobots.length < allyRobots.length) {
                     //Can Attack
                     MapLocation toAttack = lowestHealth(enemyRobotsAttackRange);
                     if (toAttack != null && rc.canAttack(toAttack))

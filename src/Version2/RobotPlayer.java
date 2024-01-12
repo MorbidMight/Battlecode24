@@ -155,7 +155,6 @@ public strictfp class RobotPlayer {
                     }
                     updateSeenLocations(rc);
                     alreadyBeen.add(rc.getLocation());
-
                     if(!rc.hasFlag()) {
                         switch (role) {
                             case builder:
@@ -169,6 +168,7 @@ public strictfp class RobotPlayer {
                                 break;
                             case soldier:
                                 Soldier.runSoldier(rc);
+                                rc.setIndicatorString("soldier");
                                 break;
                         }
                     }
@@ -195,6 +195,12 @@ public strictfp class RobotPlayer {
                     }
 
                      */
+                    RobotInfo[] enemyRobots = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
+                    Utilities.recordEnemies(rc, enemyRobots);
+                    Utilities.clearObsoleteEnemies(rc);
+
+
+                    System.out.println(Utilities.newGetClosestEnemy(rc));
                     //pickup enemy flag after setup phase ends
                     if (rc.canPickupFlag(rc.getLocation()) && rc.getRoundNum() > GameConstants.SETUP_ROUNDS){
                         rc.pickupFlag(rc.getLocation());
@@ -223,7 +229,6 @@ public strictfp class RobotPlayer {
                     MoveAwayFromSpawnLocations(rc);
                     Direction dir = directions[rng.nextInt(directions.length)];
                     MapLocation nextLoc = rc.getLocation().add(dir);
-                    RobotInfo[] enemyRobots = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
                     if (enemyRobots.length > 0 && rc.canAttack(enemyRobots[0].location)){
                         rc.attack(enemyRobots[0].location);
                     }
@@ -279,7 +284,6 @@ public strictfp class RobotPlayer {
         distancesToEach[2]=f[2].distanceSquaredTo(i);
         int temp =  Math.min(distancesToEach[0],distancesToEach[1]);
         return Math.min(temp,distancesToEach[2]);
-
     }
 
     //returns closest spawn location
