@@ -94,7 +94,7 @@ public class Pathfinding
         if (newRoute) {
             resetBasicPathfinding();
         }
-        if(RobotPlayer.alreadyBeen.size() >= 5)
+        if(RobotPlayer.alreadyBeen.size() >= 8)
             resetBasicPathfinding();
         //get current location of the robot
         MapLocation currentLocation = rc.getLocation();
