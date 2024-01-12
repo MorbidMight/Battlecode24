@@ -10,9 +10,9 @@ emojiMap = {
     'Error': ':heavy_exclamation_mark:'
 }
 errors = []
-currentBot = 'Version1'
+currentBot = 'Version4'
 
-bots = ['examplefuncsplayer']
+bots = ['examplefuncsplayer', 'Version3', 'Version2', 'Version1', 'Version1Center']
 botsSet = set(bots)
 # maps = ['maptestsmall', 'eckleburg', 'intersection', 'Barrier', 'BarrierWithLead', 'Circles', 'CloseArchons', 'colosseum', 'fortress', 'jellyfish', 'MoveYourArchons', 'MultiplePortableArchonsMoreLead', 'nottestsmall', 'progress', 'rivers', 'sandwich', 'squer', 'uncomfortable', 'underground', 'valley', 'Z']
 maps = ['DefaultSmall', 'DefaultMedium', 'DefaultLarge', 'DefaultHuge']
