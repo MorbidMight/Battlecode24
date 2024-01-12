@@ -436,6 +436,8 @@ public strictfp class RobotPlayer {
     }
 
     public static MapLocation lowestHealth(RobotInfo[] enemies){
+        if(enemies.length == 0)
+            return null;
         int lowHealth = enemies[0].health;
         MapLocation toAttack = enemies[0].getLocation();
         for(RobotInfo enemy : enemies){

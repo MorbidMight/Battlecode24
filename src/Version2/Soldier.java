@@ -81,7 +81,7 @@ public class Soldier
             if(enemyRobots.length > allyRobots.length) {
                 //Can Attack
                 MapLocation toAttack = lowestHealth(enemyRobotsAttackRange);
-                if(rc.canAttack(toAttack))
+                if(toAttack != null && rc.canAttack(toAttack))
                     rc.attack(toAttack);
                 //Can't Attack
                 else
