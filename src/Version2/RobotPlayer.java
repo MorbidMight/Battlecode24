@@ -48,16 +48,18 @@ public strictfp class RobotPlayer {
      */
     static final Random rng = new Random(6147);
 
-    /** Array containing all the possible movement directions. */
+    /**
+     * Array containing all the possible movement directions.
+     */
     static final Direction[] directions = {
-        Direction.NORTH,
-        Direction.NORTHEAST,
-        Direction.EAST,
-        Direction.SOUTHEAST,
-        Direction.SOUTH,
-        Direction.SOUTHWEST,
-        Direction.WEST,
-        Direction.NORTHWEST,
+            Direction.NORTH,
+            Direction.NORTHEAST,
+            Direction.EAST,
+            Direction.SOUTHEAST,
+            Direction.SOUTH,
+            Direction.SOUTHWEST,
+            Direction.WEST,
+            Direction.NORTHWEST,
     };
 
     static enum roles {
@@ -69,22 +71,21 @@ public strictfp class RobotPlayer {
      * run() is the method that is called when a robot is instantiated in the Battlecode world.
      * It is like the main function for your robot. If this method returns, the robot dies!
      *
-     * @param rc  The RobotController object. You use it to perform actions from this robot, and to get
-     *            information on its current status. Essentially your portal to interacting with the world.
+     * @param rc The RobotController object. You use it to perform actions from this robot, and to get
+     *           information on its current status. Essentially your portal to interacting with the world.
      **/
     @SuppressWarnings("unused")
     public static void run(RobotController rc) throws GameActionException {
 
         while (true) {
             //changes explorers to soldiers at round 200
-            if(rc.getRoundNum() == GameConstants.SETUP_ROUNDS && role == roles.explorer){
+            if (rc.getRoundNum() == GameConstants.SETUP_ROUNDS && role == roles.explorer) {
                 role = roles.soldier;
             }
             //if can buy upgrade, buy an upgrade
-            if(rc.canBuyGlobal(GlobalUpgrade.ACTION)){
+            if (rc.canBuyGlobal(GlobalUpgrade.ACTION)) {
                 rc.buyGlobal(GlobalUpgrade.ACTION);
-            }
-            else if(rc.canBuyGlobal(GlobalUpgrade.HEALING)) {
+            } else if (rc.canBuyGlobal(GlobalUpgrade.HEALING)) {
                 rc.buyGlobal(GlobalUpgrade.HEALING);
             }
             // This code runs during the entire lifespan of the robot, which is why it is in an infinite
@@ -97,60 +98,59 @@ public strictfp class RobotPlayer {
             try {
                 // Make sure you spawn your robot in before you attempt to take any actions!
                 // Robots not spawned in do not have vision of any tiles and cannot perform any actions.
-                if(turnCount==1) {//first turn fill the spawn location into the array ranked
-                 SpawnLocations = rc.getAllySpawnLocations();
+                if (turnCount == 1) {//first turn fill the spawn location into the array ranked
+                    SpawnLocations = rc.getAllySpawnLocations();
                 }
-                if (!rc.isSpawned()){
+                if (!rc.isSpawned()) {
                     // try to spawn in every location asap
                     MapLocation[] spawnLocs = rc.getAllySpawnLocations();
                     int spawnIndex = 0;
-                    while(spawnIndex < 26 && !rc.canSpawn(spawnLocs[spawnIndex])) {
+                    while (spawnIndex < 26 && !rc.canSpawn(spawnLocs[spawnIndex])) {
                         spawnIndex++;
                     }
-                        if (rc.canSpawn(spawnLocs[spawnIndex]) && spawnIndex <= 26) {
-                            rc.spawn(spawnLocs[spawnIndex]);
-                            //if third to last bit is 0, become a soldier/explorer and figure out which bit to flip
-                            if(!Utilities.readBitSharedArray(rc, 1020)){
-                                if(rc.getRoundNum() >= 200)
-                                    role = roles.soldier;
-                                else
-                                    role = roles.explorer;
-                                if(Utilities.readBitSharedArray(rc, 1023)){
-                                    Utilities.editBitSharedArray(rc, 1023, true);
-                                }
-                                else if(Utilities.readBitSharedArray(rc, 1022)){
-                                    Utilities.editBitSharedArray(rc, 1022, true);
-                                }
-                                else if(Utilities.readBitSharedArray(rc, 1021)){
-                                    Utilities.editBitSharedArray(rc,1021, true);
-                                }
-                                else{
-                                    Utilities.editBitSharedArray(rc,1020, true);
-                                }
-                            }
-                            //become a builder, set last three bits to 0
-                            else{
-                                role = roles.builder;
-                                Utilities.editBitSharedArray(rc, 1020, false);
-                                Utilities.editBitSharedArray(rc, 1021, false);
-                                Utilities.editBitSharedArray(rc, 1022, false);
-                                Utilities.editBitSharedArray(rc, 1023, false);
+                    if (rc.canSpawn(spawnLocs[spawnIndex]) && spawnIndex <= 26) {
+                        rc.spawn(spawnLocs[spawnIndex]);
+                        if (rc.senseNearbyFlags(0).length != 0) {
+                            role = roles.builder;
+                            SittingOnFlag = true;
+                            rc.setIndicatorString("SittingOnFlag");
+                        }
+                        //if third to last bit is 0, become a soldier/explorer and figure out which bit to flip
+                        else if (!Utilities.readBitSharedArray(rc, 1020)) {
+                            if (rc.getRoundNum() >= 200)
+                                role = roles.soldier;
+                            else
+                                role = roles.explorer;
+                            if (Utilities.readBitSharedArray(rc, 1023)) {
+                                Utilities.editBitSharedArray(rc, 1023, true);
+                            } else if (Utilities.readBitSharedArray(rc, 1022)) {
+                                Utilities.editBitSharedArray(rc, 1022, true);
+                            } else if (Utilities.readBitSharedArray(rc, 1021)) {
+                                Utilities.editBitSharedArray(rc, 1021, true);
+                            } else {
+                                Utilities.editBitSharedArray(rc, 1020, true);
                             }
                         }
-                }
-                else{
+                        //become a builder, set last three bits to 0
+                        else {
+                            role = roles.builder;
+                            Utilities.editBitSharedArray(rc, 1020, false);
+                            Utilities.editBitSharedArray(rc, 1021, false);
+                            Utilities.editBitSharedArray(rc, 1022, false);
+                            Utilities.editBitSharedArray(rc, 1023, false);
+                        }
+                    }
+                } else {
                     //write our own flag locations to shared array at start
-                    if(turnCount == 2 && rc.senseNearbyFlags(-1)[0].getLocation().equals(rc.getLocation())){
+                    if (turnCount == 2 && rc.senseNearbyFlags(-1)[0].getLocation().equals(rc.getLocation())) {
                         int toPush = Utilities.convertLocationToInt(rc.getLocation());
-                        if(rc.readSharedArray(0) == 0){
+                        if (rc.readSharedArray(0) == 0) {
                             rc.writeSharedArray(0, toPush);
                             rc.setIndicatorString("look at me!!");
-                        }
-                        else if(rc.readSharedArray(1) == 0 && rc.readSharedArray(0) != toPush){
+                        } else if (rc.readSharedArray(1) == 0 && rc.readSharedArray(0) != toPush) {
                             rc.writeSharedArray(1, toPush);
                             rc.setIndicatorString("look at me!!");
-                        }
-                        else if(rc.readSharedArray(2) == 0 && rc.readSharedArray(1) != toPush){
+                        } else if (rc.readSharedArray(2) == 0 && rc.readSharedArray(1) != toPush) {
                             rc.writeSharedArray(2, toPush);
                             rc.setIndicatorString("look at me!!");
                         }
@@ -158,7 +158,7 @@ public strictfp class RobotPlayer {
                     updateSeenLocations(rc);
                     alreadyBeen.add(rc.getLocation());
 
-                    if(!rc.hasFlag()) {
+                    if (!rc.hasFlag()) {
                         switch (role) {
                             case builder:
                                 Builder.runBuilder(rc);
@@ -198,25 +198,23 @@ public strictfp class RobotPlayer {
 
                      */
                     //pickup enemy flag after setup phase ends
-                    if (rc.canPickupFlag(rc.getLocation()) && rc.getRoundNum() > GameConstants.SETUP_ROUNDS){
+                    if (rc.canPickupFlag(rc.getLocation()) && rc.getRoundNum() > GameConstants.SETUP_ROUNDS) {
                         rc.pickupFlag(rc.getLocation());
                     }
                     //if we have an enemy flag, bring it to the closest area
-                    if (rc.hasFlag() && rc.getRoundNum() >= GameConstants.SETUP_ROUNDS){
+                    if (rc.hasFlag() && rc.getRoundNum() >= GameConstants.SETUP_ROUNDS) {
                         MapLocation[] spawnLocs = rc.getAllySpawnLocations();
                         MapLocation targetLoc;
                         int distance_1 = rc.getLocation().distanceSquaredTo(spawnLocs[5]);
                         int distance_2 = rc.getLocation().distanceSquaredTo(spawnLocs[14]);
                         int distance_3 = rc.getLocation().distanceSquaredTo(spawnLocs[23]);
-                        if(distance_1 < distance_2){
-                            if(distance_1 < distance_3){
+                        if (distance_1 < distance_2) {
+                            if (distance_1 < distance_3) {
                                 targetLoc = spawnLocs[5];
-                            }
-                            else{
+                            } else {
                                 targetLoc = spawnLocs[23];
                             }
-                        }
-                        else{
+                        } else {
                             targetLoc = spawnLocs[14];
                         }
                         Direction dir = rc.getLocation().directionTo(targetLoc);
@@ -226,7 +224,7 @@ public strictfp class RobotPlayer {
                     Direction dir = directions[rng.nextInt(directions.length)];
                     MapLocation nextLoc = rc.getLocation().add(dir);
                     RobotInfo[] enemyRobots = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
-                    if (enemyRobots.length > 0 && rc.canAttack(enemyRobots[0].location)){
+                    if (enemyRobots.length > 0 && rc.canAttack(enemyRobots[0].location)) {
                         rc.attack(enemyRobots[0].location);
                     }
 
@@ -261,53 +259,29 @@ public strictfp class RobotPlayer {
     }
 
 
-    public static int DistanceFromNearestFlag(MapLocation i,RobotController rc) throws GameActionException {
-        MapLocation[] f = new MapLocation[3]; // locations of all the flags
-        MapLocation cornerFlag = calculateFlagDestination(rc);
-        f[0] = cornerFlag;
-        if(f[0].x==0)
-            f[1] = new MapLocation(6,0);
-        else
-            f[1] = new MapLocation(rc.getMapWidth()-7,0);
 
-        if(f[0].y==0)
-            f[2] = new MapLocation(0,6);
-        else
-            f[2] = new MapLocation(0,rc.getMapHeight()-7);
-
-        int[] distancesToEach = new int[3];
-        distancesToEach[0]=f[0].distanceSquaredTo(i);
-        distancesToEach[1]=f[1].distanceSquaredTo(i);
-        distancesToEach[2]=f[2].distanceSquaredTo(i);
-        int temp =  Math.min(distancesToEach[0],distancesToEach[1]);
-        return Math.min(temp,distancesToEach[2]);
-
-    }
 
     //returns closest spawn location
-    public static MapLocation findClosestSpawnLocation(RobotController rc){
-        if (rc.hasFlag() && rc.getRoundNum() >= GameConstants.SETUP_ROUNDS){
+    public static MapLocation findClosestSpawnLocation(RobotController rc) {
+        MapLocation targetLoc = null;
+        if (rc.hasFlag() && rc.getRoundNum() >= GameConstants.SETUP_ROUNDS) {
             MapLocation[] spawnLocs = rc.getAllySpawnLocations();
-            MapLocation targetLoc;
+           
             int distance_1 = rc.getLocation().distanceSquaredTo(spawnLocs[5]);
             int distance_2 = rc.getLocation().distanceSquaredTo(spawnLocs[14]);
             int distance_3 = rc.getLocation().distanceSquaredTo(spawnLocs[23]);
-            if(distance_1 < distance_2){
-                if(distance_1 < distance_3){
+            if (distance_1 < distance_2) {
+                if (distance_1 < distance_3) {
                     targetLoc = spawnLocs[5];
-                }
-                else{
+                } else {
                     targetLoc = spawnLocs[23];
                 }
-            }
-            else{
+            } else {
                 targetLoc = spawnLocs[14];
             }
-            return targetLoc;
+            
         }
-        else{
-            return null;
-        }
+        return targetLoc;
     }
 
     public static MapLocation closestSeenEnemyFlag(RobotController rc) throws GameActionException {
@@ -322,13 +296,12 @@ public strictfp class RobotPlayer {
                 }
             }
             return nearbyFlags[closestIndex].getLocation();
-        }
-        else{
+        } else {
             return null;
         }
     }
 
-    public static MapLocation findClosestBroadcastFlags(RobotController rc){
+    public static MapLocation findClosestBroadcastFlags(RobotController rc) {
         MapLocation[] locations = rc.senseBroadcastFlagLocations();
         if (locations.length > 0) {
             int closestDist = rc.getLocation().distanceSquaredTo(locations[0]);
@@ -340,24 +313,23 @@ public strictfp class RobotPlayer {
                 }
             }
             return locations[closestIndex];
-        }
-        else{
+        } else {
             return null;
         }
     }
 
-    public static void updateEnemyRobots(RobotController rc) throws GameActionException{
+    public static void updateEnemyRobots(RobotController rc) throws GameActionException {
         // Sensing methods can be passed in a radius of -1 to automatically 
         // use the largest possible value.
         RobotInfo[] enemyRobots = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
-        if (enemyRobots.length != 0){
+        if (enemyRobots.length != 0) {
             // Save an array of locations with enemy robots in them for future use.
             MapLocation[] enemyLocations = new MapLocation[enemyRobots.length];
-            for (int i = 0; i < enemyRobots.length; i++){
+            for (int i = 0; i < enemyRobots.length; i++) {
                 enemyLocations[i] = enemyRobots[i].getLocation();
             }
             // Let the rest of our team know how many enemy robots we see!
-            if (rc.canWriteSharedArray(0, enemyRobots.length)){
+            if (rc.canWriteSharedArray(0, enemyRobots.length)) {
                 rc.writeSharedArray(0, enemyRobots.length);
                 int numEnemies = rc.readSharedArray(0);
             }
@@ -366,7 +338,10 @@ public strictfp class RobotPlayer {
     }
 
     static void MoveAwayFromSpawnLocations(RobotController rc) throws GameActionException {
-        if(LocIsSpawnLocation(rc.getLocation())) {
+        if(role.equals(roles.builder)){
+            return;
+        }
+        if (LocIsSpawnLocation(rc.getLocation())) {
             //remove loop for efficiency later
             for (Direction d : directions) {
                 for (MapLocation l : SpawnLocations) {
@@ -378,38 +353,33 @@ public strictfp class RobotPlayer {
         int t = rng.nextInt(directions.length);
         //make ducks go to center
         //maybe implement keeping distance
-        MapLocation centerOfMap = new MapLocation(rc.getMapWidth()/2, rc.getMapHeight()/2);
+        MapLocation centerOfMap = new MapLocation(rc.getMapWidth() / 2, rc.getMapHeight() / 2);
         Direction directionTowardsCenter = rc.getLocation().directionTo(centerOfMap);
-        if(rc.canMove(directionTowardsCenter) && turnCount >150 && turnCount < 200)
-        {
+        if (rc.canMove(directionTowardsCenter) && turnCount > 150 && turnCount < 200) {
             rc.move(directionTowardsCenter);
-        }
-        else
-        {
+        } else {
             //change direction taken based off robotID
-            if(rc.getID() % 2 == 0)
-            {
-                for(int i = 0;i<8;i++) {
+            if (rc.getID() % 2 == 0) {
+                for (int i = 0; i < 8; i++) {
                     Direction dir = directions[(t + i) % 8];
                     if (!LocIsSpawnLocation(rc.getLocation().add(dir)) && rc.canMove(dir)) {
                         rc.move(dir);
                     }
                 }
-            }
-            else
-            {
-                for(int i = 0;i<8;i++) {
-                    Direction dir = directions[8 - ((t + i) % 8) -1];
+            } else {
+                for (int i = 0; i < 8; i++) {
+                    Direction dir = directions[8 - ((t + i) % 8) - 1];
                     if (!LocIsSpawnLocation(rc.getLocation().add(dir)) && rc.canMove(dir)) {
                         rc.move(dir);
                     }
                 }
-           }
+            }
         }
     }
-    static boolean LocIsSpawnLocation(MapLocation l){
-        for(MapLocation d:SpawnLocations){
-            if(l.equals(d))
+
+    static boolean LocIsSpawnLocation(MapLocation l) {
+        for (MapLocation d : SpawnLocations) {
+            if (l.equals(d))
                 return true;
         }
         return false;
@@ -417,10 +387,8 @@ public strictfp class RobotPlayer {
     //finds first open index to write a task too, returns -1 if all 45 slots are filled
 
 
-
-
     //takes the average of the three flag locations, and then returns the coords of the nearest corner
-    static MapLocation calculateFlagDestination(RobotController rc){
+    static MapLocation calculateFlagDestination(RobotController rc) {
         MapLocation[] spawnLocs = rc.getAllySpawnLocations();
         MapLocation[] flagOrigins = new MapLocation[3];
         flagOrigins[0] = spawnLocs[5];
@@ -431,29 +399,27 @@ public strictfp class RobotPlayer {
         int mapSizeX = rc.getMapWidth();
         int mapSizeY = rc.getMapHeight();
         //if x is to the right of the middle, desired x will be equal to mapsize X - else, 0
-        if(x > (float) mapSizeX / 2){
-            x = mapSizeX-1;
-        }
-        else{
+        if (x > (float) mapSizeX / 2) {
+            x = mapSizeX - 1;
+        } else {
             x = 0;
         }
         // see above, but for y
-        if(y > (float)mapSizeY / 2){
-          y = mapSizeY-1;
-        }
-        else{
+        if (y > (float) mapSizeY / 2) {
+            y = mapSizeY - 1;
+        } else {
             y = 0;
         }
-        return new MapLocation((int)x, (int)y);
+        return new MapLocation((int) x, (int) y);
     }
 
-    public static MapLocation lowestHealth(RobotInfo[] enemies){
-        if(enemies.length == 0)
+    public static MapLocation lowestHealth(RobotInfo[] enemies) {
+        if (enemies.length == 0)
             return null;
         int lowHealth = enemies[0].health;
         MapLocation toAttack = enemies[0].getLocation();
-        for(RobotInfo enemy : enemies){
-            if(enemy.health < lowHealth){
+        for (RobotInfo enemy : enemies) {
+            if (enemy.health < lowHealth) {
                 lowHealth = enemy.health;
                 toAttack = enemy.location;
             }
@@ -461,12 +427,10 @@ public strictfp class RobotPlayer {
         return toAttack;
     }
 
-    static void updateSeenLocations(RobotController rc)
-    {
+    static void updateSeenLocations(RobotController rc) {
         MapInfo[] locations = rc.senseNearbyMapInfos();
         //this might be inefficient maybe switch to for loop
-        for (MapInfo info: locations)
-        {
+        for (MapInfo info : locations) {
             seenLocations.put(info.getMapLocation(), info);
         }
     }

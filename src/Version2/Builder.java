@@ -4,75 +4,53 @@ import battlecode.common.*;
 
 import java.nio.file.Path;
 
-//todo, make sure that builders don't dig themselves in
 
 import static Version2.RobotPlayer.*;
 
 public class Builder {
     public static void runBuilder(RobotController rc) throws GameActionException {
-
+        if(!rc.isSpawned())
+            Clock.yield();
 
 
         Task t = Utilities.readTask(rc);
-        if(SittingOnFlag){
-           UpdateExplosionBorder(rc);
-        }
-        else if (t != null) {//there is a task to do
-            Pathfinding.tryToMove(rc,t.location);
-            if (locationIsActionable(rc,t.location)){
-                if(rc.canBuild(TrapType.EXPLOSIVE,t.location)){
-                    rc.build(TrapType.EXPLOSIVE,t.location);
+        if (SittingOnFlag) {
+            System.out.println("A");
+            UpdateExplosionBorder(rc);
+        } else if (t != null) {//there is a task to do
+            Pathfinding.tryToMove(rc, t.location);
+            if (locationIsActionable(rc, t.location)) {
+                if (rc.canBuild(TrapType.EXPLOSIVE, t.location)) {
+                    rc.build(TrapType.EXPLOSIVE, t.location);
                 }
             }
 
-        } else{//there is no task to be done
-            MapLocation flag = new MapLocation(0,0);
-                  if(!Utilities.readBitSharedArray(rc,BitIndices.soldierSittingOnFlag1)){
-                      flag = Utilities.convertIntToLocation(rc.readSharedArray(0)%(int)Math.pow(2,12));
-                      Pathfinding.tryToMove(rc,flag);
-                      if(rc.getLocation().equals(flag)){
-                          Utilities.editBitSharedArray(rc,BitIndices.soldierSittingOnFlag1,true);
-                          SittingOnFlag = true;
-                      }
-            }else if(!Utilities.readBitSharedArray(rc,BitIndices.soldierSittingOnFlag2)){
-                      flag = Utilities.convertIntToLocation(rc.readSharedArray(1)%(int)Math.pow(2,12));
-                      Pathfinding.tryToMove(rc,flag);
-                      if(rc.getLocation().equals(flag)){
-                          Utilities.editBitSharedArray(rc,BitIndices.soldierSittingOnFlag2,true);
-                          SittingOnFlag = true;
-                      }
-            }else if(!Utilities.readBitSharedArray(rc,BitIndices.soldierSittingOnFlag3)){
-                      flag = Utilities.convertIntToLocation(rc.readSharedArray(2)%(int)Math.pow(2,12));
-                      Pathfinding.tryToMove(rc,flag);
-                      if(rc.getLocation().equals(flag)){
-                          Utilities.editBitSharedArray(rc,BitIndices.soldierSittingOnFlag3,true);
-                          SittingOnFlag = true;
-                      }
-                      //There is no task to be done and all the flags have guys sitting on them
-                      RobotInfo[] nearbyRobots = rc.senseNearbyRobots();
+        } else {//there is no task to be done
 
+
+            //There is no task to be done and all the flags have guys sitting on them
+            //Move away from the nearest guys avoiding ops especicially
+            Direction d = directionToMove(rc);
+            for(int i = 0;i<8;i++){
+                if(rc.canMove(d)){
+                    rc.move(d);
+                }
+                d= d.rotateLeft();
             }
 
+            if(rc.getRoundNum()%8==0/*&&distanceFromNearestSpawnLocation(rc)>16*/)
+            UpdateExplosionBorder(rc);
 
         }
-
-
-
     }
 
-    public static MapLocation findNearestFlag(MapLocation[] flags, MapLocation tileToTest) {
-        int[] distances = {200, 200, 200};
-        for (int i = 0; i < flags.length; i++) {
-            distances[i] = tileToTest.distanceSquaredTo(flags[i]);
-        }
-        int index = 0;
-        if (distances[1] < distances[0])
-            index = 1;
-        if (distances[2] < distances[index])
-            index = 2;
 
-        return flags[index];
+    private static Direction directionToMove(RobotController rc) {
+        return directions[rng.nextInt(8)];
+    }
 
+    private static int distanceFromNearestSpawnLocation(RobotController rc){
+return 0;
     }
 
     public static boolean locationIsActionable(RobotController rc, MapLocation m) throws GameActionException {
@@ -87,9 +65,10 @@ public class Builder {
     }
 
     public static void UpdateExplosionBorder(RobotController rc) throws GameActionException {
-        for(MapInfo t:rc.senseNearbyMapInfos(GameConstants.INTERACT_RADIUS_SQUARED)){
-            if(rc.canBuild(TrapType.EXPLOSIVE,t.getMapLocation())){
-                rc.canBuild(TrapType.EXPLOSIVE,t.getMapLocation());
+        for (MapInfo t : rc.senseNearbyMapInfos(GameConstants.INTERACT_RADIUS_SQUARED)) {
+            if (rc.canBuild(TrapType.EXPLOSIVE, t.getMapLocation())&&t.getTrapType().equals(TrapType.NONE)) {
+                rc.build(TrapType.EXPLOSIVE, t.getMapLocation());
+                System.out.println("Building a bomb");
             }
         }
     }
