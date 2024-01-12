@@ -55,38 +55,41 @@ public class Utilities {
     public static void setTaskSharedArray(RobotController rc, Task task, int arrayIndex) throws GameActionException
     {
         int value = convertLocationToInt(task.location);
-        value = (value | ((task.used) ? 1: 0) << 13);
-        value = (value | ((task.duckType) ? 1: 0) << 14);
-        value = (value | ((task.isComing) ? 1: 0) << 15);
+        value = (value | ((task.builderDispatched) ? 1: 0) << 13);
         rc.writeSharedArray(arrayIndex, value);
     }
 
-    /*public static void addTask(RobotController rc, Task task) throws GameActionException
+    public static void addTask(RobotController rc, Task task) throws GameActionException
     {
+        int index = openTaskIndex(rc);
+        if(index == -1)
+        {
+            return;
+        }
+        rc.writeSharedArray(index, convertLocationToInt(task.location) | (((task.builderDispatched) ? 1: 0) << 13));
+    }
 
-        rc.writeSharedArray(arrayIndex, (((convertLocationToInt(task.location) | ((task.used) ? 1: 0) << 13) | ((task.duckType) ? 1: 0) << 14) | ((task.isComing) ? 1: 0) << 15));
-    }*/
+    public static Task readTask(RobotController rc) throws GameActionException
+    {
+        int index = activeTaskIndex(rc);
+        if(index == -1)
+        {
+            return null;
+        }
+
+        return readTaskSharedArray(rc, index);
+    }
+
+    public static void clearTask(RobotController rc, int taskIndex) throws GameActionException {
+        rc.writeSharedArray(taskIndex, 0);
+    }
 
     public static Task readTaskSharedArray(RobotController rc, int arrayIndex) throws GameActionException
     {
         int value = rc.readSharedArray(arrayIndex);
-        Task task = new Task();
-        task.location = convertIntToLocation(value & 4095);
-        task.used = (value & 8192) != 0;
-        task.duckType = (value & 16384) != 0;
-        task.isComing = (value & 32768) != 0;
-        return task;
+        return new Task(convertIntToLocation(value & 4095), (value & 8192) != 0, arrayIndex);
     }
 
-    public static void storeLocationAtBitIndexShared(MapLocation mapLocation, int bitIndex)
-    {
-        boolean willUseMultipleIndices = (bitIndex % 16 + 12) > 16;
-        int toStore = convertLocationToInt(mapLocation);
-        for(int x = bitIndex; x < bitIndex + 12; x++)
-        {
-
-        }
-    }
 
     public static boolean getBitAtPosition(int value, int position)
     {
@@ -105,14 +108,26 @@ public class Utilities {
         return new MapLocation((intLocation & 4032) >> 6, (intLocation & 63));
     }
 
-    public static int openTaskIndex(RobotController rc, boolean duckType) throws GameActionException {
+    public static int openTaskIndex(RobotController rc) throws GameActionException
+    {
         //builders have tasks 6-28, soldiers have tasks 28 - 51
-        int index = duckType ? 6 : 28;
-        int finalIndex = duckType ? 28 : 51;
         //eventually - codegen into list of instructions
-        for(int i = index; i < finalIndex ; i++)
+        for(int i = 6; i < 28 ; i++)
         {
-            if(!Utilities.readBitSharedArray(rc, index * 16 + 12))
+            if(rc.readSharedArray(i) == 0)
+            {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    public static int activeTaskIndex(RobotController rc) throws GameActionException {
+        //builders have tasks 6-28, soldiers have tasks 28 - 51
+        //eventually - codegen into list of instructions
+        for(int i = 6; i < 28 ; i++)
+        {
+            if(rc.readSharedArray(i) != 0)
             {
                 return i;
             }
