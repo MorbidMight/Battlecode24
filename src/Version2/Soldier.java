@@ -29,12 +29,12 @@ public class Soldier
             //no enemy in view
             if (enemyRobots.length == 0) {
                 //Task System/ Broadcast locations
-                if (allyRobots.length == 0) {
-                    MapLocation closestBroadcasted = findClosestBroadcastFlags(rc);
-                    if (closestBroadcasted != null) {
-                        Pathfinding.tryToMove(rc, closestBroadcasted);
-                    }
-                } else {
+                MapLocation closestBroadcasted = findClosestBroadcastFlags(rc);
+                if (closestBroadcasted != null) {
+                    Pathfinding.tryToMove(rc, closestBroadcasted);
+                }
+                if(allyRobotsHealRange.length > 0)
+                {
                     //Heal Allies if possible
                     for (RobotInfo allyRobot : allyRobots) {
                         if (rc.canHeal(allyRobot.getLocation())) {
@@ -42,13 +42,14 @@ public class Soldier
                             break;
                         }
                     }
-
                 }
+
+
             }
             //enemy in view
             else {
                 //More Enemies
-                if (enemyRobots.length < allyRobots.length) {
+                if (enemyRobots.length > allyRobots.length) {
                     //Can Attack
                     MapLocation toAttack = lowestHealth(enemyRobotsAttackRange);
                     if (toAttack != null && rc.canAttack(toAttack))
@@ -73,6 +74,17 @@ public class Soldier
                             }
                         }
                     }
+                    if(rc.getLocation().directionTo(toAttack) != null)
+                        if(rc.canMove(rc.getLocation().directionTo(toAttack).opposite()))
+                            rc.move(rc.getLocation().directionTo(toAttack).opposite());
+                }
+                //Less Enemies
+                else
+                {
+                    MapLocation toAttack = lowestHealth(enemyRobotsAttackRange);
+                    if (toAttack != null && rc.canAttack(toAttack))
+                        rc.attack(toAttack);
+                    rc.move(rc.getLocation().directionTo(toAttack));
                 }
             }
         /*
