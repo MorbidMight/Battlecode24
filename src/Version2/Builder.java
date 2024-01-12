@@ -14,8 +14,7 @@ public class Builder {
 
 
         Task t = Utilities.readTask(rc);
-        if (SittingOnFlag) {
-            System.out.println("A");
+        if (SittingOnFlag&&rc.getRoundNum()%3==0) {
             UpdateExplosionBorder(rc);
         } else if (t != null) {//there is a task to do
             Pathfinding.tryToMove(rc, t.location);
@@ -29,7 +28,6 @@ public class Builder {
 
 
             //There is no task to be done and all the flags have guys sitting on them
-            //Move away from the nearest guys avoiding ops especicially
             Direction d = directionToMove(rc);
             for(int i = 0;i<8;i++){
                 if(rc.canMove(d)){
@@ -68,7 +66,6 @@ return 0;
         for (MapInfo t : rc.senseNearbyMapInfos(GameConstants.INTERACT_RADIUS_SQUARED)) {
             if (rc.canBuild(TrapType.EXPLOSIVE, t.getMapLocation())&&t.getTrapType().equals(TrapType.NONE)) {
                 rc.build(TrapType.EXPLOSIVE, t.getMapLocation());
-                System.out.println("Building a bomb");
             }
         }
     }
