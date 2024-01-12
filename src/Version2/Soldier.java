@@ -7,16 +7,14 @@ import static Version2.RobotPlayer.*;
 public class Soldier
 {
     public static void runSoldier(RobotController rc) throws GameActionException {
-        boolean hasDirection = false;
         //blank declaration, will be set by something
-        Direction dir = Pathfinding.basicPathfinding(rc, new MapLocation(rc.getMapWidth() / 2, rc.getMapHeight() / 2), false);
+        Direction dir; // = Pathfinding.basicPathfinding(rc, new MapLocation(rc.getMapWidth() / 2, rc.getMapHeight() / 2), false);
         //if we have an enemy flag, bring it to the closest area
         MapLocation closestSpawnLoc = findClosestSpawnLocation(rc);
         if (closestSpawnLoc != null) {
             dir = rc.getLocation().directionTo(closestSpawnLoc);
             if (rc.canMove(dir)) {
                 rc.move(dir);
-                hasDirection = true;
             }
 
             //pickup enemy flag if we can
