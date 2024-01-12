@@ -92,7 +92,8 @@ public class Soldier
                 MapLocation toAttack = lowestHealth(enemyRobotsAttackRange);
                 if (toAttack != null && rc.canAttack(toAttack))
                     rc.attack(toAttack);
-                rc.move(rc.getLocation().directionTo(toAttack));
+                if(rc.getLocation() != null && toAttack != null && rc.canMove(rc.getLocation().directionTo(toAttack)))
+                    rc.move(rc.getLocation().directionTo(toAttack));
             }
         }
         /*
