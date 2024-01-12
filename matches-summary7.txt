@@ -1,0 +1,7 @@
+|  | examplefuncsplayer | Version3 | Version2 | Version1 | Version1Center |
+| :---: | :---: | :---: | :---: | :---: | :---: |
+| DefaultSmall | Won (554, 375) | Won (2000, 2000) | Won (749, 655) | Won (824, 873) | Won (2000, 666) |
+| DefaultMedium | Won (360, 677) | Tied (2000, 2000) | Won (585, 1715) | Won (623, 555) | Won (1354, 850) |
+| DefaultLarge | Won (379, 419) | Tied (2000, 2000) | Won (706, 874) | Won (676, 813) | Won (2000, 2000) |
+| DefaultHuge | Won (462, 821) | Won (2000, 1206) | Won (379, 1074) | Won (431, 1212) | Won (530, 1944) |
+
