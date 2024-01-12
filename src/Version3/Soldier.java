@@ -90,10 +90,10 @@ public class Soldier
             {
                 rc.setIndicatorString("try to attack/ move forward when there are more allies than enemies");
                 MapLocation toAttack = lowestHealth(enemyRobotsAttackRange);
-                if (toAttack != null && rc.canAttack(toAttack))
-                    rc.attack(toAttack);
                 if(rc.getLocation() != null && toAttack != null && rc.canMove(rc.getLocation().directionTo(toAttack)))
                     rc.move(rc.getLocation().directionTo(toAttack));
+                if (toAttack != null && rc.canAttack(toAttack))
+                    rc.attack(toAttack);
             }
         }
         /*
