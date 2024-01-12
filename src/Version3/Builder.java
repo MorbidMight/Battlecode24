@@ -39,6 +39,10 @@ public class Builder {
             UpdateExplosionBorder(rc);
 
         }
+        RobotInfo[] enemyRobotsAttackRange = rc.senseNearbyRobots(GameConstants.ATTACK_RADIUS_SQUARED, rc.getTeam().opponent());
+        MapLocation toAttack = lowestHealth(enemyRobotsAttackRange);
+        if (toAttack != null && rc.canAttack(toAttack))
+            rc.attack(toAttack);
     }
 
 
