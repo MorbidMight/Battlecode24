@@ -40,8 +40,9 @@ public class Soldier
                 rc.move(dir);
         }
         else if(hasDirection){
-            if(rc.canMove(dir.opposite()))
+            if(rc.canMove(dir.opposite())) {
                 rc.move(dir.opposite());
+            }
         }
         //pickup enemy flag if we can
         if (rc.canPickupFlag(rc.getLocation()) && rc.getRoundNum() > GameConstants.SETUP_ROUNDS){
