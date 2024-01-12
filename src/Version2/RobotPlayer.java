@@ -157,7 +157,6 @@ public strictfp class RobotPlayer {
                     }
                     updateSeenLocations(rc);
                     alreadyBeen.add(rc.getLocation());
-
                     if (!rc.hasFlag()) {
                         switch (role) {
                             case builder:
@@ -171,6 +170,7 @@ public strictfp class RobotPlayer {
                                 break;
                             case soldier:
                                 Soldier.runSoldier(rc);
+                                rc.setIndicatorString("soldier");
                                 break;
                         }
                     }
@@ -197,6 +197,12 @@ public strictfp class RobotPlayer {
                     }
 
                      */
+                    RobotInfo[] enemyRobots = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
+                    Utilities.recordEnemies(rc, enemyRobots);
+                    Utilities.clearObsoleteEnemies(rc);
+
+
+                    System.out.println(Utilities.newGetClosestEnemy(rc));
                     //pickup enemy flag after setup phase ends
                     if (rc.canPickupFlag(rc.getLocation()) && rc.getRoundNum() > GameConstants.SETUP_ROUNDS) {
                         rc.pickupFlag(rc.getLocation());
@@ -223,7 +229,6 @@ public strictfp class RobotPlayer {
                     MoveAwayFromSpawnLocations(rc);
                     Direction dir = directions[rng.nextInt(directions.length)];
                     MapLocation nextLoc = rc.getLocation().add(dir);
-                    RobotInfo[] enemyRobots = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
                     if (enemyRobots.length > 0 && rc.canAttack(enemyRobots[0].location)) {
                         rc.attack(enemyRobots[0].location);
                     }
@@ -259,14 +264,34 @@ public strictfp class RobotPlayer {
     }
 
 
+    public static int DistanceFromNearestFlag(MapLocation i,RobotController rc) throws GameActionException {
+        MapLocation[] f = new MapLocation[3]; // locations of all the flags
+        MapLocation cornerFlag = calculateFlagDestination(rc);
+        f[0] = cornerFlag;
+        if(f[0].x==0)
+            f[1] = new MapLocation(6,0);
+        else
+            f[1] = new MapLocation(rc.getMapWidth()-7,0);
 
+        if(f[0].y==0)
+            f[2] = new MapLocation(0,6);
+        else
+            f[2] = new MapLocation(0,rc.getMapHeight()-7);
+
+        int[] distancesToEach = new int[3];
+        distancesToEach[0]=f[0].distanceSquaredTo(i);
+        distancesToEach[1]=f[1].distanceSquaredTo(i);
+        distancesToEach[2]=f[2].distanceSquaredTo(i);
+        int temp =  Math.min(distancesToEach[0],distancesToEach[1]);
+        return Math.min(temp,distancesToEach[2]);
+    }
 
     //returns closest spawn location
     public static MapLocation findClosestSpawnLocation(RobotController rc) {
         MapLocation targetLoc = null;
         if (rc.hasFlag() && rc.getRoundNum() >= GameConstants.SETUP_ROUNDS) {
             MapLocation[] spawnLocs = rc.getAllySpawnLocations();
-           
+
             int distance_1 = rc.getLocation().distanceSquaredTo(spawnLocs[5]);
             int distance_2 = rc.getLocation().distanceSquaredTo(spawnLocs[14]);
             int distance_3 = rc.getLocation().distanceSquaredTo(spawnLocs[23]);
@@ -279,7 +304,7 @@ public strictfp class RobotPlayer {
             } else {
                 targetLoc = spawnLocs[14];
             }
-            
+
         }
         return targetLoc;
     }

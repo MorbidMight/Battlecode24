@@ -138,7 +138,69 @@ public class Utilities {
         return -1;
     }
 
+    public static int openEnemyIndex(RobotController rc) throws GameActionException
+    {
+        //builders have tasks 6-28, soldiers have tasks 28 - 51
+        //eventually - codegen into list of instructions
+        for(int i = 28; i < 51 ; i++)
+        {
+            if(rc.readSharedArray(i) == 0)
+            {
+                return i;
+            }
+        }
+        return -1;
+    }
 
+    public static void reportEnemy(RobotController rc, MapLocation enemy) throws GameActionException {
+        for (int x = 28; x < 51; x++)
+        {
+            if (rc.readSharedArray(x) == 0)
+            {
+                rc.writeSharedArray(x, Utilities.convertLocationToInt(enemy));
+            }
+        }
+    }
 
+    public static void clearObsoleteEnemies(RobotController rc) throws GameActionException {
+        if (rc.canWriteSharedArray(0, 0)) {
+            for (int i = 28; i < 51; i++) {
+                int readLocation = rc.readSharedArray(i);
+                if (readLocation != 0) {
+                    MapLocation location = Utilities.convertIntToLocation(readLocation);
+                    if (!rc.canSenseRobotAtLocation(location)) {
+                        rc.writeSharedArray(i, 0);
+                    }
+                }
+            }
+        }
+    }
+
+    public static void recordEnemies(RobotController rc, RobotInfo[] enemies) throws GameActionException
+    {
+        for(RobotInfo enemy: enemies)
+        {
+            Utilities.reportEnemy(rc, enemy.getLocation());
+        }
+    }
+    public static MapLocation newGetClosestEnemy(RobotController rc) throws GameActionException {
+        MapLocation closest = null;
+        for(int x = 28; x < 51; x++)
+        {
+            if(rc.readSharedArray(x) == 0) continue;
+            if(closest == null)
+            {
+                closest = Utilities.convertIntToLocation(rc.readSharedArray(x));
+                continue;
+            }
+            MapLocation tempLocation = Utilities.convertIntToLocation(rc.readSharedArray(x));
+            if(rc.getLocation().distanceSquaredTo(tempLocation) < closest.distanceSquaredTo(tempLocation))
+            {
+                closest = new MapLocation(tempLocation.x, tempLocation.y);
+            }
+            return closest;
+        }
+        return closest;
+    }
 
 }
