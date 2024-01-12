@@ -1,4 +1,4 @@
-package Version3;
+package Version4;
 
 import battlecode.common.*;
 
@@ -243,7 +243,10 @@ public strictfp class RobotPlayer {
                         rc.attack(enemyRobots[0].location);
                     }
 
-
+                    // Rarely attempt placing traps behind the robot.
+                    MapLocation prevLoc = rc.getLocation().subtract(dir);
+                    if (rc.canBuild(TrapType.EXPLOSIVE, prevLoc) && rng.nextInt() % 37 == 1)
+                        rc.build(TrapType.EXPLOSIVE, prevLoc);
                 }
 
             } catch (GameActionException e) {
