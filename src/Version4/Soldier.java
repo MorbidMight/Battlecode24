@@ -2,7 +2,7 @@ package Version4;
 
 import battlecode.common.*;
 
-import static Version2.RobotPlayer.*;
+import static Version4.RobotPlayer.*;
 
 public class Soldier
 {
@@ -10,20 +10,28 @@ public class Soldier
         rc.setIndicatorString("Soldier code");
         //blank declaration, will be set by something
         Direction dir; // = Pathfinding.basicPathfinding(rc, new MapLocation(rc.getMapWidth() / 2, rc.getMapHeight() / 2), false);
-        //if we have an enemy flag, bring it to the closest area
-        MapLocation closestSpawnLoc = findClosestSpawnLocation(rc);
-        if (closestSpawnLoc != null) {
-            dir = rc.getLocation().directionTo(closestSpawnLoc);
-            if (rc.canMove(dir)) {
-                rc.setIndicatorString("moving flag");
-                rc.move(dir);
-            }
-
-            //pickup enemy flag if we can
-            if (rc.canPickupFlag(rc.getLocation()) && rc.getRoundNum() > GameConstants.SETUP_ROUNDS) {
-                rc.pickupFlag(rc.getLocation());
-            }
+        //try to move towards any seen opponent flags
+        FlagInfo[] nearbyOppFlags = rc.senseNearbyFlags(-1, rc.getTeam().opponent());
+        if(nearbyOppFlags.length != 0 && !nearbyOppFlags[0].isPickedUp()){
+            Pathfinding.tryToMove(rc, nearbyOppFlags[0].getLocation());
         }
+        //pickup enemy flag if we can
+        if (rc.canPickupFlag(rc.getLocation()) && rc.getRoundNum() > GameConstants.SETUP_ROUNDS) {
+            rc.pickupFlag(rc.getLocation());
+        }
+        //if we have an enemy flag, bring it to closest area
+        MapLocation closestSpawnLoc = findClosestSpawnLocation(rc);
+        //method returns null if we dont have a flag
+        if (closestSpawnLoc != null) {
+//            dir = rc.getLocation().directionTo(closestSpawnLoc);
+//            if (rc.canMove(dir)) {
+//                rc.setIndicatorString("moving flag");
+//                rc.move(dir);
+//            }
+            rc.setIndicatorString("moving flag");
+            Pathfinding.tryToMove(rc, closestSpawnLoc);
+        }
+
         //attack
         RobotInfo[] enemyRobots = rc.senseNearbyRobots(GameConstants.VISION_RADIUS_SQUARED, rc.getTeam().opponent());
         RobotInfo[] enemyRobotsAttackRange = rc.senseNearbyRobots(GameConstants.ATTACK_RADIUS_SQUARED, rc.getTeam().opponent());

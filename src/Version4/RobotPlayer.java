@@ -297,22 +297,24 @@ public strictfp class RobotPlayer {
     }
 
     //returns closest spawn location
-    public static MapLocation findClosestSpawnLocation(RobotController rc) {
+    public static MapLocation findClosestSpawnLocation(RobotController rc) throws GameActionException {
         MapLocation targetLoc = null;
         if (rc.hasFlag() && rc.getRoundNum() >= GameConstants.SETUP_ROUNDS) {
             MapLocation[] spawnLocs = rc.getAllySpawnLocations();
-
-            int distance_1 = rc.getLocation().distanceSquaredTo(spawnLocs[5]);
-            int distance_2 = rc.getLocation().distanceSquaredTo(spawnLocs[14]);
-            int distance_3 = rc.getLocation().distanceSquaredTo(spawnLocs[23]);
+            int distance_1 = (rc.readSharedArray(0) == 0) ? rc.getLocation().distanceSquaredTo(spawnLocs[5]) : rc.getLocation().distanceSquaredTo(Utilities.convertIntToLocation(rc.readSharedArray(0)));
+            int distance_2 = (rc.readSharedArray(1) == 0) ? rc.getLocation().distanceSquaredTo(spawnLocs[14]) : rc.getLocation().distanceSquaredTo(Utilities.convertIntToLocation(rc.readSharedArray(1)));
+            int distance_3 = (rc.readSharedArray(2) == 0) ? rc.getLocation().distanceSquaredTo(spawnLocs[23]) : rc.getLocation().distanceSquaredTo(Utilities.convertIntToLocation(rc.readSharedArray(2)));
             if (distance_1 < distance_2) {
                 if (distance_1 < distance_3) {
-                    targetLoc = spawnLocs[5];
+                    targetLoc = Utilities.convertIntToLocation(rc.readSharedArray(0));
                 } else {
-                    targetLoc = spawnLocs[23];
+                    targetLoc = Utilities.convertIntToLocation(rc.readSharedArray(2));
                 }
             } else {
-                targetLoc = spawnLocs[14];
+                if(distance_2 < distance_3)
+                    targetLoc = Utilities.convertIntToLocation(rc.readSharedArray(1));
+                else
+                    targetLoc = Utilities.convertIntToLocation(rc.readSharedArray(2));
             }
 
         }
