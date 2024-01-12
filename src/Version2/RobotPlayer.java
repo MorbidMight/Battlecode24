@@ -201,8 +201,6 @@ public strictfp class RobotPlayer {
                     Utilities.recordEnemies(rc, enemyRobots);
                     Utilities.clearObsoleteEnemies(rc);
 
-
-                    System.out.println(Utilities.newGetClosestEnemy(rc));
                     //pickup enemy flag after setup phase ends
                     if (rc.canPickupFlag(rc.getLocation()) && rc.getRoundNum() > GameConstants.SETUP_ROUNDS) {
                         rc.pickupFlag(rc.getLocation());

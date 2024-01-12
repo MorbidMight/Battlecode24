@@ -36,7 +36,7 @@ public class Builder {
             }
 
             if(rc.getRoundNum()%8==0/*&&distanceFromNearestSpawnLocation(rc)>16*/)
-            UpdateExplosionBorder(rc);
+                UpdateExplosionBorder(rc);
 
         }
         RobotInfo[] enemyRobotsAttackRange = rc.senseNearbyRobots(GameConstants.ATTACK_RADIUS_SQUARED, rc.getTeam().opponent());

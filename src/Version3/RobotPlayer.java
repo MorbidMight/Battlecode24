@@ -41,6 +41,11 @@ public strictfp class RobotPlayer {
     //used for flag placer only
     static ArrayList<MapLocation> prevDestinations;
 
+    //Ratios for spawning
+    public static final float SOLDIER_RATIO = 0.8f;
+    public static final float BUILDER_RATIO = 0.2f;
+
+
     /**
      * A random number generator.
      * We will use this RNG to make some random moves. The Random class is provided by the java.util.Random
@@ -63,7 +68,7 @@ public strictfp class RobotPlayer {
             Direction.NORTHWEST,
     };
 
-    static enum roles {
+    enum roles {
         explorer, soldier, builder, healer
     }
 
@@ -80,7 +85,8 @@ public strictfp class RobotPlayer {
 
         while (true) {
             //changes explorers to soldiers at round 200
-            if (rc.getRoundNum() == GameConstants.SETUP_ROUNDS && role == roles.explorer) {
+            if (rc.getRoundNum() == GameConstants.SETUP_ROUNDS && role == roles.explorer)
+            {
                 role = roles.soldier;
             }
             //if can buy upgrade, buy an upgrade
@@ -113,32 +119,33 @@ public strictfp class RobotPlayer {
                         rc.spawn(spawnLocs[spawnIndex]);
                         if (rc.senseNearbyFlags(0).length != 0) {
                             role = roles.builder;
+                            incrementBuilder(rc);
                             SittingOnFlag = true;
                             rc.setIndicatorString("SittingOnFlag");
                         }
-                        //if third to last bit is 0, become a soldier/explorer and figure out which bit to flip
-                        else if (!Utilities.readBitSharedArray(rc, 1020)) {
-                            if (rc.getRoundNum() >= 200)
-                                role = roles.soldier;
-                            else
-                                role = roles.explorer;
-                            if (Utilities.readBitSharedArray(rc, 1023)) {
-                                Utilities.editBitSharedArray(rc, 1023, true);
-                            } else if (Utilities.readBitSharedArray(rc, 1022)) {
-                                Utilities.editBitSharedArray(rc, 1022, true);
-                            } else if (Utilities.readBitSharedArray(rc, 1021)) {
-                                Utilities.editBitSharedArray(rc, 1021, true);
-                            } else {
-                                Utilities.editBitSharedArray(rc, 1020, true);
-                            }
-                        }
-                        //become a builder, set last three bits to 0
-                        else {
+                    }
+                    if(role == null)
+                    {
+                        int numSoldiers = rc.readSharedArray(52);
+                        int numBuilders = rc.readSharedArray(53);
+
+                        if((numSoldiers + numBuilders) == 0)
+                        {
                             role = roles.builder;
-                            Utilities.editBitSharedArray(rc, 1020, false);
-                            Utilities.editBitSharedArray(rc, 1021, false);
-                            Utilities.editBitSharedArray(rc, 1022, false);
-                            Utilities.editBitSharedArray(rc, 1023, false);
+                            incrementBuilder(rc);
+                        }else
+                        {
+                            System.out.println(numSoldiers);
+                            if ((float) numSoldiers / (numBuilders + numSoldiers) < SOLDIER_RATIO)
+                            {
+                                if (rc.getRoundNum() < 200) role = roles.explorer;
+                                else role = roles.soldier;
+                                incrementSoldier(rc);
+                            } else //((float) numBuilders / (numBuilders + numSoldiers) < BUILDER_RATIO)
+                            {
+                                role = roles.builder;
+                                incrementBuilder(rc);
+                            }
                         }
                     }
                 } else {
@@ -162,12 +169,15 @@ public strictfp class RobotPlayer {
                         switch (role) {
                             case builder:
                                 Builder.runBuilder(rc);
+                                rc.setIndicatorString("builder");
                                 break;
                             case explorer:
                                 Explorer.runExplorer(rc);
+                                rc.setIndicatorString("explorer");
                                 break;
                             case healer:
                                 Healer.runHealer(rc);
+                                rc.setIndicatorString("healer");
                                 break;
                             case soldier:
                                 Soldier.runSoldier(rc);
@@ -203,7 +213,6 @@ public strictfp class RobotPlayer {
                     Utilities.clearObsoleteEnemies(rc);
 
 
-                    System.out.println(Utilities.newGetClosestEnemy(rc));
                     //pickup enemy flag after setup phase ends
                     if (rc.canPickupFlag(rc.getLocation()) && rc.getRoundNum() > GameConstants.SETUP_ROUNDS) {
                         rc.pickupFlag(rc.getLocation());
@@ -445,6 +454,9 @@ public strictfp class RobotPlayer {
         int lowHealth = enemies[0].health;
         MapLocation toAttack = enemies[0].getLocation();
         for (RobotInfo enemy : enemies) {
+            if(enemy.hasFlag){
+                return enemy.getLocation();
+            }
             if (enemy.health < lowHealth) {
                 lowHealth = enemy.health;
                 toAttack = enemy.location;
@@ -453,7 +465,8 @@ public strictfp class RobotPlayer {
         return toAttack;
     }
 
-    static void updateSeenLocations(RobotController rc) {
+    static void updateSeenLocations(RobotController rc)
+    {
         MapInfo[] locations = rc.senseNearbyMapInfos();
         //this might be inefficient maybe switch to for loop
         for (MapInfo info : locations) {
@@ -464,6 +477,16 @@ public strictfp class RobotPlayer {
     //takes in a failed flag destination, and tries to find a good one around it - deprecated method
     public static MapLocation findNextBestFlagDestination(RobotController rc, MapLocation currDestination, ArrayList<MapLocation> prevDestinations) throws GameActionException {
         return new MapLocation(0, 0);
+    }
+
+    public static void incrementSoldier(RobotController rc) throws GameActionException
+    {
+        rc.writeSharedArray(52, rc.readSharedArray(52) + 1);
+    }
+
+    public static void incrementBuilder(RobotController rc) throws GameActionException
+    {
+        rc.writeSharedArray(53, rc.readSharedArray(53) + 1);
     }
 
 }
