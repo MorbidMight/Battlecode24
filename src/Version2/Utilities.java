@@ -59,15 +59,6 @@ public class Utilities {
         rc.writeSharedArray(arrayIndex, value);
     }
 
-    public static void addTask(RobotController rc, Task task) throws GameActionException
-    {
-        int index = openTaskIndex(rc);
-        if(index == -1)
-        {
-            return;
-        }
-        rc.writeSharedArray(index, convertLocationToInt(task.location) | (((task.builderDispatched) ? 1: 0) << 13));
-    }
 
     public static Task readTask(RobotController rc) throws GameActionException
     {
@@ -90,6 +81,18 @@ public class Utilities {
         return new Task(convertIntToLocation(value & 4095), (value & 8192) != 0, arrayIndex);
     }
 
+
+
+
+    public static void storeLocationAtBitIndexShared(MapLocation mapLocation, int bitIndex)
+    {
+        boolean willUseMultipleIndices = (bitIndex % 16 + 12) > 16;
+        int toStore = convertLocationToInt(mapLocation);
+        for(int x = bitIndex; x < bitIndex + 12; x++)
+        {
+
+        }
+    }
 
     public static boolean getBitAtPosition(int value, int position)
     {

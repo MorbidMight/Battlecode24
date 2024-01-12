@@ -2,65 +2,96 @@ package Version2;
 
 import battlecode.common.*;
 
+import java.nio.file.Path;
+
+//todo, make sure that builders don't dig themselves in
+
 import static Version2.RobotPlayer.*;
 
-public class Builder
-{
+public class Builder {
     public static void runBuilder(RobotController rc) throws GameActionException {
-        //Go to flag from array
-        if(DistanceFromNearestFlag(rc.getLocation(),rc)>6){
-            //URAV PATHFINDING
+
+
+
+        Task t = Utilities.readTask(rc);
+        if(SittingOnFlag){
+           UpdateExplosionBorder(rc);
+        }
+        else if (t != null) {//there is a task to do
+            Pathfinding.tryToMove(rc,t.location);
+            if (locationIsActionable(rc,t.location)){
+                if(rc.canBuild(TrapType.EXPLOSIVE,t.location)){
+                    rc.build(TrapType.EXPLOSIVE,t.location);
+                }
+            }
+
+        } else{//there is no task to be done
+            MapLocation flag = new MapLocation(0,0);
+                  if(!Utilities.readBitSharedArray(rc,BitIndices.soldierSittingOnFlag1)){
+                      flag = Utilities.convertIntToLocation(rc.readSharedArray(0)%(int)Math.pow(2,12));
+                      Pathfinding.tryToMove(rc,flag);
+                      if(rc.getLocation().equals(flag)){
+                          Utilities.editBitSharedArray(rc,BitIndices.soldierSittingOnFlag1,true);
+                          SittingOnFlag = true;
+                      }
+            }else if(!Utilities.readBitSharedArray(rc,BitIndices.soldierSittingOnFlag2)){
+                      flag = Utilities.convertIntToLocation(rc.readSharedArray(1)%(int)Math.pow(2,12));
+                      Pathfinding.tryToMove(rc,flag);
+                      if(rc.getLocation().equals(flag)){
+                          Utilities.editBitSharedArray(rc,BitIndices.soldierSittingOnFlag2,true);
+                          SittingOnFlag = true;
+                      }
+            }else if(!Utilities.readBitSharedArray(rc,BitIndices.soldierSittingOnFlag3)){
+                      flag = Utilities.convertIntToLocation(rc.readSharedArray(2)%(int)Math.pow(2,12));
+                      Pathfinding.tryToMove(rc,flag);
+                      if(rc.getLocation().equals(flag)){
+                          Utilities.editBitSharedArray(rc,BitIndices.soldierSittingOnFlag3,true);
+                          SittingOnFlag = true;
+                      }
+                      //There is no task to be done and all the flags have guys sitting on them
+                      RobotInfo[] nearbyRobots = rc.senseNearbyRobots();
+
+            }
+
 
         }
-        else if(true)/*conditional to make them stop and do something else)*/  {//Dig water around the flag
-            FlagInfo[] BreadLocation = rc.senseNearbyFlags(GameConstants.VISION_RADIUS_SQUARED);
-            if (BreadLocation.length != 0) {
-                MapInfo[] actionableTiles = rc.senseNearbyMapInfos(2);
 
-                for (MapInfo i : actionableTiles) {
-                    if (DistanceFromNearestFlag(i.getMapLocation(), rc) <= MoatRadius && rc.canDig(i.getMapLocation())) {
-                        rc.dig(i.getMapLocation());
-                    } else if (DistanceFromNearestFlag(i.getMapLocation(), rc) == MoatRadius + 1 && rc.canBuild(TrapType.WATER, i.getMapLocation())) {
-                        rc.build(TrapType.WATER, i.getMapLocation());
-                    }
-                }
-            }else { //builder can't do any moves on it's actionble tiles so it needs to move
-                //Urav Pathfinding towards dead center of map (Away from the corner)
-            }
-        }else{
-            //Find Average value of all nearby friendlys and walk away from them
-            RobotInfo[] NearbyFriendlys = rc.senseNearbyRobots(GameConstants.VISION_RADIUS_SQUARED,rc.getTeam());
-            int x = 0;
-            int y = 0;
-            Direction d = directions[rng.nextInt(8)];
 
-            if(NearbyFriendlys.length!=0) {
-                for (RobotInfo i : NearbyFriendlys) {
-                    x += i.getLocation().x;
-                    y += i.getLocation().y;
-                }
-                x /= NearbyFriendlys.length;
-                y /= NearbyFriendlys.length;
-                MapLocation AvgOfNearbyFriends = new MapLocation((int) x, (int) y);
-                d = AvgOfNearbyFriends.directionTo(rc.getLocation()).rotateRight();
-            }
-            for(int i = 0;i<8;i++){
-                if(rc.canMove(d)) {
-                    rc.move(d);
-                    break;
-                }else{
-                    d = d.rotateLeft();
-                }
+
+    }
+
+    public static MapLocation findNearestFlag(MapLocation[] flags, MapLocation tileToTest) {
+        int[] distances = {200, 200, 200};
+        for (int i = 0; i < flags.length; i++) {
+            distances[i] = tileToTest.distanceSquaredTo(flags[i]);
+        }
+        int index = 0;
+        if (distances[1] < distances[0])
+            index = 1;
+        if (distances[2] < distances[index])
+            index = 2;
+
+        return flags[index];
+
+    }
+
+    public static boolean locationIsActionable(RobotController rc, MapLocation m) throws GameActionException {
+        MapInfo[] ActionableTiles = rc.senseNearbyMapInfos(GameConstants.INTERACT_RADIUS_SQUARED);
+        for (MapInfo curr : ActionableTiles) {
+            if (m.equals(curr.getMapLocation())) {
+                return true;
             }
 
-            if(rc.getRoundNum() % BombFrequency==0){
-                MapLocation[] ActionableTiles = rc.getAllLocationsWithinRadiusSquared(rc.getLocation(),GameConstants.INTERACT_RADIUS_SQUARED);
-                for(MapLocation m: ActionableTiles){
-                    if(rc.canBuild(TrapType.EXPLOSIVE,m))
-                        rc.build(TrapType.EXPLOSIVE,m);//Don't break because they can place two bombs/turn
+        }
+        return false;
+    }
 
-                }
+    public static void UpdateExplosionBorder(RobotController rc) throws GameActionException {
+        for(MapInfo t:rc.senseNearbyMapInfos(GameConstants.INTERACT_RADIUS_SQUARED)){
+            if(rc.canBuild(TrapType.EXPLOSIVE,t.getMapLocation())){
+                rc.canBuild(TrapType.EXPLOSIVE,t.getMapLocation());
             }
         }
     }
+
 }

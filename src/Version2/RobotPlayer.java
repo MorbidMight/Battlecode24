@@ -23,6 +23,8 @@ public strictfp class RobotPlayer {
     static Direction preferredDirection = null; //For scouts, it's the direction their intending to go in
     static ArrayList<MapLocation> PlacesHaveBeen = new ArrayList<MapLocation>(); //To prevent scouts from backtracking
     static roles role;
+
+    static boolean SittingOnFlag = false; //for builders if they sit on the flag and spam explosion bombs
     static final int MoatRadius = 9; //Radius of the moat squared
 
     static HashMap<MapLocation, MapInfo> seenLocations = new HashMap<MapLocation, MapInfo>();
@@ -397,16 +399,9 @@ public strictfp class RobotPlayer {
         return false;
     }
     //finds first open index to write a task too, returns -1 if all 45 slots are filled
-    static int openTaskIndex(RobotController rc) throws GameActionException {
-        int index = 6;
-        //eventually - codegen into list of instructions
-        for(int i = index; i < index + 45; i++){
-            if(!Utilities.readBitSharedArray(rc, 12)){
-                return i;
-            }
-        }
-        return -1;
-    }
+
+
+
 
     //takes the average of the three flag locations, and then returns the coords of the nearest corner
     static MapLocation calculateFlagDestination(RobotController rc){
