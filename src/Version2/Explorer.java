@@ -21,9 +21,16 @@ public class Explorer
                 preferredDirection = Direction.SOUTHEAST;
         }
 
-        if(rc.senseNearbyCrumbs(-1).length != 0){
-            if(rc.senseMapInfo(rc.senseNearbyCrumbs(-1)[0]).isPassable())
-                Pathfinding.tryToMove(rc, rc.senseNearbyCrumbs(-1)[0]);
+        //tries to get any nearby crumbs
+        MapLocation[] nearbyCrumbs = rc.senseNearbyCrumbs(-1);
+        if(nearbyCrumbs.length != 0) {
+            MapLocation targetCrumb = chooseTargetCrumb(rc, nearbyCrumbs);
+            MapInfo targetLoc = rc.senseMapInfo(targetCrumb);
+            //check if crumb is on water
+            if(!targetLoc.isPassable() && rc.canFill(targetCrumb)){
+                rc.fill(targetCrumb);
+            }
+            Pathfinding.tryToMove(rc, targetCrumb);
         }
 
         Direction tempDir = preferredDirection;
@@ -52,5 +59,17 @@ public class Explorer
             preferredDirection = preferredDirection.rotateLeft();
             preferredDirection = preferredDirection.rotateLeft();
         }
+    }
+
+    public static MapLocation chooseTargetCrumb(RobotController rc, MapLocation[] nearbyCrumbs) throws GameActionException {
+        int highestCrumbVal = rc.senseMapInfo(nearbyCrumbs[0]).getCrumbs();
+        int highestIndex = 0;
+        for(int i = 1; i < nearbyCrumbs.length; i++){
+            if(rc.senseMapInfo(nearbyCrumbs[i]).getCrumbs() > highestCrumbVal){
+                highestIndex = i;
+                highestCrumbVal = rc.senseMapInfo(nearbyCrumbs[i]).getCrumbs();
+            }
+        }
+        return nearbyCrumbs[highestIndex];
     }
 }
