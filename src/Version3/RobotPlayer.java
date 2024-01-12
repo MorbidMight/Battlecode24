@@ -445,6 +445,9 @@ public strictfp class RobotPlayer {
         int lowHealth = enemies[0].health;
         MapLocation toAttack = enemies[0].getLocation();
         for (RobotInfo enemy : enemies) {
+            if(enemy.hasFlag){
+                return enemy.getLocation();
+            }
             if (enemy.health < lowHealth) {
                 lowHealth = enemy.health;
                 toAttack = enemy.location;
