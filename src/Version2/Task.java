@@ -5,26 +5,28 @@ import battlecode.common.MapLocation;
 public class Task
 {
     public MapLocation location;
-    public boolean used;
-    public boolean duckType;
-    public boolean isComing;
+    public boolean builderDispatched;
 
-    public Task(MapLocation location, boolean taskActive, boolean duckType, boolean isComing) {
+    public int arrayIndex;
+
+    public Task(MapLocation location, boolean builderDispatched, int arrayIndex ) {
         this.location = location;
-        this.used = taskActive;
-        this.duckType = duckType;
-        this.isComing = isComing;
+        this.builderDispatched = builderDispatched;
+        this.arrayIndex = arrayIndex;
     }
 
-    public Task(){}
+    public Task(MapLocation location, boolean builderDispatched)
+    {
+        this.location = location;
+        this.builderDispatched = builderDispatched;
+    }
 
     @Override
     public String toString() {
         return "Task{" +
                 "location=" + location +
-                ", used=" + used +
-                ", duckType=" + duckType +
-                ", isComing=" + isComing +
+                ", builderDispatched=" + builderDispatched +
+                ", arrayIndex=" + arrayIndex +
                 '}';
     }
 }
