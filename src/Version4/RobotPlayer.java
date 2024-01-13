@@ -109,42 +109,116 @@ public strictfp class RobotPlayer {
                     SpawnLocations = rc.getAllySpawnLocations();
                 }
                 if (!rc.isSpawned()) {
-                    // try to spawn in every location asap
-                    MapLocation[] spawnLocs = rc.getAllySpawnLocations();
-                    int spawnIndex = 0;
-                    while (spawnIndex < 26 && !rc.canSpawn(spawnLocs[spawnIndex])) {
-                        spawnIndex++;
-                    }
-                    if (rc.canSpawn(spawnLocs[spawnIndex]) && spawnIndex <= 26) {
-                        rc.spawn(spawnLocs[spawnIndex]);
-                        if (rc.senseNearbyFlags(0).length != 0) {
-                            role = roles.builder;
-                            incrementBuilder(rc);
-                            SittingOnFlag = true;
-                            rc.setIndicatorString("SittingOnFlag");
+                    //get our robots out onto the map
+                    if(turnCount <= 10) {
+                        // try to spawn in every location asap
+                        MapLocation[] spawnLocs = rc.getAllySpawnLocations();
+                        int spawnIndex = 0;
+                        while (spawnIndex < 26 && !rc.canSpawn(spawnLocs[spawnIndex])) {
+                            spawnIndex++;
                         }
-                    }
-                    if(role == null)
-                    {
-                        int numSoldiers = rc.readSharedArray(52);
-                        int numBuilders = rc.readSharedArray(53);
-
-                        if((numSoldiers + numBuilders) == 0)
-                        {
-                            role = roles.builder;
-                            incrementBuilder(rc);
-                        }else
-                        {
-                            System.out.println(numSoldiers);
-                            if ((float) numSoldiers / (numBuilders + numSoldiers) < SOLDIER_RATIO)
-                            {
-                                if (rc.getRoundNum() < 200) role = roles.explorer;
-                                else role = roles.soldier;
-                                incrementSoldier(rc);
-                            } else //((float) numBuilders / (numBuilders + numSoldiers) < BUILDER_RATIO)
-                            {
+                        if (rc.canSpawn(spawnLocs[spawnIndex]) && spawnIndex <= 26) {
+                            rc.spawn(spawnLocs[spawnIndex]);
+                            if (rc.senseNearbyFlags(0).length != 0) {
                                 role = roles.builder;
                                 incrementBuilder(rc);
+                                SittingOnFlag = true;
+                                rc.setIndicatorString("SittingOnFlag");
+                            }
+                        }
+                        if (role == null) {
+                            int numSoldiers = rc.readSharedArray(52);
+                            int numBuilders = rc.readSharedArray(53);
+
+                            if ((numSoldiers + numBuilders) == 0) {
+                                role = roles.builder;
+                                incrementBuilder(rc);
+                            } else {
+                                System.out.println(numSoldiers);
+                                if ((float) numSoldiers / (numBuilders + numSoldiers) < SOLDIER_RATIO) {
+                                    if (rc.getRoundNum() < 200) role = roles.explorer;
+                                    else role = roles.soldier;
+                                    incrementSoldier(rc);
+                                } else //((float) numBuilders / (numBuilders + numSoldiers) < BUILDER_RATIO)
+                                {
+                                    role = roles.builder;
+                                    incrementBuilder(rc);
+                                }
+                            }
+                        }
+                    }
+                    else{
+                        //decide which place to spawn at based on last two bits of shared array, and
+                        //whether to cycle that spawn location based on third to last bit
+                        //means 10, spawn locs 18-26, if not locked then cycle to 00
+                        if(Utilities.readBitSharedArray(rc, 1022)){
+                            //spawn from spawnLocs[18-26], then try other places if that doesnt work
+                            for(int i = 18; i <= 26; i++){
+                                if(rc.canSpawn(SpawnLocations[i])){
+                                    rc.spawn(SpawnLocations[i]);
+                                    break;
+                                }
+                            }
+                            //try all other spaces if intended ones dont work
+                            if(!rc.isSpawned()){
+                                for(int i = 0; i < 18; i++) {
+                                    if (rc.canSpawn(SpawnLocations[i])) {
+                                        rc.spawn(SpawnLocations[i]);
+                                        break;
+                                    }
+                                }
+                            }
+                            //if spawn location isnt locked, cycle to next spawn location for next duck to use
+                            if(rc.isSpawned() && !Utilities.readBitSharedArray(rc, 1021)){
+                                Utilities.editBitSharedArray(rc, 1022, false);
+                                Utilities.editBitSharedArray(rc, 1023, false);
+                            }
+                        }
+                        //means 01, spawn loc 9-17, if not locked then cycle to 10
+                        else if(Utilities.readBitSharedArray(rc, 1023)){
+                            //spawn from spawnLocs[9-17], then try other places if that doesnt work
+                            for(int i = 9; i <= 17; i++){
+                                if(rc.canSpawn(SpawnLocations[i])){
+                                    rc.spawn(SpawnLocations[i]);
+                                    break;
+                                }
+                            }
+                            //try all other spaces if intended ones dont work
+                            if(!rc.isSpawned()){
+                                for(int i = 0; i < 27; i++){
+                                    if(rc.canSpawn(SpawnLocations[i])) {
+                                        rc.spawn(SpawnLocations[i]);
+                                        break;
+                                    }
+                                }
+                            }
+                            //if spawn location isnt locked, cycle to next spawn location for next duck to use
+                            if(rc.isSpawned() && !Utilities.readBitSharedArray(rc, 1021)){
+                                Utilities.editBitSharedArray(rc, 1022, true);
+                                Utilities.editBitSharedArray(rc, 1023, false);
+                            }
+                        }
+                        //means 00, spawn loc 0-8, if not locked then cycle to 01
+                        else{
+                            //spawn from spawnLocs[0-8], then try other places if that doesnt work
+                            for(int i = 0; i <= 8; i++){
+                                if(rc.canSpawn(SpawnLocations[i])){
+                                    rc.spawn(SpawnLocations[i]);
+                                    break;
+                                }
+                            }
+                            //try all other spaces if intended ones dont work
+                            if(!rc.isSpawned()){
+                                for(int i = 9; i < 27; i++){
+                                    if(rc.canSpawn(SpawnLocations[i])) {
+                                        rc.spawn(SpawnLocations[i]);
+                                        break;
+                                    }
+                                }
+                            }
+                            //if spawn location isnt locked, cycle to next spawn location for next duck to use
+                            if(rc.isSpawned() && !Utilities.readBitSharedArray(rc, 1021)){
+                                Utilities.editBitSharedArray(rc, 1023, true);
                             }
                         }
                     }
