@@ -19,6 +19,8 @@ public strictfp class RobotPlayer {
      * You can use static variables like this to save any information you want. Keep in mind that even though
      * these variables are static, in Battlecode they aren't actually shared between your robots.
      */
+    //used to unlock spawn locs 20 turns after locking it, if no longer under attack - otherwise, reset count
+    static int countSinceLocked = 0;
     static int turnCount = 0;
     static MapLocation[] SpawnLocations = new MapLocation[27]; //All the spawn locations. low:close to center high:away from center
     static Direction preferredDirection = null; //For scouts, it's the direction their intending to go in
@@ -129,7 +131,6 @@ public strictfp class RobotPlayer {
                         if (role == null) {
                             int numSoldiers = rc.readSharedArray(52);
                             int numBuilders = rc.readSharedArray(53);
-
                             if ((numSoldiers + numBuilders) == 0) {
                                 role = roles.builder;
                                 incrementBuilder(rc);
@@ -224,16 +225,15 @@ public strictfp class RobotPlayer {
                     }
                 } else {
                     //write our own flag locations to shared array at start
-                    if (turnCount == 2 && rc.senseNearbyFlags(-1)[0].getLocation().equals(rc.getLocation())) {
-                        int toPush = Utilities.convertLocationToInt(rc.getLocation());
+                    if (turnCount == 2) {
                         if (rc.readSharedArray(0) == 0) {
-                            rc.writeSharedArray(0, toPush);
+                            rc.writeSharedArray(0, Utilities.convertLocationToInt(SpawnLocations[5]));
                             rc.setIndicatorString("look at me!!");
-                        } else if (rc.readSharedArray(1) == 0 && rc.readSharedArray(0) != toPush) {
-                            rc.writeSharedArray(1, toPush);
+                        } else if (rc.readSharedArray(1) == 0) {
+                            rc.writeSharedArray(1, Utilities.convertLocationToInt(SpawnLocations[14]));
                             rc.setIndicatorString("look at me!!");
-                        } else if (rc.readSharedArray(2) == 0 && rc.readSharedArray(1) != toPush) {
-                            rc.writeSharedArray(2, toPush);
+                        } else if (rc.readSharedArray(2) == 0) {
+                            rc.writeSharedArray(2, Utilities.convertLocationToInt(SpawnLocations[23]));
                             rc.setIndicatorString("look at me!!");
                         }
                     }

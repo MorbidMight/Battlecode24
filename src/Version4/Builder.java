@@ -6,12 +6,41 @@ import static Version4.RobotPlayer.*;
 
 public class Builder {
     public static void runBuilder(RobotController rc) throws GameActionException {
-        if(!rc.isSpawned())
+        if(!rc.isSpawned()) {
             Clock.yield();
-
-
+        }
         Task t = Utilities.readTask(rc);
         if (SittingOnFlag) {
+            if(countSinceLocked !=0){
+                countSinceLocked++;
+            }
+            if(countSinceLocked >= 20){
+                countSinceLocked = 0;
+                Utilities.editBitSharedArray(rc, 1021, false);
+            }
+            //check if nearby enemies are coming to attack, call for robots to prioritize spawning at ur flag
+            if(rc.senseNearbyRobots(-1, rc.getTeam().opponent()).length > rc.senseNearbyRobots(-1, rc.getTeam()).length){
+                //spawn everyone in 0-8 if possible, also lock so it wont cycle
+                if(rc.getLocation().equals(Utilities.convertIntToLocation(rc.readSharedArray(0)))){
+                    Utilities.editBitSharedArray(rc, 1022, false);
+                    Utilities.editBitSharedArray(rc, 1023, false);
+                    //lock
+                    Utilities.editBitSharedArray(rc, 1021, true);
+                }
+                else if(rc.getLocation().equals(Utilities.convertIntToLocation(rc.readSharedArray(1)))){
+                    Utilities.editBitSharedArray(rc, 1022, false);
+                    Utilities.editBitSharedArray(rc, 1023, true);
+                    //lock
+                    Utilities.editBitSharedArray(rc, 1021, true);
+                }
+                else{
+                    Utilities.editBitSharedArray(rc, 1022, true);
+                    Utilities.editBitSharedArray(rc, 1023, false);
+                    //lock
+                    Utilities.editBitSharedArray(rc, 1021, true);
+                }
+                countSinceLocked++;
+            }
             System.out.println("A");
             UpdateExplosionBorder(rc);
         } else if (t != null) {//there is a task to do
