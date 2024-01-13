@@ -2,7 +2,7 @@ package Version5;
 
 import battlecode.common.*;
 
-import static Version4.RobotPlayer.*;
+import static Version5.RobotPlayer.*;
 
 public class Soldier
 {
