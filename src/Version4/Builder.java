@@ -15,7 +15,7 @@ public class Builder {
             System.out.println("A");
             UpdateExplosionBorder(rc);
         } else if (t != null) {//there is a task to do
-            Pathfinding.tryToMove(rc, t.location);
+            Pathfinding.bugNav2(rc, t.location);
             if (locationIsActionable(rc, t.location)) {
                 if (rc.canBuild(TrapType.EXPLOSIVE, t.location)) {
                     rc.build(TrapType.EXPLOSIVE, t.location);

@@ -13,7 +13,7 @@ public class Soldier
         //try to move towards any seen opponent flags
         FlagInfo[] nearbyOppFlags = rc.senseNearbyFlags(-1, rc.getTeam().opponent());
         if(nearbyOppFlags.length != 0 && !nearbyOppFlags[0].isPickedUp()){
-            Pathfinding.tryToMove(rc, nearbyOppFlags[0].getLocation());
+            Pathfinding.bugNav2(rc, nearbyOppFlags[0].getLocation());
         }
         //pickup enemy flag if we can
         if (rc.canPickupFlag(rc.getLocation()) && rc.getRoundNum() > GameConstants.SETUP_ROUNDS) {
@@ -29,7 +29,7 @@ public class Soldier
 //                rc.move(dir);
 //            }
             rc.setIndicatorString("moving flag");
-            Pathfinding.tryToMove(rc, closestSpawnLoc);
+            Pathfinding.bugNav2(rc, closestSpawnLoc);
         }
 
         //attack
@@ -48,7 +48,7 @@ public class Soldier
             MapLocation closestBroadcasted = findClosestBroadcastFlags(rc);
             if (closestBroadcasted != null) {
                 rc.setIndicatorString("going to broadcast location");
-                Pathfinding.tryToMove(rc, closestBroadcasted);
+                Pathfinding.bugNav2(rc, closestBroadcasted);
             }
             if(allyRobotsHealRange.length > 0)
             {
@@ -57,7 +57,7 @@ public class Soldier
                 if(toHeal != null && rc.canHeal(toHeal.getLocation())){
                     rc.heal(toHeal.getLocation());
                 }
-                Pathfinding.tryToMove(rc, Utilities.newGetClosestEnemy(rc));
+                Pathfinding.bugNav2(rc, Utilities.newGetClosestEnemy(rc));
             }
         }
         //enemy in view
@@ -79,7 +79,7 @@ public class Soldier
                     MapLocation closestBroadcasted = findClosestBroadcastFlags(rc);
                     rc.setIndicatorString("go to broadcast location when there are no enemies to attack ");
                     if (closestBroadcasted != null) {
-                        Pathfinding.tryToMove(rc, closestBroadcasted);
+                        Pathfinding.bugNav2(rc, closestBroadcasted);
                     }
                     //Can Heal
                     if (allyRobotsHealRange.length > 0) {
