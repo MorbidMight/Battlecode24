@@ -8,10 +8,18 @@ import java.util.PriorityQueue;
 
 public class Pathfinding
 {
+
+    //for bugNav2
+    private static MapLocation previousDestination = null;
+    private static HashSet<MapLocation> lineLocations = null;
+    private static int obstacleStartDistance = 0;
+    private static int bugState = 0;
+    private static int turnDirection = -1;
+    private static Direction bugDirection;
+
+
     public static Direction AStar(RobotController rc, MapLocation destination)
     {
-
-
         HashMap<MapLocation, AStarNode> nodes = new HashMap<>();
         PriorityQueue<AStarNode> unvisitedNodes = new PriorityQueue<>();
         HashSet<MapLocation> visitedNodes = new HashSet<MapLocation>();
@@ -83,18 +91,12 @@ public class Pathfinding
         return numNull;
     }
 
-    public static boolean InBounds(RobotController rc, MapLocation location)
-    {
-        MapInfo checkedLocation = RobotPlayer.seenLocations.get(location);
-        return location.x < rc.getMapWidth() && location.y < rc.getMapHeight() && location.x >= 0 && location.y >= 0
-                && (checkedLocation == null || checkedLocation.isPassable());
-    }
 
     public static Direction basicPathfinding(RobotController rc, MapLocation targetLocation, boolean newRoute) throws GameActionException {
         if (newRoute) {
             resetBasicPathfinding();
         }
-        if(RobotPlayer.alreadyBeen.size() >= 8)
+        if(RobotPlayer.alreadyBeen.size() >= 15)
             resetBasicPathfinding();
         //get current location of the robot
         MapLocation currentLocation = rc.getLocation();
@@ -148,6 +150,186 @@ public class Pathfinding
 
     public static void resetBasicPathfinding() {
         RobotPlayer.alreadyBeen.clear();
+    }
+
+    public static void bugNav2(RobotController rc, MapLocation destination) throws GameActionException {
+        if(destination == null)
+        {
+            return;
+        }
+        if(!destination.equals(previousDestination))
+        {
+            previousDestination = destination;
+            lineLocations = createLine(rc.getLocation(), destination);
+        }
+
+        /*for(MapLocation ml : lineLocations)
+        {
+            rc.setIndicatorDot(ml, 255,0,0);
+        }*/
+
+        if(RobotPlayer.turnCount % 10 == 0)
+        {
+            bugState = 0;
+        }
+        if(bugState == 0)
+        {
+            bugDirection = rc.getLocation().directionTo(destination);
+            if(rc.canMove(bugDirection))
+            {
+                rc.move(bugDirection);
+            }
+            else
+            {
+                bugState = 1;
+                obstacleStartDistance = rc.getLocation().distanceSquaredTo(destination);
+                bugDirection = rc.getLocation().directionTo(destination);
+            }
+        }
+        else
+        {
+            if(lineLocations.contains(rc.getLocation()) && rc.getLocation().distanceSquaredTo(destination) < obstacleStartDistance)
+            {
+                bugState = 0;
+                turnDirection = -1;
+            }
+
+            if(turnDirection == -1)
+            {
+                Direction tempBugDirectionRight = bugDirection;
+                for(int i = 0; i < 8; i++)
+                {
+                    if(rc.canMove(tempBugDirectionRight))
+                    {
+                        //rc.move(bugDirection);
+                        tempBugDirectionRight = tempBugDirectionRight.rotateRight();
+                        break;
+                    }
+                    else
+                    {
+                        tempBugDirectionRight = bugDirection.rotateLeft();
+                    }
+                }
+                Direction tempBugDirectionLeft = bugDirection;
+                for(int i = 0; i < 8; i++)
+                {
+                    if(rc.canMove(tempBugDirectionLeft))
+                    {
+                        //rc.move(bugDirection);
+                        tempBugDirectionLeft = tempBugDirectionLeft.rotateLeft();
+                        break;
+                    }
+                    else
+                    {
+                        tempBugDirectionLeft = tempBugDirectionLeft.rotateLeft();
+                    }
+                }
+                if(rc.getLocation().add(tempBugDirectionRight).distanceSquaredTo(destination)
+                        < rc.getLocation().add(tempBugDirectionLeft).distanceSquaredTo(destination))
+                {
+                    turnDirection = 0;
+                }else
+                {
+                    turnDirection = 1;
+                }
+            }
+
+            if(turnDirection == 0)
+            {
+                for (int i = 0; i < 8; i++)
+                {
+                    if (rc.canMove(bugDirection))
+                    {
+                        rc.move(bugDirection);
+                        bugDirection = bugDirection.rotateRight();
+                        break;
+                    }
+                    else
+                    {
+                        bugDirection = bugDirection.rotateLeft();
+                    }
+                }
+            }
+            else
+            {
+                for (int i = 0; i < 8; i++)
+                {
+                    if (rc.canMove(bugDirection))
+                    {
+                        rc.move(bugDirection);
+                        bugDirection = bugDirection.rotateLeft();
+                        break;
+                    }
+                    else
+                    {
+                        bugDirection = bugDirection.rotateRight();
+                    }
+                }
+            }
+        }
+    }
+
+    public static HashSet<MapLocation> createLine(MapLocation a, MapLocation b)
+    {
+        HashSet<MapLocation> locations = new HashSet<>();
+        int x = a.x, y = a.y;
+        int dx = Math.abs(b.x - a.x);
+        int dy = Math.abs(b.y - a.y);
+        int sx = (int) Math.signum(dx);
+        int sy = (int) Math.signum(dy);
+        int d = Math.max(dx, dy);
+        int r = d/2;
+        if(dx > dy)
+        {
+           for(int i = 0; i < d; i++)
+           {
+               locations.add(new MapLocation(x,y));
+               x += sx;
+               r += dy;
+               if(r >= dx)
+               {
+                   locations.add(new MapLocation(x,y));
+                   y += sy;
+                   r -= dx;
+               }
+           }
+        }else
+        {
+            for(int i = 0; i < d; i++)
+            {
+                locations.add(new MapLocation(x,y));
+                y += sy;
+                r += dx;
+                if(r >= dy)
+                {
+                    locations.add(new MapLocation(x,y));
+                    x += sx;
+                    r -= dy;
+                }
+            }
+        }
+        locations.add(new MapLocation(x,y));
+        return  locations;
+    }
+
+    public static void combinedPathfinding(RobotController rc, MapLocation destination) throws GameActionException
+    {
+        if(destination == null) return;
+        if(rc.canSenseLocation(destination))
+        {
+            tryToMove(rc, destination);
+        }
+        else
+        {
+            bugNav2(rc, destination);
+        }
+    }
+
+    public static boolean InBounds(RobotController rc, MapLocation location)
+    {
+        MapInfo checkedLocation = RobotPlayer.seenLocations.get(location);
+        return location.x < rc.getMapWidth() && location.y < rc.getMapHeight() && location.x >= 0 && location.y >= 0
+                && (checkedLocation == null || checkedLocation.isPassable());
     }
 }
 

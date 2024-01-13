@@ -30,7 +30,7 @@ public class Explorer
             if(!targetLoc.isPassable() && rc.canFill(targetCrumb)){
                 rc.fill(targetCrumb);
             }
-            Pathfinding.tryToMove(rc, targetCrumb);
+            Pathfinding.bugNav2(rc, targetCrumb);
         }
 
         Direction tempDir = preferredDirection;
