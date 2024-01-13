@@ -75,13 +75,11 @@ public class Soldier
                 //Can't Attack
                 else {
                     //Move
-                    if (allyRobotsHealRange.length == 0) {
-                        //Task System/ Broadcast locations
-                        MapLocation closestBroadcasted = findClosestBroadcastFlags(rc);
-                        rc.setIndicatorString("go to broadcast location when there are no enemies to attack ");
-                        if (closestBroadcasted != null) {
-                            Pathfinding.tryToMove(rc, closestBroadcasted);
-                        }
+                    //Task System/ Broadcast locations
+                    MapLocation closestBroadcasted = findClosestBroadcastFlags(rc);
+                    rc.setIndicatorString("go to broadcast location when there are no enemies to attack ");
+                    if (closestBroadcasted != null) {
+                        Pathfinding.tryToMove(rc, closestBroadcasted);
                     }
                     //Can Heal
                     if (allyRobotsHealRange.length > 0) {
