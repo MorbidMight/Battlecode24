@@ -106,8 +106,8 @@ return 0;
 
     public static void UpdateExplosionBorder(RobotController rc) throws GameActionException {
         for (MapInfo t : rc.senseNearbyMapInfos(GameConstants.INTERACT_RADIUS_SQUARED)) {
-            if (rc.canBuild(TrapType.EXPLOSIVE, t.getMapLocation())&&t.getTrapType().equals(TrapType.NONE)) {
-                rc.build(TrapType.EXPLOSIVE, t.getMapLocation());
+            if (rc.canBuild(TrapType.STUN, t.getMapLocation())&&t.getTrapType().equals(TrapType.NONE)) {
+                rc.build(TrapType.STUN, t.getMapLocation());
                 System.out.println("Building a bomb");
             }
         }
