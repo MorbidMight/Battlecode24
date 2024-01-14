@@ -41,7 +41,20 @@ public class Builder {
                 }
                 countSinceLocked++;
             }
+            System.out.println("A");
             UpdateExplosionBorder(rc);
+            /*if(rc.senseNearbyRobots(-1, rc.getTeam().opponent()).length > 0)
+            {
+                System.out.println("Sensed!!!!!!!!!!!!");
+               if(rc.canBuild(TrapType.EXPLOSIVE, rc.getLocation().add(rc.getLocation().directionTo(rc.senseNearbyRobots(-1, rc.getTeam().opponent())[0].getLocation()))))
+                {
+                   rc.build(TrapType.EXPLOSIVE, rc.getLocation().add(rc.getLocation().directionTo(rc.senseNearbyRobots(-1, rc.getTeam().opponent())[0].getLocation())));
+                }
+               else
+               {
+                   System.out.println("" + rc.getCrumbs());
+               }
+            }*/
         } else if (t != null) {//there is a task to do
             Pathfinding.bugNav2(rc, t.location);
             if (locationIsActionable(rc, t.location)) {
@@ -95,6 +108,7 @@ return 0;
         for (MapInfo t : rc.senseNearbyMapInfos(GameConstants.INTERACT_RADIUS_SQUARED)) {
             if (rc.canBuild(TrapType.STUN, t.getMapLocation())&&t.getTrapType().equals(TrapType.NONE)) {
                 rc.build(TrapType.STUN, t.getMapLocation());
+                System.out.println("Building a bomb");
             }
         }
     }
