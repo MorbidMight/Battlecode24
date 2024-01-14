@@ -149,77 +149,87 @@ public strictfp class RobotPlayer {
                         }
                     }
                     else{
-                        //decide which place to spawn at based on last two bits of shared array, and
-                        //whether to cycle that spawn location based on third to last bit
-                        //means 10, spawn locs 18-26, if not locked then cycle to 00
-                        if(Utilities.readBitSharedArray(rc, 1022)){
-                            //spawn from spawnLocs[18-26], then try other places if that doesnt work
-                            for(int i = 18; i <= 26; i++){
-                                if(rc.canSpawn(SpawnLocations[i])){
-                                    rc.spawn(SpawnLocations[i]);
-                                    break;
-                                }
+                        if(SittingOnFlag){
+                            if(rc.canSpawn(SpawnLocations[4]))
+                                rc.spawn(SpawnLocations[4]);
+                            else if(rc.canSpawn(SpawnLocations[13]))
+                                rc.spawn(SpawnLocations[13]);
+                            else if(rc.canSpawn(SpawnLocations[22])) {
+                                rc.spawn(SpawnLocations[22]);
                             }
-                            //try all other spaces if intended ones dont work
-                            if(!rc.isSpawned()){
-                                for(int i = 0; i < 18; i++) {
+                        } else {
+                            //decide which place to spawn at based on last two bits of shared array, and
+                            //whether to cycle that spawn location based on third to last bit
+                            //means 10, spawn locs 18-26, if not locked then cycle to 00
+                            if (Utilities.readBitSharedArray(rc, 1022)) {
+                                //spawn from spawnLocs[18-26], then try other places if that doesnt work
+                                for (int i = 18; i <= 26; i++) {
                                     if (rc.canSpawn(SpawnLocations[i])) {
                                         rc.spawn(SpawnLocations[i]);
                                         break;
                                     }
                                 }
-                            }
-                            //if spawn location isnt locked, cycle to next spawn location for next duck to use
-                            if(rc.isSpawned() && !Utilities.readBitSharedArray(rc, 1021)){
-                                Utilities.editBitSharedArray(rc, 1022, false);
-                                Utilities.editBitSharedArray(rc, 1023, false);
-                            }
-                        }
-                        //means 01, spawn loc 9-17, if not locked then cycle to 10
-                        else if(Utilities.readBitSharedArray(rc, 1023)){
-                            //spawn from spawnLocs[9-17], then try other places if that doesnt work
-                            for(int i = 9; i <= 17; i++){
-                                if(rc.canSpawn(SpawnLocations[i])){
-                                    rc.spawn(SpawnLocations[i]);
-                                    break;
+                                //try all other spaces if intended ones dont work
+                                if (!rc.isSpawned()) {
+                                    for (int i = 0; i < 18; i++) {
+                                        if (rc.canSpawn(SpawnLocations[i])) {
+                                            rc.spawn(SpawnLocations[i]);
+                                            break;
+                                        }
+                                    }
+                                }
+                                //if spawn location isnt locked, cycle to next spawn location for next duck to use
+                                if (rc.isSpawned() && !Utilities.readBitSharedArray(rc, 1021)) {
+                                    Utilities.editBitSharedArray(rc, 1022, false);
+                                    Utilities.editBitSharedArray(rc, 1023, false);
                                 }
                             }
-                            //try all other spaces if intended ones dont work
-                            if(!rc.isSpawned()){
-                                for(int i = 0; i < 27; i++){
-                                    if(rc.canSpawn(SpawnLocations[i])) {
+                            //means 01, spawn loc 9-17, if not locked then cycle to 10
+                            else if (Utilities.readBitSharedArray(rc, 1023)) {
+                                //spawn from spawnLocs[9-17], then try other places if that doesnt work
+                                for (int i = 9; i <= 17; i++) {
+                                    if (rc.canSpawn(SpawnLocations[i])) {
                                         rc.spawn(SpawnLocations[i]);
                                         break;
                                     }
                                 }
-                            }
-                            //if spawn location isnt locked, cycle to next spawn location for next duck to use
-                            if(rc.isSpawned() && !Utilities.readBitSharedArray(rc, 1021)){
-                                Utilities.editBitSharedArray(rc, 1022, true);
-                                Utilities.editBitSharedArray(rc, 1023, false);
-                            }
-                        }
-                        //means 00, spawn loc 0-8, if not locked then cycle to 01
-                        else{
-                            //spawn from spawnLocs[0-8], then try other places if that doesnt work
-                            for(int i = 0; i <= 8; i++){
-                                if(rc.canSpawn(SpawnLocations[i])){
-                                    rc.spawn(SpawnLocations[i]);
-                                    break;
+                                //try all other spaces if intended ones dont work
+                                if (!rc.isSpawned()) {
+                                    for (int i = 0; i < 27; i++) {
+                                        if (rc.canSpawn(SpawnLocations[i])) {
+                                            rc.spawn(SpawnLocations[i]);
+                                            break;
+                                        }
+                                    }
+                                }
+                                //if spawn location isnt locked, cycle to next spawn location for next duck to use
+                                if (rc.isSpawned() && !Utilities.readBitSharedArray(rc, 1021)) {
+                                    Utilities.editBitSharedArray(rc, 1022, true);
+                                    Utilities.editBitSharedArray(rc, 1023, false);
                                 }
                             }
-                            //try all other spaces if intended ones dont work
-                            if(!rc.isSpawned()){
-                                for(int i = 9; i < 27; i++){
-                                    if(rc.canSpawn(SpawnLocations[i])) {
+                            //means 00, spawn loc 0-8, if not locked then cycle to 01
+                            else {
+                                //spawn from spawnLocs[0-8], then try other places if that doesnt work
+                                for (int i = 0; i <= 8; i++) {
+                                    if (rc.canSpawn(SpawnLocations[i])) {
                                         rc.spawn(SpawnLocations[i]);
                                         break;
                                     }
                                 }
-                            }
-                            //if spawn location isnt locked, cycle to next spawn location for next duck to use
-                            if(rc.isSpawned() && !Utilities.readBitSharedArray(rc, 1021)){
-                                Utilities.editBitSharedArray(rc, 1023, true);
+                                //try all other spaces if intended ones dont work
+                                if (!rc.isSpawned()) {
+                                    for (int i = 9; i < 27; i++) {
+                                        if (rc.canSpawn(SpawnLocations[i])) {
+                                            rc.spawn(SpawnLocations[i]);
+                                            break;
+                                        }
+                                    }
+                                }
+                                //if spawn location isnt locked, cycle to next spawn location for next duck to use
+                                if (rc.isSpawned() && !Utilities.readBitSharedArray(rc, 1021)) {
+                                    Utilities.editBitSharedArray(rc, 1023, true);
+                                }
                             }
                         }
                     }
@@ -227,13 +237,13 @@ public strictfp class RobotPlayer {
                     //write our own flag locations to shared array at start
                     if (turnCount == 2) {
                         if (rc.readSharedArray(0) == 0) {
-                            rc.writeSharedArray(0, Utilities.convertLocationToInt(SpawnLocations[5]));
+                            rc.writeSharedArray(0, Utilities.convertLocationToInt(SpawnLocations[4]));
                             rc.setIndicatorString("look at me!!");
                         } else if (rc.readSharedArray(1) == 0) {
-                            rc.writeSharedArray(1, Utilities.convertLocationToInt(SpawnLocations[14]));
+                            rc.writeSharedArray(1, Utilities.convertLocationToInt(SpawnLocations[13]));
                             rc.setIndicatorString("look at me!!");
                         } else if (rc.readSharedArray(2) == 0) {
-                            rc.writeSharedArray(2, Utilities.convertLocationToInt(SpawnLocations[23]));
+                            rc.writeSharedArray(2, Utilities.convertLocationToInt(SpawnLocations[22]));
                             rc.setIndicatorString("look at me!!");
                         }
                     }
@@ -295,17 +305,17 @@ public strictfp class RobotPlayer {
                     if (rc.hasFlag() && rc.getRoundNum() >= GameConstants.SETUP_ROUNDS) {
                         MapLocation[] spawnLocs = rc.getAllySpawnLocations();
                         MapLocation targetLoc;
-                        int distance_1 = rc.getLocation().distanceSquaredTo(spawnLocs[5]);
-                        int distance_2 = rc.getLocation().distanceSquaredTo(spawnLocs[14]);
-                        int distance_3 = rc.getLocation().distanceSquaredTo(spawnLocs[23]);
+                        int distance_1 = rc.getLocation().distanceSquaredTo(spawnLocs[4]);
+                        int distance_2 = rc.getLocation().distanceSquaredTo(spawnLocs[13]);
+                        int distance_3 = rc.getLocation().distanceSquaredTo(spawnLocs[22]);
                         if (distance_1 < distance_2) {
                             if (distance_1 < distance_3) {
-                                targetLoc = spawnLocs[5];
+                                targetLoc = spawnLocs[4];
                             } else {
-                                targetLoc = spawnLocs[23];
+                                targetLoc = spawnLocs[22];
                             }
                         } else {
-                            targetLoc = spawnLocs[14];
+                            targetLoc = spawnLocs[13];
                         }
                         Direction dir = rc.getLocation().directionTo(targetLoc);
                         Pathfinding.tryToMove(rc, targetLoc);
@@ -375,9 +385,9 @@ public strictfp class RobotPlayer {
         MapLocation targetLoc = null;
         if (rc.hasFlag() && rc.getRoundNum() >= GameConstants.SETUP_ROUNDS) {
             MapLocation[] spawnLocs = rc.getAllySpawnLocations();
-            int distance_1 = (rc.readSharedArray(0) == 0) ? rc.getLocation().distanceSquaredTo(spawnLocs[5]) : rc.getLocation().distanceSquaredTo(Utilities.convertIntToLocation(rc.readSharedArray(0)));
-            int distance_2 = (rc.readSharedArray(1) == 0) ? rc.getLocation().distanceSquaredTo(spawnLocs[14]) : rc.getLocation().distanceSquaredTo(Utilities.convertIntToLocation(rc.readSharedArray(1)));
-            int distance_3 = (rc.readSharedArray(2) == 0) ? rc.getLocation().distanceSquaredTo(spawnLocs[23]) : rc.getLocation().distanceSquaredTo(Utilities.convertIntToLocation(rc.readSharedArray(2)));
+            int distance_1 = (rc.readSharedArray(0) == 0) ? rc.getLocation().distanceSquaredTo(spawnLocs[4]) : rc.getLocation().distanceSquaredTo(Utilities.convertIntToLocation(rc.readSharedArray(0)));
+            int distance_2 = (rc.readSharedArray(1) == 0) ? rc.getLocation().distanceSquaredTo(spawnLocs[13]) : rc.getLocation().distanceSquaredTo(Utilities.convertIntToLocation(rc.readSharedArray(1)));
+            int distance_3 = (rc.readSharedArray(2) == 0) ? rc.getLocation().distanceSquaredTo(spawnLocs[22]) : rc.getLocation().distanceSquaredTo(Utilities.convertIntToLocation(rc.readSharedArray(2)));
             if (distance_1 < distance_2) {
                 if (distance_1 < distance_3) {
                     targetLoc = Utilities.convertIntToLocation(rc.readSharedArray(0));
@@ -502,9 +512,9 @@ public strictfp class RobotPlayer {
     static MapLocation calculateFlagDestination(RobotController rc) {
         MapLocation[] spawnLocs = rc.getAllySpawnLocations();
         MapLocation[] flagOrigins = new MapLocation[3];
-        flagOrigins[0] = spawnLocs[5];
-        flagOrigins[1] = spawnLocs[14];
-        flagOrigins[2] = spawnLocs[23];
+        flagOrigins[0] = spawnLocs[4];
+        flagOrigins[1] = spawnLocs[13];
+        flagOrigins[2] = spawnLocs[22];
         float x = (float) (flagOrigins[0].x + flagOrigins[1].x + flagOrigins[2].x) / 3;
         float y = (float) (flagOrigins[0].y + flagOrigins[1].y + flagOrigins[2].y) / 3;
         int mapSizeX = rc.getMapWidth();
