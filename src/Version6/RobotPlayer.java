@@ -49,6 +49,11 @@ public strictfp class RobotPlayer {
 
     public static final int NUMHEALERS = 10;
 
+    static Random rng;
+
+    //used by explorers
+    static int turnsSinceLocGen = 0;
+    static MapLocation targetLoc;
 
     /**
      * A random number generator.
@@ -56,7 +61,6 @@ public strictfp class RobotPlayer {
      * import at the top of this file. Here, we *seed* the RNG with a constant number (6147); this makes sure
      * we get the same sequence of numbers every time this code is run. This is very useful for debugging!
      */
-    static final Random rng = new Random(6147);
 
     /**
      * Array containing all the possible movement directions.
@@ -86,7 +90,7 @@ public strictfp class RobotPlayer {
      **/
     @SuppressWarnings("unused")
     public static void run(RobotController rc) throws GameActionException {
-
+        rng = new Random(rc.getID());
         while (true) {
             //changes explorers to soldiers at round 200
             if (rc.getRoundNum() == GameConstants.SETUP_ROUNDS && role == roles.explorer)
@@ -326,25 +330,15 @@ public strictfp class RobotPlayer {
                         rc.writeSharedArray(58, Utilities.convertLocationToInt(rc.getLocation()));
                         Pathfinding.tryToMove(rc, findClosestSpawnLocation(rc));
                     }
-                    MoveAwayFromSpawnLocations(rc);
-                    Direction dir = directions[rng.nextInt(directions.length)];
-                    MapLocation nextLoc = rc.getLocation().add(dir);
-                    if (enemyRobots.length > 0 && rc.canAttack(enemyRobots[0].location)) {
-                        rc.attack(enemyRobots[0].location);
-                    }
-
-                    // Rarely attempt placing traps behind the robot.
-                    MapLocation prevLoc = rc.getLocation().subtract(dir);
-                    if (rc.canBuild(TrapType.EXPLOSIVE, prevLoc) && rng.nextInt() % 37 == 1)
-                        rc.build(TrapType.EXPLOSIVE, prevLoc);
-
+//                    if(rc.getRoundNum() < 10)
+//                        MoveAwayFromSpawnLocations(rc);
                     switch (role)
                     {
                         case builder:
                             rc.setIndicatorDot(rc.getLocation(), 0,0,255);
                             break;
                         case explorer:
-                            rc.setIndicatorDot(rc.getLocation(), 255,0,0);
+                            rc.setIndicatorDot(rc.getLocation(), 255,255,255);
                             break;
                         case healer:
                             rc.setIndicatorDot(rc.getLocation(), 0,255,0);
@@ -480,45 +474,45 @@ public strictfp class RobotPlayer {
         }
     }
 
-    static void MoveAwayFromSpawnLocations(RobotController rc) throws GameActionException {
-        if(role.equals(roles.builder)){
-            return;
-        }
-        if (LocIsSpawnLocation(rc.getLocation())) {
-            //remove loop for efficiency later
-            for (Direction d : directions) {
-                for (MapLocation l : SpawnLocations) {
-                    if (!rc.getLocation().add(d).equals(l) && rc.canMove(d))
-                        rc.move(d);
-                }
-            }
-        }
-        int t = rng.nextInt(directions.length);
-        //make ducks go to center
-        //maybe implement keeping distance
-        MapLocation centerOfMap = new MapLocation(rc.getMapWidth() / 2, rc.getMapHeight() / 2);
-        Direction directionTowardsCenter = rc.getLocation().directionTo(centerOfMap);
-        if (rc.canMove(directionTowardsCenter) && turnCount > 150 && turnCount < 200) {
-            rc.move(directionTowardsCenter);
-        } else {
-            //change direction taken based off robotID
-            if (rc.getID() % 2 == 0) {
-                for (int i = 0; i < 8; i++) {
-                    Direction dir = directions[(t + i) % 8];
-                    if (!LocIsSpawnLocation(rc.getLocation().add(dir)) && rc.canMove(dir)) {
-                        rc.move(dir);
-                    }
-                }
-            } else {
-                for (int i = 0; i < 8; i++) {
-                    Direction dir = directions[8 - ((t + i) % 8) - 1];
-                    if (!LocIsSpawnLocation(rc.getLocation().add(dir)) && rc.canMove(dir)) {
-                        rc.move(dir);
-                    }
-                }
-            }
-        }
-    }
+//    static void MoveAwayFromSpawnLocations(RobotController rc) throws GameActionException {
+//        if(role.equals(roles.builder)){
+//            return;
+//        }
+//        if (LocIsSpawnLocation(rc.getLocation())) {
+//            //remove loop for efficiency later
+//            for (Direction d : directions) {
+//                for (MapLocation l : SpawnLocations) {
+//                    if (!rc.getLocation().add(d).equals(l) && rc.canMove(d))
+//                        rc.move(d);
+//                }
+//            }
+//        }
+//        int t = rng.nextInt(directions.length);
+//        //make ducks go to center
+//        //maybe implement keeping distance
+//        MapLocation centerOfMap = new MapLocation(rc.getMapWidth() / 2, rc.getMapHeight() / 2);
+//        Direction directionTowardsCenter = rc.getLocation().directionTo(centerOfMap);
+//        if (rc.canMove(directionTowardsCenter) && turnCount > 150 && turnCount < 200) {
+//            rc.move(directionTowardsCenter);
+//        } else {
+//            //change direction taken based off robotID
+//            if (rc.getID() % 2 == 0) {
+//                for (int i = 0; i < 8; i++) {
+//                    Direction dir = directions[(t + i) % 8];
+//                    if (!LocIsSpawnLocation(rc.getLocation().add(dir)) && rc.canMove(dir)) {
+//                        rc.move(dir);
+//                    }
+//                }
+//            } else {
+//                for (int i = 0; i < 8; i++) {
+//                    Direction dir = directions[8 - ((t + i) % 8) - 1];
+//                    if (!LocIsSpawnLocation(rc.getLocation().add(dir)) && rc.canMove(dir)) {
+//                        rc.move(dir);
+//                    }
+//                }
+//            }
+//        }
+    //}
 
     static boolean LocIsSpawnLocation(MapLocation l) {
         for (MapLocation d : SpawnLocations) {

@@ -41,7 +41,6 @@ public class Builder {
                 }
                 countSinceLocked++;
             }
-            System.out.println("A");
             UpdateExplosionBorder(rc);
         } else if (t != null) {//there is a task to do
             Pathfinding.bugNav2(rc, t.location);
@@ -52,8 +51,6 @@ public class Builder {
             }
 
         } else {//there is no task to be done
-
-
             //There is no task to be done and all the flags have guys sitting on them
             //Move away from the nearest guys avoiding ops especicially
             Direction d = directionToMove(rc);
@@ -96,9 +93,8 @@ return 0;
 
     public static void UpdateExplosionBorder(RobotController rc) throws GameActionException {
         for (MapInfo t : rc.senseNearbyMapInfos(GameConstants.INTERACT_RADIUS_SQUARED)) {
-            if (rc.canBuild(TrapType.EXPLOSIVE, t.getMapLocation())&&t.getTrapType().equals(TrapType.NONE)) {
-                rc.build(TrapType.EXPLOSIVE, t.getMapLocation());
-                System.out.println("Building a bomb");
+            if (rc.canBuild(TrapType.STUN, t.getMapLocation())&&t.getTrapType().equals(TrapType.NONE)) {
+                rc.build(TrapType.STUN, t.getMapLocation());
             }
         }
     }
