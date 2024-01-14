@@ -41,7 +41,7 @@ public class Builder {
                 }
                 countSinceLocked++;
             }
-            //System.out.println("A");
+            System.out.println("A");
             UpdateExplosionBorder(rc);
             /*if(rc.senseNearbyRobots(-1, rc.getTeam().opponent()).length > 0)
             {
@@ -64,8 +64,6 @@ public class Builder {
             }
 
         } else {//there is no task to be done
-
-
             //There is no task to be done and all the flags have guys sitting on them
             //Move away from the nearest guys avoiding ops especicially
             Direction d = directionToMove(rc);

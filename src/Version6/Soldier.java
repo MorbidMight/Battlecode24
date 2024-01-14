@@ -9,6 +9,19 @@ public class Soldier
 {
     public static void runSoldier(RobotController rc) throws GameActionException {
 
+        //tries to get neary crumbs
+        MapLocation[] nearbyCrumbs = rc.senseNearbyCrumbs(-1);
+        MapLocation targetCrumb = null;
+        if (nearbyCrumbs.length > 0)
+            targetCrumb = Explorer.chooseTargetCrumb(rc, nearbyCrumbs);
+        if (targetCrumb != null) {
+            MapInfo targetLoc = rc.senseMapInfo(targetCrumb);
+            //check if crumb is on water
+            if (!targetLoc.isPassable() && rc.canFill(targetCrumb)) {
+                rc.fill(targetCrumb);
+            }
+            Pathfinding.bugNav2(rc, targetCrumb);
+        }
         //blank declaration, will be set by something
         Direction dir; // = Pathfinding.basicPathfinding(rc, new MapLocation(rc.getMapWidth() / 2, rc.getMapHeight() / 2), false);
         //try to move towards any seen opponent flags
@@ -98,7 +111,7 @@ public class Soldier
                 if (toAttack != null && rc.canAttack(toAttack))
                     rc.attack(toAttack);
                 if(rc.getLocation() != null && toAttack != null && rc.canMove(rc.getLocation().directionTo(toAttack)))
-                    rc.move(rc.getLocation().directionTo(toAttack));
+                    Pathfinding.tryToMove(rc, rc.getLocation().add(rc.getLocation().directionTo(toAttack)));
             }
         }
 

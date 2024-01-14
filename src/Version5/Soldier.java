@@ -73,7 +73,6 @@ public class Soldier
                 if (toAttack != null && rc.canAttack(toAttack))
                 {
                     rc.attack(toAttack);
-
                 }
                 //Can't Attack
                 else {
