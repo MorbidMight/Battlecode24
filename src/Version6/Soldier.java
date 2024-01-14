@@ -98,7 +98,7 @@ public class Soldier
                 if (toAttack != null && rc.canAttack(toAttack))
                     rc.attack(toAttack);
                 if(rc.getLocation() != null && toAttack != null && rc.canMove(rc.getLocation().directionTo(toAttack)))
-                    rc.move(rc.getLocation().directionTo(toAttack));
+                    Pathfinding.tryToMove(rc, rc.getLocation().add(rc.getLocation().directionTo(toAttack)));
             }
         }
 

@@ -315,6 +315,7 @@ public strictfp class RobotPlayer {
                     RobotInfo[] enemyRobots = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
                     Utilities.recordEnemies(rc, enemyRobots);
                     Utilities.clearObsoleteEnemies(rc);
+                    checkEnemyHasOurFlag(rc);
                     checkFlagDropped(rc);
 
                     //pickup enemy flag after setup phase ends
@@ -326,7 +327,7 @@ public strictfp class RobotPlayer {
                         rc.writeSharedArray(58, Utilities.convertLocationToInt(rc.getLocation()));
                         Pathfinding.tryToMove(rc, findClosestSpawnLocation(rc));
                     }
-                    MoveAwayFromSpawnLocations(rc);
+                    if(rc.getRoundNum() < 200) MoveAwayFromSpawnLocations(rc);
                     Direction dir = directions[rng.nextInt(directions.length)];
                     MapLocation nextLoc = rc.getLocation().add(dir);
                     if (enemyRobots.length > 0 && rc.canAttack(enemyRobots[0].location)) {
@@ -617,6 +618,18 @@ public strictfp class RobotPlayer {
         else
         {
             rc.writeSharedArray(58,0);
+        }
+    }
+
+    public static void checkEnemyHasOurFlag(RobotController rc) throws GameActionException
+    {
+        RobotInfo[] robots = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
+        for(RobotInfo robot : robots)
+        {
+            if(robot.hasFlag())
+            {
+                rc.writeSharedArray(58, Utilities.convertLocationToInt(robot.getLocation()));
+            }
         }
     }
 
