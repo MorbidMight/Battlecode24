@@ -319,6 +319,7 @@ public strictfp class RobotPlayer {
                     RobotInfo[] enemyRobots = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
                     Utilities.recordEnemies(rc, enemyRobots);
                     Utilities.clearObsoleteEnemies(rc);
+                    checkEnemyHasOurFlag(rc);
                     checkFlagDropped(rc);
 
                     //pickup enemy flag after setup phase ends
@@ -338,7 +339,7 @@ public strictfp class RobotPlayer {
                             rc.setIndicatorDot(rc.getLocation(), 0,0,255);
                             break;
                         case explorer:
-                            rc.setIndicatorDot(rc.getLocation(), 255,255,255);
+                            rc.setIndicatorDot(rc.getLocation(), 255,0,0);
                             break;
                         case healer:
                             rc.setIndicatorDot(rc.getLocation(), 0,255,0);
@@ -611,6 +612,18 @@ public strictfp class RobotPlayer {
         else
         {
             rc.writeSharedArray(58,0);
+        }
+    }
+
+    public static void checkEnemyHasOurFlag(RobotController rc) throws GameActionException
+    {
+        RobotInfo[] robots = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
+        for(RobotInfo robot : robots)
+        {
+            if(robot.hasFlag())
+            {
+                rc.writeSharedArray(58, Utilities.convertLocationToInt(robot.getLocation()));
+            }
         }
     }
 

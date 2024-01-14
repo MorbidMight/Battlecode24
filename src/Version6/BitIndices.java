@@ -8,7 +8,4 @@ public class BitIndices {
     public static final int soldierSittingOnFlag1 = 992;
     public static final int soldierSittingOnFlag2 = 993;
     public static final int soldierSittingOnFlag3 = 994;
-
-
-
 }

@@ -1,9 +1,6 @@
 package Version6;
 
-import battlecode.common.GameActionException;
-import battlecode.common.MapLocation;
-import battlecode.common.RobotController;
-import battlecode.common.RobotInfo;
+import battlecode.common.*;
 
 public class Utilities {
 
@@ -241,5 +238,12 @@ public class Utilities {
             }
         }
         return possibleHeals[lowIndex];
+    }
+
+    public static void writeFlagToSharedArray(RobotController rc, Flag flag, int flagIndex) throws GameActionException
+    {
+        int value = Utilities.convertLocationToInt(flag.location);
+        value = value | (flag.isStolen ? 1: 0) << 13;
+        rc.writeSharedArray(flagIndex, value);
     }
 }
