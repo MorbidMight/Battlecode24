@@ -111,8 +111,6 @@ public strictfp class RobotPlayer {
 
             // Try/catch blocks stop unhandled exceptions, which cause your robot to explode.
             try {
-                if(turnCount > 500)
-                    rc.resign();
                 // Make sure you spawn your robot in before you attempt to take any actions!
                 // Robots not spawned in do not have vision of any tiles and cannot perform any actions.
                 if (turnCount == 1) {//first turn fill the spawn location into the array ranked
