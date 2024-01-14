@@ -111,6 +111,8 @@ public strictfp class RobotPlayer {
 
             // Try/catch blocks stop unhandled exceptions, which cause your robot to explode.
             try {
+                if(turnCount > 500)
+                    rc.resign();
                 // Make sure you spawn your robot in before you attempt to take any actions!
                 // Robots not spawned in do not have vision of any tiles and cannot perform any actions.
                 if (turnCount == 1) {//first turn fill the spawn location into the array ranked
@@ -166,12 +168,14 @@ public strictfp class RobotPlayer {
                     }
                     else{
                         if(SittingOnFlag){
-                            if(rc.canSpawn(SpawnLocations[4]))
-                                rc.spawn(SpawnLocations[4]);
-                            else if(rc.canSpawn(SpawnLocations[13]))
-                                rc.spawn(SpawnLocations[13]);
-                            else if(rc.canSpawn(SpawnLocations[22])) {
-                                rc.spawn(SpawnLocations[22]);
+                            if(rc.canSpawn(Utilities.convertIntToLocation(rc.readSharedArray(0)))){
+                                rc.spawn(Utilities.convertIntToLocation(rc.readSharedArray(0)));
+                            }
+                            else if(rc.canSpawn(Utilities.convertIntToLocation(rc.readSharedArray(1)))){
+                                rc.spawn(Utilities.convertIntToLocation(rc.readSharedArray(1)));
+                            }
+                            else if(rc.canSpawn(Utilities.convertIntToLocation(rc.readSharedArray(2)))){
+                                rc.spawn(Utilities.convertIntToLocation(rc.readSharedArray(2)));
                             }
                         } else {
                             //currently, just spawns anywhere - makes a more unified attack?
@@ -263,13 +267,17 @@ public strictfp class RobotPlayer {
                     }
                 } else {
                     //write our own flag locations to shared array at start
-                    if (turnCount == 2) {
+                    if (turnCount == 2 && rc.senseNearbyFlags(-1)[0].getLocation().equals(rc.getLocation())) {
+                        int toPush = Version3.Utilities.convertLocationToInt(rc.getLocation());
                         if (rc.readSharedArray(0) == 0) {
-                            rc.writeSharedArray(0, Utilities.convertLocationToInt(SpawnLocations[4]));
-                        } else if (rc.readSharedArray(1) == 0) {
-                            rc.writeSharedArray(1, Utilities.convertLocationToInt(SpawnLocations[13]));
-                        } else if (rc.readSharedArray(2) == 0) {
-                            rc.writeSharedArray(2, Utilities.convertLocationToInt(SpawnLocations[22]));
+                            rc.writeSharedArray(0, toPush);
+                            rc.setIndicatorString("look at me!!");
+                        } else if (rc.readSharedArray(1) == 0 && rc.readSharedArray(0) != toPush) {
+                            rc.writeSharedArray(1, toPush);
+                            rc.setIndicatorString("look at me!!");
+                        } else if (rc.readSharedArray(2) == 0 && rc.readSharedArray(1) != toPush) {
+                            rc.writeSharedArray(2, toPush);
+                            rc.setIndicatorString("look at me!!");
                         }
                     }
                     alreadyBeen.add(rc.getLocation());
@@ -402,9 +410,9 @@ public strictfp class RobotPlayer {
         MapLocation targetLoc = null;
         if (rc.hasFlag() && rc.getRoundNum() >= GameConstants.SETUP_ROUNDS) {
             MapLocation[] spawnLocs = rc.getAllySpawnLocations();
-            int distance_1 = (rc.readSharedArray(0) == 0) ? rc.getLocation().distanceSquaredTo(spawnLocs[4]) : rc.getLocation().distanceSquaredTo(Utilities.convertIntToLocation(rc.readSharedArray(0)));
-            int distance_2 = (rc.readSharedArray(1) == 0) ? rc.getLocation().distanceSquaredTo(spawnLocs[13]) : rc.getLocation().distanceSquaredTo(Utilities.convertIntToLocation(rc.readSharedArray(1)));
-            int distance_3 = (rc.readSharedArray(2) == 0) ? rc.getLocation().distanceSquaredTo(spawnLocs[22]) : rc.getLocation().distanceSquaredTo(Utilities.convertIntToLocation(rc.readSharedArray(2)));
+            int distance_1 = rc.getLocation().distanceSquaredTo(Utilities.convertIntToLocation(rc.readSharedArray(0)));
+            int distance_2 = rc.getLocation().distanceSquaredTo(Utilities.convertIntToLocation(rc.readSharedArray(1)));
+            int distance_3 = rc.getLocation().distanceSquaredTo(Utilities.convertIntToLocation(rc.readSharedArray(2)));
             if (distance_1 < distance_2) {
                 if (distance_1 < distance_3) {
                     targetLoc = Utilities.convertIntToLocation(rc.readSharedArray(0));
