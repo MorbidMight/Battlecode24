@@ -7,10 +7,14 @@ import static Version5.RobotPlayer.*;
 public class Soldier
 {
     public static void runSoldier(RobotController rc) throws GameActionException {
-        rc.setIndicatorString("Soldier code");
         //blank declaration, will be set by something
         Direction dir; // = Pathfinding.basicPathfinding(rc, new MapLocation(rc.getMapWidth() / 2, rc.getMapHeight() / 2), false);
         //try to move towards any seen opponent flags
+        if(rc.readSharedArray(58) != 0)
+        {
+            Pathfinding.tryToMove(rc, Utilities.convertIntToLocation(rc.readSharedArray(58)));
+            rc.setIndicatorString("Helping teammate @ " + Utilities.convertIntToLocation(rc.readSharedArray(58)));
+        }
         FlagInfo[] nearbyOppFlags = rc.senseNearbyFlags(-1, rc.getTeam().opponent());
         if(nearbyOppFlags.length != 0 && !nearbyOppFlags[0].isPickedUp()){
             Pathfinding.bugNav2(rc, nearbyOppFlags[0].getLocation());
@@ -29,7 +33,7 @@ public class Soldier
 //                rc.move(dir);
 //            }
             rc.setIndicatorString("moving flag");
-            Pathfinding.bugNav2(rc, closestSpawnLoc);
+            if(rc.isMovementReady()) Pathfinding.bugNav2(rc, closestSpawnLoc);
         }
 
         //attack
@@ -47,17 +51,15 @@ public class Soldier
             //Task System/ Broadcast locations
             MapLocation closestBroadcasted = findClosestBroadcastFlags(rc);
             if (closestBroadcasted != null) {
-                rc.setIndicatorString("going to broadcast location");
-                Pathfinding.bugNav2(rc, closestBroadcasted);
+                if(rc.isMovementReady()) Pathfinding.bugNav2(rc, closestBroadcasted);
             }
             if(allyRobotsHealRange.length > 0)
             {
-                rc.setIndicatorString("trying to heal");
                 //Heal Allies if possible
                 if(toHeal != null && rc.canHeal(toHeal.getLocation())){
                     rc.heal(toHeal.getLocation());
                 }
-                Pathfinding.bugNav2(rc, Utilities.newGetClosestEnemy(rc));
+                if(rc.isMovementReady()) Pathfinding.bugNav2(rc, Utilities.newGetClosestEnemy(rc));
             }
         }
         //enemy in view
@@ -68,7 +70,6 @@ public class Soldier
                 MapLocation toAttack = lowestHealth(enemyRobotsAttackRange);
                 if (toAttack != null && rc.canAttack(toAttack))
                 {
-                    rc.setIndicatorString("attack when there are more enemies");
                     rc.attack(toAttack);
 
                 }
@@ -77,13 +78,11 @@ public class Soldier
                     //Move
                     //Task System/ Broadcast locations
                     MapLocation closestBroadcasted = findClosestBroadcastFlags(rc);
-                    rc.setIndicatorString("go to broadcast location when there are no enemies to attack ");
                     if (closestBroadcasted != null) {
-                        Pathfinding.bugNav2(rc, closestBroadcasted);
+                        if(rc.isMovementReady()) Pathfinding.bugNav2(rc, closestBroadcasted);
                     }
                     //Can Heal
                     if (allyRobotsHealRange.length > 0) {
-                        rc.setIndicatorString("try to heal allies if no enemies to attack");
                         if(toHeal != null && rc.canHeal(toHeal.getLocation())){
                             rc.heal(toHeal.getLocation());
                         }
@@ -93,7 +92,6 @@ public class Soldier
             //Less Enemies
             else
             {
-                rc.setIndicatorString("try to attack/ move forward when there are more allies than enemies");
                 MapLocation toAttack = lowestHealth(enemyRobotsAttackRange);
                 if (toAttack != null && rc.canAttack(toAttack))
                     rc.attack(toAttack);

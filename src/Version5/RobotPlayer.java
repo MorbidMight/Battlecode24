@@ -259,7 +259,6 @@ public strictfp class RobotPlayer {
                             rc.setIndicatorString("look at me!!");
                         }
                     }
-                    updateSeenLocations(rc);
                     alreadyBeen.add(rc.getLocation());
                     if (!rc.hasFlag()) {
                         switch (role) {
@@ -277,7 +276,6 @@ public strictfp class RobotPlayer {
                                 break;
                             case soldier:
                                 Soldier.runSoldier(rc);
-                                rc.setIndicatorString("soldier");
                                 break;
                         }
                     }
@@ -307,7 +305,7 @@ public strictfp class RobotPlayer {
                     RobotInfo[] enemyRobots = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
                     Utilities.recordEnemies(rc, enemyRobots);
                     Utilities.clearObsoleteEnemies(rc);
-
+                    checkFlagDropped(rc);
 
                     //pickup enemy flag after setup phase ends
                     if (rc.canPickupFlag(rc.getLocation()) && rc.getRoundNum() > GameConstants.SETUP_ROUNDS) {
@@ -315,22 +313,8 @@ public strictfp class RobotPlayer {
                     }
                     //if we have an enemy flag, bring it to the closest area
                     if (rc.hasFlag() && rc.getRoundNum() >= GameConstants.SETUP_ROUNDS) {
-                        MapLocation[] spawnLocs = rc.getAllySpawnLocations();
-                        MapLocation targetLoc;
-                        int distance_1 = rc.getLocation().distanceSquaredTo(spawnLocs[4]);
-                        int distance_2 = rc.getLocation().distanceSquaredTo(spawnLocs[13]);
-                        int distance_3 = rc.getLocation().distanceSquaredTo(spawnLocs[22]);
-                        if (distance_1 < distance_2) {
-                            if (distance_1 < distance_3) {
-                                targetLoc = spawnLocs[4];
-                            } else {
-                                targetLoc = spawnLocs[22];
-                            }
-                        } else {
-                            targetLoc = spawnLocs[13];
-                        }
-                        Direction dir = rc.getLocation().directionTo(targetLoc);
-                        Pathfinding.tryToMove(rc, targetLoc);
+                        rc.writeSharedArray(58, Utilities.convertLocationToInt(rc.getLocation()));
+                        Pathfinding.tryToMove(rc, findClosestSpawnLocation(rc));
                     }
                     MoveAwayFromSpawnLocations(rc);
                     Direction dir = directions[rng.nextInt(directions.length)];
@@ -585,6 +569,24 @@ public strictfp class RobotPlayer {
     public static void incrementBuilder(RobotController rc) throws GameActionException
     {
         rc.writeSharedArray(53, rc.readSharedArray(53) + 1);
+    }
+
+    public static void checkFlagDropped(RobotController rc) throws GameActionException
+    {
+        MapLocation tempLocation = Utilities.convertIntToLocation(rc.readSharedArray(58));
+        if(!rc.canSenseLocation(tempLocation)) return;
+        if(rc.readSharedArray(58) == 0) return;
+        if(rc.canSenseRobotAtLocation(tempLocation))
+        {
+            if(!rc.senseRobotAtLocation(tempLocation).hasFlag())
+            {
+                rc.writeSharedArray(58, 0);
+            }
+        }
+        else
+        {
+            rc.writeSharedArray(58,0);
+        }
     }
 
 }
