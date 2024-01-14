@@ -3,10 +3,12 @@ package Version5;
 import battlecode.common.*;
 
 import static Version5.RobotPlayer.*;
+import static Version5.Utilities.bestHeal;
 
 public class Soldier
 {
     public static void runSoldier(RobotController rc) throws GameActionException {
+
         //blank declaration, will be set by something
         Direction dir; // = Pathfinding.basicPathfinding(rc, new MapLocation(rc.getMapWidth() / 2, rc.getMapHeight() / 2), false);
         //try to move towards any seen opponent flags
@@ -102,28 +104,7 @@ public class Soldier
 
 
         }
-        //returns the lowest health nearby ally
-    //returns null if empty array
-    public static RobotInfo bestHeal(RobotController rc, RobotInfo[] possibleHeals) {
-        if(possibleHeals.length == 0){
-            return null;
-        }
-        int lowHealth = possibleHeals[0].health;
-        int lowIndex = 0;
-        if(possibleHeals[0].hasFlag()){
-            return possibleHeals[0];
-        }
-        for(int i = 1; i < possibleHeals.length; i++){
-            if(possibleHeals[i].hasFlag()){
-                return possibleHeals[i];
-            }
-            if(possibleHeals[i].health < lowHealth){
-                lowIndex = i;
-                lowHealth = possibleHeals[i].getHealth();
-            }
-        }
-        return possibleHeals[lowIndex];
-    }
+
 
         /*
         if (enemyRobots.length > allyRobots.length)

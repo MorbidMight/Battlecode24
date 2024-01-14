@@ -44,8 +44,10 @@ public strictfp class RobotPlayer {
     static ArrayList<MapLocation> prevDestinations;
 
     //Ratios for spawning
-    public static final float SOLDIER_RATIO = 0.8f;
-    public static final float BUILDER_RATIO = 0.2f;
+    public static final int NUMSOLDIERS = 35;
+    public static final int NUMBUILDERS = 5;
+
+    public static final int NUMHEALERS = 10;
 
 
     /**
@@ -128,22 +130,32 @@ public strictfp class RobotPlayer {
                                 rc.setIndicatorString("SittingOnFlag");
                             }
                         }
-                        if (role == null) {
+                        if (role == null)
+                        {
                             int numSoldiers = rc.readSharedArray(52);
                             int numBuilders = rc.readSharedArray(53);
-                            if ((numSoldiers + numBuilders) == 0) {
+                            int numHealers = rc.readSharedArray(54);
+                            if ((numSoldiers + numBuilders + numHealers) == 0)
+                            {
                                 role = roles.builder;
                                 incrementBuilder(rc);
-                            } else {
-                                System.out.println(numSoldiers);
-                                if ((float) numSoldiers / (numBuilders + numSoldiers) < SOLDIER_RATIO) {
-                                    if (rc.getRoundNum() < 200) role = roles.explorer;
-                                    else role = roles.soldier;
-                                    incrementSoldier(rc);
-                                } else //((float) numBuilders / (numBuilders + numSoldiers) < BUILDER_RATIO)
+                            } else
+                            {
+                                if (numBuilders < NUMBUILDERS)
                                 {
                                     role = roles.builder;
                                     incrementBuilder(rc);
+                                }
+                                else if (numSoldiers < NUMSOLDIERS)
+                                {
+                                    if (rc.getRoundNum() < 200) role = roles.explorer;
+                                    else role = roles.soldier;
+                                    incrementSoldier(rc);
+                                }
+                                else
+                                {
+                                    role = roles.healer;
+                                    incrementHealer(rc);
                                 }
                             }
                         }
@@ -250,13 +262,10 @@ public strictfp class RobotPlayer {
                     if (turnCount == 2) {
                         if (rc.readSharedArray(0) == 0) {
                             rc.writeSharedArray(0, Utilities.convertLocationToInt(SpawnLocations[4]));
-                            rc.setIndicatorString("look at me!!");
                         } else if (rc.readSharedArray(1) == 0) {
                             rc.writeSharedArray(1, Utilities.convertLocationToInt(SpawnLocations[13]));
-                            rc.setIndicatorString("look at me!!");
                         } else if (rc.readSharedArray(2) == 0) {
                             rc.writeSharedArray(2, Utilities.convertLocationToInt(SpawnLocations[22]));
-                            rc.setIndicatorString("look at me!!");
                         }
                     }
                     alreadyBeen.add(rc.getLocation());
@@ -276,6 +285,7 @@ public strictfp class RobotPlayer {
                                 break;
                             case soldier:
                                 Soldier.runSoldier(rc);
+                                rc.setIndicatorString("soldier");
                                 break;
                         }
                     }
@@ -327,6 +337,22 @@ public strictfp class RobotPlayer {
                     MapLocation prevLoc = rc.getLocation().subtract(dir);
                     if (rc.canBuild(TrapType.EXPLOSIVE, prevLoc) && rng.nextInt() % 37 == 1)
                         rc.build(TrapType.EXPLOSIVE, prevLoc);
+
+                    switch (role)
+                    {
+                        case builder:
+                            rc.setIndicatorDot(rc.getLocation(), 0,0,255);
+                            break;
+                        case explorer:
+                            rc.setIndicatorDot(rc.getLocation(), 255,0,0);
+                            break;
+                        case healer:
+                            rc.setIndicatorDot(rc.getLocation(), 0,255,0);
+                            break;
+                        case soldier:
+                            rc.setIndicatorDot(rc.getLocation(), 255,0,0);
+                            break;
+                    }
                 }
 
             } catch (GameActionException e) {
@@ -569,6 +595,11 @@ public strictfp class RobotPlayer {
     public static void incrementBuilder(RobotController rc) throws GameActionException
     {
         rc.writeSharedArray(53, rc.readSharedArray(53) + 1);
+    }
+
+    public static void incrementHealer(RobotController rc) throws GameActionException
+    {
+        rc.writeSharedArray(54, rc.readSharedArray(54) + 1);
     }
 
     public static void checkFlagDropped(RobotController rc) throws GameActionException

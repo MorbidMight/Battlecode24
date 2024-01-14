@@ -206,4 +206,40 @@ public class Utilities {
         return closest;
     }
 
+    //array must be greater than 0
+    public static MapLocation averageRobotLocation(RobotInfo[] robots)
+    {
+        int x = 0;
+        int y = 0;
+        for(RobotInfo robot : robots)
+        {
+            x += robot.location.x;
+            y += robot.location.y;
+        }
+
+        return new MapLocation(x / robots.length, y/robots.length);
+    }
+
+    //returns the lowest health nearby ally
+    //returns null if empty array
+    public static RobotInfo bestHeal(RobotController rc, RobotInfo[] possibleHeals) {
+        if(possibleHeals.length == 0){
+            return null;
+        }
+        int lowHealth = possibleHeals[0].health;
+        int lowIndex = 0;
+        if(possibleHeals[0].hasFlag()){
+            return possibleHeals[0];
+        }
+        for(int i = 1; i < possibleHeals.length; i++){
+            if(possibleHeals[i].hasFlag()){
+                return possibleHeals[i];
+            }
+            if(possibleHeals[i].health < lowHealth){
+                lowIndex = i;
+                lowHealth = possibleHeals[i].getHealth();
+            }
+        }
+        return possibleHeals[lowIndex];
+    }
 }
