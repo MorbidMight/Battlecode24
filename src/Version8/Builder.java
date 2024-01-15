@@ -19,11 +19,15 @@ public class Builder {
         Task t = Utilities.readTask(rc);
         if (SittingOnFlag)
         {
+
+            if(!Utilities.readBitSharedArray(rc, 1021)){
+                determineSpawnLocation(rc);
+            }
             //sitting where flag should be, but cant see any flags...
             //if we still cant see a flag 50 turns later, then until we do see one we're gonna assume this location should essentially be shut down
             if(rc.senseNearbyFlags(-1, rc.getTeam()).length == 0){
                 //shut down this spawn location for now
-                if(countSinceSeenFlag > 40){
+                if(countSinceSeenFlag > 30){
                     rc.setIndicatorString("Dont come help me!");
                     Clock.yield();
                 }
@@ -40,10 +44,13 @@ public class Builder {
             if(countSinceLocked >= 20){
                 countSinceLocked = 0;
                 Utilities.editBitSharedArray(rc, 1021, false);
+                //when we unlock the spawning location, have them spawn close to the action
+                determineSpawnLocation(rc);
+
             }
             //check if nearby enemies are coming to attack, call for robots to prioritize spawning at ur flag
-            if(rc.senseNearbyRobots(-1, rc.getTeam().opponent()).length > rc.senseNearbyRobots(-1, rc.getTeam()).length){
-                //spawn everyone in 0-8 if possible, also lock so it wont cycle
+            if(rc.senseNearbyRobots(GameConstants.VISION_RADIUS_SQUARED, rc.getTeam().opponent()).length > rc.senseNearbyRobots(GameConstants.VISION_RADIUS_SQUARED, rc.getTeam()).length){
+                //spawn everyone adjanct to spawn 0
                 if(rc.getLocation().equals(Utilities.convertIntToLocation(rc.readSharedArray(0)))){
                     Utilities.editBitSharedArray(rc, 1022, false);
                     Utilities.editBitSharedArray(rc, 1023, false);
@@ -67,7 +74,7 @@ public class Builder {
             //UpdateExplosionBorder(rc);
             if(rc.senseNearbyRobots(-1, rc.getTeam().opponent()).length > 0)
             {
-                System.out.println("Sensed!!!!!!!!!!!!");
+                //System.out.println("Sensed!!!!!!!!!!!!");
                 Direction directionOfAttack = rc.getLocation().directionTo(rc.senseNearbyRobots(-1, rc.getTeam().opponent())[0].getLocation());
                if(rc.canBuild(TrapType.EXPLOSIVE, rc.getLocation().add(directionOfAttack)))
                {
@@ -191,19 +198,40 @@ return 0;
         }
     }
 
-    public static void runBuild(RobotController rc, RobotInfo[] enemies) throws GameActionException
-    {
+    public static void runBuild(RobotController rc, RobotInfo[] enemies) throws GameActionException {
         PriorityQueue<MapLocationWithDistance> bestTrapLocations = getBestBombLocations(rc, enemies);
-        while (!bestTrapLocations.isEmpty())
-        {
+        while (!bestTrapLocations.isEmpty()) {
             MapLocation currentTryLocation = bestTrapLocations.remove().location;
-            if (currentTryLocation != null && rc.canBuild(TrapType.STUN, currentTryLocation))
-            {
-                if(rc.getCrumbs() > 500)
+            if (currentTryLocation != null && rc.canBuild(TrapType.STUN, currentTryLocation)) {
+                if (rc.getCrumbs() > 500)
                     rc.build(TrapType.STUN, currentTryLocation);
             }
         }
     }
+    //sets spawn location to the closest spawn location to the action
+    public static void determineSpawnLocation(RobotController rc) throws GameActionException {
+        int x = findClosestSpawnLocationToCoordinatedBroadcast(rc);
+        //last two digits of shared array should be 00
+        if(x == 0){
+            Utilities.editBitSharedArray(rc, 1022, false);
+            Utilities.editBitSharedArray(rc, 1023, false);
+        }
+        //last two digits need to be 01
+        else if(x == 1){
+            Utilities.editBitSharedArray(rc, 1022, false);
+            Utilities.editBitSharedArray(rc, 1023, true);
+        }
+        //last two digits should be 10
+        else if(x==2){
+            Utilities.editBitSharedArray(rc, 1022, true);
+            Utilities.editBitSharedArray(rc, 1023, false);
+        }
+        //something went wrong
+        else{
+            return;
+        }
+    }
+
 
     public static PriorityQueue<MapLocationWithDistance> getBestBombLocations(RobotController rc, RobotInfo[] enemies)
     {
