@@ -56,6 +56,11 @@ public class Utilities {
     {
         int value = convertLocationToInt(task.location);
         value = (value | ((task.builderDispatched) ? 1: 0) << 13);
+        for(int i = 6; i < 28; i++){
+            if(value == rc.readSharedArray(i)){
+                return;
+            }
+        }
         rc.writeSharedArray(arrayIndex, value);
     }
 

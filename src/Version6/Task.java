@@ -29,4 +29,15 @@ public class Task
                 ", arrayIndex=" + arrayIndex +
                 '}';
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (obj.getClass() != this.getClass()) {
+            return false;
+        }
+        return ((Task) obj).location.equals(this.location);
+    }
 }

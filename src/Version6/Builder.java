@@ -6,6 +6,11 @@ import static Version6.RobotPlayer.*;
 
 public class Builder {
     public static void runBuilder(RobotController rc) throws GameActionException {
+        if(turnCount == 150){
+            for(int i = 6; i < 28; i++){
+                Utilities.clearTask(rc, i);
+            }
+        }
         if(!rc.isSpawned()) {
             Clock.yield();
         }
@@ -41,7 +46,6 @@ public class Builder {
                 }
                 countSinceLocked++;
             }
-            System.out.println("A");
             UpdateExplosionBorder(rc);
             /*if(rc.senseNearbyRobots(-1, rc.getTeam().opponent()).length > 0)
             {
@@ -58,14 +62,17 @@ public class Builder {
         } else if (t != null) {//there is a task to do
             Pathfinding.bugNav2(rc, t.location);
             if (locationIsActionable(rc, t.location)) {
-                if (rc.canBuild(TrapType.EXPLOSIVE, t.location)) {
-                    rc.build(TrapType.EXPLOSIVE, t.location);
+                if (rc.canBuild(TrapType.STUN, t.location)) {
+                    rc.build(TrapType.STUN, t.location);
+                    Utilities.clearTask(rc, t.arrayIndex);
                 }
             }
-
         } else {//there is no task to be done
             //There is no task to be done and all the flags have guys sitting on them
             //Move away from the nearest guys avoiding ops especicially
+            if(rc.getLocation().distanceSquaredTo(findClosestSpawnLocation(rc)) > 15){
+                Pathfinding.bugNav2(rc, findClosestSpawnLocation(rc));
+            }
             Direction d = directionToMove(rc);
             for(int i = 0;i<8;i++){
                 if(rc.canMove(d)){

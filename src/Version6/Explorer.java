@@ -11,6 +11,14 @@ public class Explorer
         if(!rc.isSpawned()){
             Clock.yield();
         }
+        if(isAdjacentToDam(rc) && turnCount < 150 && rc.senseMapInfo(rc.getLocation()).getTrapType() == TrapType.NONE){
+            Task bomb = new Task(rc.getLocation(), false);
+            int index = Utilities.openTaskIndex(rc);
+            bomb.arrayIndex = index;
+            if(index != -1){
+                Utilities.setTaskSharedArray(rc, bomb, index);
+            }
+        }
         //condense on dam for when it breaks
         MapLocation centerOfMap = new MapLocation(rc.getMapWidth() / 2, rc.getMapHeight() / 2);
         MapLocation nearestEnemyFlag = findClosestBroadcastFlags(rc);

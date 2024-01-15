@@ -361,7 +361,7 @@ public strictfp class RobotPlayer {
     //returns closest spawn location
     public static MapLocation findClosestSpawnLocation(RobotController rc) throws GameActionException {
         MapLocation targetLoc = null;
-        if (rc.hasFlag() && rc.getRoundNum() >= GameConstants.SETUP_ROUNDS) {
+        if (rc.hasFlag() && rc.getRoundNum() >= GameConstants.SETUP_ROUNDS || role == roles.builder) {
             MapLocation[] spawnLocs = rc.getAllySpawnLocations();
             int distance_1 = rc.getLocation().distanceSquaredTo(Utilities.convertIntToLocation(rc.readSharedArray(0)));
             int distance_2 = rc.getLocation().distanceSquaredTo(Utilities.convertIntToLocation(rc.readSharedArray(1)));
