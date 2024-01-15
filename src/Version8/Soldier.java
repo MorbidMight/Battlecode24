@@ -51,13 +51,7 @@ public class Soldier
             }
             //if you have the flag, just run back, and maybe fill in water on the way
             if (rc.hasFlag()) {
-                MapLocation closestSpawnLoc = findClosestSpawnLocation(rc);
-                Direction d = rc.getLocation().directionTo(closestSpawnLoc);
-                if (rc.canFill(rc.getLocation().add(d))) {
-                    rc.fill(rc.getLocation().add(d));
-                }
-                rc.setIndicatorString("moving flag");
-                Pathfinding.bugNav2(rc, closestSpawnLoc);
+                Carrier.runCarrier(rc);
             }
             //take in important info around you
             RobotInfo[] enemyRobots = rc.senseNearbyRobots(GameConstants.VISION_RADIUS_SQUARED, rc.getTeam().opponent());

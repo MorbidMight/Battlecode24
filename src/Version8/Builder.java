@@ -9,28 +9,31 @@ import java.util.PriorityQueue;
 
 import static Version8.RobotPlayer.*;
 
+//Current Builder strategy
+//if a builder is spawned on a flag it sits there and places bombs around
+//if there a task to dp the builder goes to the task location and build a different trap based on context
+//Otherwise it wanders around and places traps wherever
+//in addition if a teammate current has a flag they don't place any bombs so that the bomb carrier can live.
 public class Builder {
     public static void runBuilder(RobotController rc) throws GameActionException {
-        if(turnCount == 150){
-            for(int i = 6; i < 28; i++){
+        if (turnCount == 150) {
+            for (int i = 6; i < 28; i++) {
                 Utilities.clearTask(rc, i);
             }
         }
-        if(!rc.isSpawned()) {
+        if (!rc.isSpawned()) {
             Clock.yield();
         }
         Task t = Utilities.readTask(rc);
-        if (SittingOnFlag)
-        {
+        if (SittingOnFlag) {
             //sitting where flag should be, but cant see any flags...
             //if we still cant see a flag 50 turns later, then until we do see one we're gonna assume this location should essentially be shut down
-            if(rc.senseNearbyFlags(-1, rc.getTeam()).length == 0){
+            if (rc.senseNearbyFlags(-1, rc.getTeam()).length == 0) {
                 //shut down this spawn location for now
-                if(countSinceSeenFlag > 40){
+                if (countSinceSeenFlag > 40) {
                     rc.setIndicatorString("Dont come help me!");
                     Clock.yield();
-                }
-                else{
+                } else {
                     countSinceSeenFlag++;
                 }
             }
@@ -85,10 +88,10 @@ public class Builder {
         {//there is a task to do
             Pathfinding.bugNav2(rc, t.location);
             if (locationIsActionable(rc, t.location)) {
-                if (rc.canBuild(TrapType.STUN, t.location)) {
-                    rc.build(TrapType.STUN, t.location);
-                    Utilities.clearTask(rc, t.arrayIndex);
-                }
+                TrapType toBeBuilt = TrapType.STUN;
+                if (rc.getCrumbs() > 2000)
+                    toBeBuilt = TrapType.EXPLOSIVE;
+                Utilities.clearTask(rc, t.arrayIndex);
             }
         }
         else
@@ -191,8 +194,7 @@ public class Builder {
         while (!bestTrapLocations.isEmpty())
         {
             MapLocation currentTryLocation = bestTrapLocations.remove().location;
-            if (currentTryLocation != null && rc.canBuild(TrapType.STUN, currentTryLocation) && rc.getCrumbs() > 300)
-            {
+            if (currentTryLocation != null && rc.canBuild(TrapType.STUN, currentTryLocation)) {
                 rc.build(TrapType.STUN, currentTryLocation);
             }
         }

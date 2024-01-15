@@ -214,8 +214,12 @@ public class Utilities {
     //array must be greater than 0
     public static MapLocation averageRobotLocation(RobotInfo[] robots)
     {
+
         int x = 0;
         int y = 0;
+        if(robots.length==0){
+            return null;
+        }
         for(RobotInfo robot : robots)
         {
             x += robot.location.x;
