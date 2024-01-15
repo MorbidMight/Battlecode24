@@ -45,7 +45,7 @@ public class Builder {
                 Utilities.editBitSharedArray(rc, 1021, false);
             }
             //check if nearby enemies are coming to attack, call for robots to prioritize spawning at ur flag
-            if(rc.senseNearbyRobots(-1, rc.getTeam().opponent()).length > rc.senseNearbyRobots(-1, rc.getTeam()).length){
+            if(rc.senseNearbyRobots(GameConstants.VISION_RADIUS_SQUARED, rc.getTeam().opponent()).length > rc.senseNearbyRobots(GameConstants.VISION_RADIUS_SQUARED, rc.getTeam()).length){
                 //spawn everyone in 0-8 if possible, also lock so it wont cycle
                 if(rc.getLocation().equals(Utilities.convertIntToLocation(rc.readSharedArray(0)))){
                     Utilities.editBitSharedArray(rc, 1022, false);

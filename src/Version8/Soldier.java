@@ -89,7 +89,8 @@ public class Soldier
                 }
                 //finally, we cant see enemies or a flag, so lets move towawrds closest broadcast location!
                 else {
-                    if (rc.isMovementReady()) Pathfinding.tryToMove(rc, findClosestBroadcastFlags(rc));
+                    //if (rc.isMovementReady()) Pathfinding.tryToMove(rc, findClosestBroadcastFlags(rc));
+                    if (rc.isMovementReady()) Pathfinding.tryToMove(rc, findCoordinatedBroadcastFlag(rc));
                 }
             }
             //there are enemies than allies, or we've already attacked this turn
