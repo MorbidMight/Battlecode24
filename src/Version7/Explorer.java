@@ -83,11 +83,3 @@ public class Explorer {
         return false;
     }
 }
-
-//        preferredDirection = Direction.NORTH;
-//        int cornerToGoTo = rc.getID()%4; //0 is bottom left, increases clockwise
-//        PlacesHaveBeen.add(rc.getLocation());
-//        if (turnCount < 5) {
-//            if (cornerToGoTo == 0)
-//                preferredDirection = Direction.SOUTHWEST;
-//            els

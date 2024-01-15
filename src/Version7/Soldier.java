@@ -8,7 +8,6 @@ import static Version7.Utilities.bestHeal;
 public class Soldier
 {
     public static void runSoldier(RobotController rc) throws GameActionException {
-
         //tries to get neary crumbs
         MapLocation[] nearbyCrumbs = rc.senseNearbyCrumbs(-1);
         MapLocation targetCrumb = null;
@@ -113,26 +112,6 @@ public class Soldier
                     Pathfinding.tryToMove(rc, rc.getLocation().add(rc.getLocation().directionTo(toAttack)));
             }
         }
-
-
         }
 
-
-        /*
-        if (enemyRobots.length > allyRobots.length)
-        {
-            MapLocation toAttack = lowestHealth(enemyRobots);
-            if(rc.canAttack(toAttack))
-                rc.attack(toAttack);
-        }
-        if(enemyRobots.length == 0 && allyRobots.length > 0)
-        {
-            for (RobotInfo allyRobot : allyRobots) {
-                if (rc.canHeal(allyRobot.getLocation())) {
-                    rc.heal(allyRobot.getLocation());
-                    break;
-                }
-            }
-        }
-         */
 }

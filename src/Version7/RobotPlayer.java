@@ -21,6 +21,8 @@ public strictfp class RobotPlayer {
      */
     //used to unlock spawn locs 20 turns after locking it, if no longer under attack - otherwise, reset count
     static int countSinceLocked = 0;
+    //counts number of turns since a flag sitter has seen a friendly flag
+    static int countSinceSeenFlag = 0;
     static int turnCount = 0;
     static MapLocation[] SpawnLocations = new MapLocation[27]; //All the spawn locations. low:close to center high:away from center
     static Direction preferredDirection = null; //For scouts, it's the direction their intending to go in
@@ -100,7 +102,8 @@ public strictfp class RobotPlayer {
             //if can buy upgrade, buy an upgrade
             if (rc.canBuyGlobal(GlobalUpgrade.ACTION)) {
                 rc.buyGlobal(GlobalUpgrade.ACTION);
-            } else if (rc.canBuyGlobal(GlobalUpgrade.HEALING)) {
+            }
+            else if (rc.canBuyGlobal(GlobalUpgrade.HEALING)) {
                 rc.buyGlobal(GlobalUpgrade.HEALING);
             }
             // This code runs during the entire lifespan of the robot, which is why it is in an infinite
@@ -254,29 +257,7 @@ public strictfp class RobotPlayer {
                                 break;
                         }
                     }
-                    /* this code below is for flag movement, which we no longer do
-                    //if spawn on the flag, pick it up and try to get it to the best corner
-                    if (rc.canPickupFlag(rc.getLocation()) && rc.getRoundNum() <= 2)
-                    {
-                        rc.pickupFlag(rc.getLocation());
-                        flagPlacer = true;
-                        flagDestination = calculateFlagDestination(rc);
-                        prevDestinations.add(flagDestination);
-                    }
-                    //runs a turn trying to place the flag or find a good place to do so
-                    if(flagPlacer){
-                        //if not a legal place, try other places
-                        if(rc.canSenseLocation(flagDestination) && !rc.senseLegalStartingFlagPlacement(flagDestination)){
-                            flagDestination = findNextBestFlagDestination(rc, flagDestination, prevDestinations);
-                        }
-                        Pathfinding.tryToMove(rc,flagDestination);
-                        if(Objects.equals(rc.getLocation(), flagDestination) && rc.canDropFlag(flagDestination) && rc.senseLegalStartingFlagPlacement(flagDestination)){
-                            rc.dropFlag(flagDestination);
-                            flagPlacer = false;
-                        }
-                    }
 
-                     */
                     RobotInfo[] enemyRobots = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
                     Utilities.recordEnemies(rc, enemyRobots);
                     Utilities.clearObsoleteEnemies(rc);
@@ -432,45 +413,6 @@ public strictfp class RobotPlayer {
         }
     }
 
-//    static void MoveAwayFromSpawnLocations(RobotController rc) throws GameActionException {
-//        if(role.equals(roles.builder)){
-//            return;
-//        }
-//        if (LocIsSpawnLocation(rc.getLocation())) {
-//            //remove loop for efficiency later
-//            for (Direction d : directions) {
-//                for (MapLocation l : SpawnLocations) {
-//                    if (!rc.getLocation().add(d).equals(l) && rc.canMove(d))
-//                        rc.move(d);
-//                }
-//            }
-//        }
-//        int t = rng.nextInt(directions.length);
-//        //make ducks go to center
-//        //maybe implement keeping distance
-//        MapLocation centerOfMap = new MapLocation(rc.getMapWidth() / 2, rc.getMapHeight() / 2);
-//        Direction directionTowardsCenter = rc.getLocation().directionTo(centerOfMap);
-//        if (rc.canMove(directionTowardsCenter) && turnCount > 150 && turnCount < 200) {
-//            rc.move(directionTowardsCenter);
-//        } else {
-//            //change direction taken based off robotID
-//            if (rc.getID() % 2 == 0) {
-//                for (int i = 0; i < 8; i++) {
-//                    Direction dir = directions[(t + i) % 8];
-//                    if (!LocIsSpawnLocation(rc.getLocation().add(dir)) && rc.canMove(dir)) {
-//                        rc.move(dir);
-//                    }
-//                }
-//            } else {
-//                for (int i = 0; i < 8; i++) {
-//                    Direction dir = directions[8 - ((t + i) % 8) - 1];
-//                    if (!LocIsSpawnLocation(rc.getLocation().add(dir)) && rc.canMove(dir)) {
-//                        rc.move(dir);
-//                    }
-//                }
-//            }
-//        }
-    //}
 
     static boolean LocIsSpawnLocation(MapLocation l) {
         for (MapLocation d : SpawnLocations) {
@@ -546,11 +488,6 @@ public strictfp class RobotPlayer {
         for (MapInfo info : locations) {
             seenLocations.put(info.getMapLocation(), info);
         }
-    }
-
-    //takes in a failed flag destination, and tries to find a good one around it - deprecated method
-    public static MapLocation findNextBestFlagDestination(RobotController rc, MapLocation currDestination, ArrayList<MapLocation> prevDestinations) throws GameActionException {
-        return new MapLocation(0, 0);
     }
 
     public static void incrementSoldier(RobotController rc) throws GameActionException
