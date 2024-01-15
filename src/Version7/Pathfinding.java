@@ -118,7 +118,7 @@ public class Pathfinding
             if (RobotPlayer.alreadyBeen.contains(tempLocation)) {
                 continue;
             }
-            else if(!rc.getLocation().equals(Utilities.convertIntToLocation(rc.readSharedArray(58))) && rc.readSharedArray(58) != 0 && tempLocation.distanceSquaredTo(Utilities.convertIntToLocation(rc.readSharedArray(58))) < 2)
+            else if(!rc.getLocation().equals(Utilities.convertIntToLocation(rc.readSharedArray(58))) && rc.readSharedArray(58) != 0 && tempLocation.distanceSquaredTo(Utilities.convertIntToLocation(rc.readSharedArray(58))) < 4)
             {
                 continue;
             }
