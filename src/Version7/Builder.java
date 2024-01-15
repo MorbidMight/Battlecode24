@@ -93,7 +93,7 @@ public class Builder {
                 if(rc.canMove(d)){
                     rc.move(d);
                 }
-                d= d.rotateLeft();
+                d = d.rotateLeft();
             }
 
             if(rc.getRoundNum()%8==0/*&&distanceFromNearestSpawnLocation(rc)>16*/)

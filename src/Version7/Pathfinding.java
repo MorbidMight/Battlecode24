@@ -117,7 +117,12 @@ public class Pathfinding
 
             if (RobotPlayer.alreadyBeen.contains(tempLocation)) {
                 continue;
-            } else {
+            }
+            else if(!rc.getLocation().equals(Utilities.convertIntToLocation(rc.readSharedArray(58))) && rc.readSharedArray(58) != 0 && tempLocation.distanceSquaredTo(Utilities.convertIntToLocation(rc.readSharedArray(58))) < 2)
+            {
+                continue;
+            }
+            else {
                 //distance squared to the target location
                 possibleMoveDirections[x] = tempLocation.distanceSquaredTo(targetLocation) * 1.0f;
                 if (possibleMoveDirections[x] < lowestScore) {

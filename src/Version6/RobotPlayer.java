@@ -2,10 +2,7 @@ package Version6;
 
 import battlecode.common.*;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Random;
+import java.util.*;
 
 /**
  * RobotPlayer is the class that describes your main robot strategy.
@@ -46,14 +43,10 @@ public strictfp class RobotPlayer {
     //Ratios for spawning
     public static final int NUMSOLDIERS = 35;
     public static final int NUMBUILDERS = 5;
-
     public static final int NUMHEALERS = 10;
-
-    static Random rng;
-
-    //used by explorers
     static int turnsSinceLocGen = 0;
     static MapLocation targetLoc;
+
 
     /**
      * A random number generator.
@@ -61,6 +54,7 @@ public strictfp class RobotPlayer {
      * import at the top of this file. Here, we *seed* the RNG with a constant number (6147); this makes sure
      * we get the same sequence of numbers every time this code is run. This is very useful for debugging!
      */
+    static Random rng;
 
     /**
      * Array containing all the possible movement directions.
@@ -213,6 +207,10 @@ public strictfp class RobotPlayer {
                                             rc.spawn(SpawnLocations[i]);
                                             break;
                                         }
+                                    }
+                                    //if spawn location isnt locked, cycle to next spawn location for next duck to use
+                                    if (rc.isSpawned() && !Utilities.readBitSharedArray(rc, 1021)) {
+                                        Utilities.editBitSharedArray(rc, 1023, true);
                                     }
                                 }
                             }
