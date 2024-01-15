@@ -64,27 +64,35 @@ public class Builder {
                 }
                 countSinceLocked++;
             }
-            UpdateExplosionBorder(rc);
-            /*if(rc.senseNearbyRobots(-1, rc.getTeam().opponent()).length > 0)
+            //UpdateExplosionBorder(rc);
+            if(rc.senseNearbyRobots(-1, rc.getTeam().opponent()).length > 0)
             {
                 System.out.println("Sensed!!!!!!!!!!!!");
-               if(rc.canBuild(TrapType.EXPLOSIVE, rc.getLocation().add(rc.getLocation().directionTo(rc.senseNearbyRobots(-1, rc.getTeam().opponent())[0].getLocation()))))
-                {
-                   rc.build(TrapType.EXPLOSIVE, rc.getLocation().add(rc.getLocation().directionTo(rc.senseNearbyRobots(-1, rc.getTeam().opponent())[0].getLocation())));
-                }
-               else
+                Direction directionOfAttack = rc.getLocation().directionTo(rc.senseNearbyRobots(-1, rc.getTeam().opponent())[0].getLocation());
+               if(rc.canBuild(TrapType.EXPLOSIVE, rc.getLocation().add(directionOfAttack)))
                {
-                   System.out.println("" + rc.getCrumbs());
+                    rc.build(TrapType.EXPLOSIVE, rc.getLocation().add(directionOfAttack));
                }
-            }*/
+               if(rc.canBuild(TrapType.EXPLOSIVE, rc.getLocation().add(directionOfAttack.rotateLeft())))
+               {
+                   rc.build(TrapType.EXPLOSIVE, rc.getLocation().add(directionOfAttack.rotateLeft()));
+               }
+                if(rc.canBuild(TrapType.EXPLOSIVE, rc.getLocation().add(directionOfAttack.rotateRight())))
+                {
+                    rc.build(TrapType.EXPLOSIVE, rc.getLocation().add(directionOfAttack.rotateRight()));
+                }
+            }
         }
         else if (t != null)
         {//there is a task to do
             Pathfinding.bugNav2(rc, t.location);
             if (locationIsActionable(rc, t.location)) {
                 if (rc.canBuild(TrapType.STUN, t.location)) {
-                    rc.build(TrapType.STUN, t.location);
-                    Utilities.clearTask(rc, t.arrayIndex);
+                    if(rc.getCrumbs() > 500)
+                    {
+                        rc.build(TrapType.STUN, t.location);
+                        Utilities.clearTask(rc, t.arrayIndex);
+                    }
                 }
             }
         }
@@ -177,7 +185,8 @@ return 0;
     public static void UpdateExplosionBorder(RobotController rc) throws GameActionException {
         for (MapInfo t : rc.senseNearbyMapInfos(GameConstants.INTERACT_RADIUS_SQUARED)) {
             if (rc.canBuild(TrapType.STUN, t.getMapLocation())&&t.getTrapType().equals(TrapType.NONE)) {
-                rc.build(TrapType.STUN, t.getMapLocation());
+                if(rc.getCrumbs() > 500)
+                    rc.build(TrapType.STUN, t.getMapLocation());
             }
         }
     }
@@ -190,7 +199,8 @@ return 0;
             MapLocation currentTryLocation = bestTrapLocations.remove().location;
             if (currentTryLocation != null && rc.canBuild(TrapType.STUN, currentTryLocation))
             {
-                rc.build(TrapType.STUN, currentTryLocation);
+                if(rc.getCrumbs() > 500)
+                    rc.build(TrapType.STUN, currentTryLocation);
             }
         }
     }
