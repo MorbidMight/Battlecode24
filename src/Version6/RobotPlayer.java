@@ -361,24 +361,20 @@ public strictfp class RobotPlayer {
     //returns closest spawn location
     public static MapLocation findClosestSpawnLocation(RobotController rc) throws GameActionException {
         MapLocation targetLoc = null;
-        if (rc.hasFlag() && rc.getRoundNum() >= GameConstants.SETUP_ROUNDS || role == roles.builder) {
-            MapLocation[] spawnLocs = rc.getAllySpawnLocations();
-            int distance_1 = rc.getLocation().distanceSquaredTo(Utilities.convertIntToLocation(rc.readSharedArray(0)));
-            int distance_2 = rc.getLocation().distanceSquaredTo(Utilities.convertIntToLocation(rc.readSharedArray(1)));
-            int distance_3 = rc.getLocation().distanceSquaredTo(Utilities.convertIntToLocation(rc.readSharedArray(2)));
-            if (distance_1 < distance_2) {
-                if (distance_1 < distance_3) {
-                    targetLoc = Utilities.convertIntToLocation(rc.readSharedArray(0));
-                } else {
-                    targetLoc = Utilities.convertIntToLocation(rc.readSharedArray(2));
-                }
+        int distance_1 = rc.getLocation().distanceSquaredTo(Utilities.convertIntToLocation(rc.readSharedArray(0)));
+        int distance_2 = rc.getLocation().distanceSquaredTo(Utilities.convertIntToLocation(rc.readSharedArray(1)));
+        int distance_3 = rc.getLocation().distanceSquaredTo(Utilities.convertIntToLocation(rc.readSharedArray(2)));
+        if (distance_1 < distance_2) {
+            if (distance_1 < distance_3) {
+                targetLoc = Utilities.convertIntToLocation(rc.readSharedArray(0));
             } else {
-                if(distance_2 < distance_3)
-                    targetLoc = Utilities.convertIntToLocation(rc.readSharedArray(1));
-                else
-                    targetLoc = Utilities.convertIntToLocation(rc.readSharedArray(2));
+                targetLoc = Utilities.convertIntToLocation(rc.readSharedArray(2));
             }
-
+        } else {
+            if (distance_2 < distance_3)
+                targetLoc = Utilities.convertIntToLocation(rc.readSharedArray(1));
+            else
+                targetLoc = Utilities.convertIntToLocation(rc.readSharedArray(2));
         }
         return targetLoc;
     }

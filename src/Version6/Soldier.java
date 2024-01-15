@@ -38,17 +38,10 @@ public class Soldier
         if (rc.canPickupFlag(rc.getLocation()) && rc.getRoundNum() > GameConstants.SETUP_ROUNDS) {
             rc.pickupFlag(rc.getLocation());
         }
-        //if we have an enemy flag, bring it to closest area
-        MapLocation closestSpawnLoc = findClosestSpawnLocation(rc);
-        //method returns null if we dont have a flag
-        if (closestSpawnLoc != null) {
-//            dir = rc.getLocation().directionTo(closestSpawnLoc);
-//            if (rc.canMove(dir)) {
-//                rc.setIndicatorString("moving flag");
-//                rc.move(dir);
-//            }
+        if (rc.hasFlag()) {
+            MapLocation closestSpawnLoc = findClosestSpawnLocation(rc);
             rc.setIndicatorString("moving flag");
-            if(rc.isMovementReady()) Pathfinding.bugNav2(rc, closestSpawnLoc);
+            Pathfinding.bugNav2(rc, closestSpawnLoc);
         }
 
         //attack
