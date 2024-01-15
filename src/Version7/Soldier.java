@@ -26,6 +26,14 @@ public class Soldier
             }
             Pathfinding.bugNav2(rc, targetCrumb);
         }
+        //dont you dare move
+//        if(turnCount >= 200 && turnCount <= 205){
+//            //try and attack the best target
+//            MapLocation toAttack = lowestHealth(rc.senseNearbyRobots(GameConstants.ATTACK_RADIUS_SQUARED, rc.getTeam().opponent()));
+//            if(toAttack != null && rc.canAttack(toAttack)){
+//                rc.attack(toAttack);
+//            }
+//        }
         //support any flag heist or defense
         if(rc.readSharedArray(58) != 0)
         {
@@ -65,8 +73,10 @@ public class Soldier
         if(allyRobots.length >= enemyRobots.length && rc.getActionCooldownTurns() <10){
             //can sense an enemy flag - move towards the flag!
             if(rc.senseNearbyFlags(-1, rc.getTeam().opponent()).length != 0){
-                if(rc.isMovementReady()) Pathfinding.tryToMove(rc, rc.senseNearbyFlags(-1,rc.getTeam().opponent())[0].getLocation());
-                if(rc.canFill(rc.getLocation().add(rc.getLocation().directionTo(rc.senseNearbyFlags(-1,rc.getTeam())[0].getLocation())))) rc.fill(rc.getLocation().add(rc.getLocation().directionTo(rc.senseNearbyFlags(-1,rc.getTeam())[0].getLocation())));
+                if(rc.canFill(rc.getLocation().add(rc.getLocation().directionTo(rc.senseNearbyFlags(-1,rc.getTeam().opponent())[0].getLocation()))))
+                    rc.fill(rc.getLocation().add(rc.getLocation().directionTo(rc.senseNearbyFlags(-1,rc.getTeam().opponent())[0].getLocation())));
+                if(rc.isMovementReady())
+                    Pathfinding.tryToMove(rc, rc.senseNearbyFlags(-1,rc.getTeam().opponent())[0].getLocation());
             }
             //otherwise, if we can see enemies, just move towards their average location
             else if(enemyRobots.length != 0){
