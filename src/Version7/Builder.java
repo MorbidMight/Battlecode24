@@ -16,6 +16,21 @@ public class Builder {
         }
         Task t = Utilities.readTask(rc);
         if (SittingOnFlag) {
+            //sitting where flag should be, but cant see any flags...
+            //if we still cant see a flag 50 turns later, then until we do see one we're gonna assume this location should essentially be shut down
+            if(rc.senseNearbyFlags(-1, rc.getTeam()).length == 0){
+                //shut down this spawn location for now
+                if(countSinceSeenFlag > 40){
+                    rc.setIndicatorString("Dont come help me!");
+                    Clock.yield();
+                }
+                else{
+                    countSinceSeenFlag++;
+                }
+            }
+            else{
+                countSinceSeenFlag=0;
+            }
             if(countSinceLocked !=0){
                 countSinceLocked++;
             }
@@ -115,9 +130,10 @@ return 0;
         for (MapInfo t : rc.senseNearbyMapInfos(GameConstants.INTERACT_RADIUS_SQUARED)) {
             if (rc.canBuild(TrapType.STUN, t.getMapLocation())&&t.getTrapType().equals(TrapType.NONE)) {
                 rc.build(TrapType.STUN, t.getMapLocation());
-                System.out.println("Building a bomb");
             }
         }
     }
+
+
 
 }

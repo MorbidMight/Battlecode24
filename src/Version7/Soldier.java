@@ -8,7 +8,6 @@ import static Version7.Utilities.bestHeal;
 public class Soldier
 {
     public static void runSoldier(RobotController rc) throws GameActionException {
-
         //tries to get neary crumbs
         MapLocation[] nearbyCrumbs = rc.senseNearbyCrumbs(-1);
         MapLocation targetCrumb = null;

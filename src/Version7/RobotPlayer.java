@@ -21,6 +21,8 @@ public strictfp class RobotPlayer {
      */
     //used to unlock spawn locs 20 turns after locking it, if no longer under attack - otherwise, reset count
     static int countSinceLocked = 0;
+    //counts number of turns since a flag sitter has seen a friendly flag
+    static int countSinceSeenFlag = 0;
     static int turnCount = 0;
     static MapLocation[] SpawnLocations = new MapLocation[27]; //All the spawn locations. low:close to center high:away from center
     static Direction preferredDirection = null; //For scouts, it's the direction their intending to go in
