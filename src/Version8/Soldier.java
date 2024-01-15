@@ -6,7 +6,8 @@ import static Version8.RobotPlayer.*;
 import static Version8.Utilities.averageRobotLocation;
 import static Version8.Utilities.bestHeal;
 
-public class Soldier {
+public class Soldier
+{
     public static void runSoldier(RobotController rc) throws GameActionException {
         if (!rc.isSpawned())
             Clock.yield();
@@ -24,29 +25,29 @@ public class Soldier {
             Pathfinding.bugNav2(rc, targetCrumb);
         }
         //dont you dare move
-        if (rc.getRoundNum() >= 200 && rc.getRoundNum() <= 205) {
+        if(rc.getRoundNum() >= 200 && rc.getRoundNum() <= 205){
             //try and attack the best target
             MapLocation toAttack = lowestHealth(rc.senseNearbyRobots(GameConstants.ATTACK_RADIUS_SQUARED, rc.getTeam().opponent()));
-            if (toAttack != null && rc.canAttack(toAttack)) {
+            if(toAttack != null && rc.canAttack(toAttack)){
                 rc.attack(toAttack);
             }
             //try to heal if nothing else can be done
             RobotInfo toHeal = bestHeal(rc, rc.senseNearbyRobots(GameConstants.HEAL_RADIUS_SQUARED, rc.getTeam()));
-            if (toHeal != null && rc.canHeal(toHeal.getLocation())) {
+            if(toHeal != null && rc.canHeal(toHeal.getLocation())){
                 rc.heal(toHeal.getLocation());
             }
-            if (rc.senseNearbyFlags(-1, rc.getTeam().opponent()).length != 0)
+            if(rc.senseNearbyFlags(-1, rc.getTeam().opponent()).length != 0)
                 Pathfinding.tryToMove(rc, rc.getLocation().add(rc.getLocation().directionTo(averageRobotLocation(rc.senseNearbyRobots(-1, rc.getTeam().opponent()))).opposite()));
-        } else {
+        }
+        else {
             //support any flag heist or defense
-            if (rc.readSharedArray(58) != 0 && !rc.hasFlag()) {
+            if (rc.readSharedArray(58) != 0) {
                 Pathfinding.tryToMove(rc, Utilities.convertIntToLocation(rc.readSharedArray(58)));
                 rc.setIndicatorString("Helping teammate @ " + Utilities.convertIntToLocation(rc.readSharedArray(58)));
             }
             //try to pick up enemy flag
             if (rc.canPickupFlag(rc.getLocation()) && rc.getRoundNum() > GameConstants.SETUP_ROUNDS) {
                 rc.pickupFlag(rc.getLocation());
-                System.out.println("Picked up flag");
             }
             //if you have the flag, just run back, and maybe fill in water on the way
             if (rc.hasFlag()) {
@@ -82,8 +83,8 @@ public class Soldier {
                     }
                     //finally, we cant see enemies or a flag, so lets move towawrds closest broadcast location!
                     else {
-                        if (rc.isMovementReady()) Pathfinding.tryToMove(rc, findClosestBroadcastFlags(rc));
-                    }
+                        //if (rc.isMovementReady()) Pathfinding.tryToMove(rc, findClosestBroadcastFlags(rc));
+                    if (rc.isMovementReady()) Pathfinding.tryToMove(rc, findCoordinatedBroadcastFlag(rc));}
                 }
                 //there are enemies than allies, or we've already attacked this turn
                 else {
@@ -216,6 +217,5 @@ public class Soldier {
 //            }
 //        }
 //        }
-        }
     }
-
+}
