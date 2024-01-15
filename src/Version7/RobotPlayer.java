@@ -512,6 +512,7 @@ public strictfp class RobotPlayer {
         if (enemies.length == 0)
             return null;
         int lowHealth = enemies[0].health;
+        boolean isSame = true;
         MapLocation toAttack = enemies[0].getLocation();
         for (RobotInfo enemy : enemies) {
             if(enemy.hasFlag){
@@ -520,6 +521,19 @@ public strictfp class RobotPlayer {
             if (enemy.health < lowHealth) {
                 lowHealth = enemy.health;
                 toAttack = enemy.location;
+                isSame = false;
+            }
+        }
+        if(isSame)
+        {
+            int lowestID = enemies[0].ID;
+            for(RobotInfo enemy: enemies)
+            {
+               if(enemy.ID < lowestID)
+               {
+                   lowestID = enemy.ID;
+                   toAttack = enemy.getLocation();
+               }
             }
         }
         return toAttack;
