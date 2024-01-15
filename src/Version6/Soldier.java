@@ -40,6 +40,10 @@ public class Soldier
         }
         if (rc.hasFlag()) {
             MapLocation closestSpawnLoc = findClosestSpawnLocation(rc);
+            Direction d = rc.getLocation().directionTo(closestSpawnLoc);
+            if(rc.canFill(rc.getLocation().add(d))){
+                rc.fill(rc.getLocation().add(d));
+            }
             rc.setIndicatorString("moving flag");
             Pathfinding.bugNav2(rc, closestSpawnLoc);
         }
