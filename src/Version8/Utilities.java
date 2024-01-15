@@ -254,4 +254,8 @@ public class Utilities {
         value = value | (flag.isStolen ? 1: 0) << 13;
         rc.writeSharedArray(flagIndex, value);
     }
+    public static MapLocation randomMapLocation(RobotController rc)
+    {
+        return new MapLocation(RobotPlayer.rng.nextInt(rc.getMapWidth()), RobotPlayer.rng.nextInt(rc.getMapHeight()));
+    }
 }

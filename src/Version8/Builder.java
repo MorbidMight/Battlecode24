@@ -7,6 +7,10 @@ import java.util.PriorityQueue;
 import static Version8.RobotPlayer.*;
 
 public class Builder {
+    public static final int BUILDER_MAX_DISPLACEMENT = 200;
+    public static final int BUILDER_MIN_DISPLACEMENT = 50;
+    public static int spawnLocationToDefend;
+
     public static void runBuilder(RobotController rc) throws GameActionException {
         if(turnCount == 150){
             for(int i = 6; i < 28; i++){
@@ -64,8 +68,8 @@ public class Builder {
                 }
                 countSinceLocked++;
             }
-            //UpdateExplosionBorder(rc);
-            if(rc.senseNearbyRobots(-1, rc.getTeam().opponent()).length > 0)
+            UpdateExplosionBorder(rc);
+           /* if(rc.senseNearbyRobots(-1, rc.getTeam().opponent()).length > 0)
             {
                 System.out.println("Sensed!!!!!!!!!!!!");
                 Direction directionOfAttack = rc.getLocation().directionTo(rc.senseNearbyRobots(-1, rc.getTeam().opponent())[0].getLocation());
@@ -81,16 +85,16 @@ public class Builder {
                 {
                     rc.build(TrapType.EXPLOSIVE, rc.getLocation().add(directionOfAttack.rotateRight()));
                 }
-            }
+            }*/
         }
         else if (t != null)
         {//there is a task to do
             Pathfinding.bugNav2(rc, t.location);
             if (locationIsActionable(rc, t.location)) {
-                if (rc.canBuild(TrapType.STUN, t.location)) {
+                if (rc.canBuild(TrapType.EXPLOSIVE, t.location)) {
                     if(rc.getCrumbs() > 500)
                     {
-                        rc.build(TrapType.STUN, t.location);
+                        rc.build(TrapType.EXPLOSIVE, t.location);
                         Utilities.clearTask(rc, t.arrayIndex);
                     }
                 }
@@ -122,35 +126,33 @@ public class Builder {
 
             RobotInfo[] enemies = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
             MapInfo[] possibleTraps = rc.senseNearbyMapInfos(-1);
-            /*int count = 1;
-            int x = rc.getLocation().x;
-            int y = rc.getLocation().y;
-            for(MapInfo info : possibleTraps)
-            {
-                if(!info.getTrapType().equals(TrapType.NONE))
-                {
-                    x += info.getMapLocation().x;
-                    y += info.getMapLocation().y;
-                }
-
-            }*/
+            MapLocation averageTrapLocation = getAverageTrapLocation(rc, possibleTraps);
 
             runBuild(rc, enemies);
 
-            if(rc.getLocation().distanceSquaredTo(RobotPlayer.findClosestSpawnLocation(rc)) > 100)
+            if (enemies.length == 0)
             {
-                Pathfinding.bugNav2(rc, RobotPlayer.findClosestSpawnLocation(rc));
-            }
-            else if (enemies.length == 0)
-            {
-                MapLocation closestBroadcast = findClosestBroadcastFlags(rc);
-                if (closestBroadcast != null) {
-                    if(rc.isMovementReady()) Pathfinding.bugNav2(rc, closestBroadcast);
-                };
+                if(rc.getLocation().distanceSquaredTo(Utilities.convertIntToLocation(rc.readSharedArray(spawnLocationToDefend))) > BUILDER_MAX_DISPLACEMENT)
+                {
+                    if(rc.isMovementReady()) Pathfinding.bugNav2(rc, Utilities.convertIntToLocation(rc.readSharedArray(spawnLocationToDefend)));
+                }
+                else if(rc.getLocation().distanceSquaredTo(Utilities.convertIntToLocation(rc.readSharedArray(spawnLocationToDefend))) < BUILDER_MIN_DISPLACEMENT)
+                {
+                    MapLocation closestBroadcast = findClosestBroadcastFlags(rc);
+                    if (closestBroadcast != null) {
+                        if(rc.isMovementReady()) Pathfinding.bugNav2(rc, closestBroadcast);
+                    }
+                }
+                else
+                {
+                    if(averageTrapLocation != null)  if(rc.isMovementReady()) Pathfinding.tryToMove(rc, rc.adjacentLocation(rc.getLocation().directionTo(averageTrapLocation).opposite()));
+                    if(rc.isMovementReady()) Pathfinding.bugNav2(rc, Utilities.randomMapLocation(rc));
+                }
+
             }
             else
             {
-                Pathfinding.tryToMove(rc, rc.adjacentLocation(rc.getLocation().directionTo(Utilities.averageRobotLocation(enemies)).opposite()));
+                if(rc.isMovementReady()) Pathfinding.tryToMove(rc, rc.adjacentLocation(rc.getLocation().directionTo(Utilities.averageRobotLocation(enemies)).opposite()));
             }
 
             runBuild(rc, enemies);
@@ -160,7 +162,28 @@ public class Builder {
 
     }
 
+    private static MapLocation getAverageTrapLocation(RobotController rc, MapInfo[] possibleTraps)
+    {
+        int count = 0;
+        int x = 0;
+        int y = 0;
+        for(MapInfo info : possibleTraps)
+        {
+            if(!info.getTrapType().equals(TrapType.NONE))
+            {
+                x += info.getMapLocation().x;
+                y += info.getMapLocation().y;
+                count++;
+            }
+        }
 
+        MapLocation averageTrapLocation = null;
+        if(count != 0)
+        {
+            averageTrapLocation = new MapLocation(x / count, y / count);
+        }
+        return averageTrapLocation;
+    }
 
 
     private static Direction directionToMove(RobotController rc) {
@@ -197,10 +220,9 @@ return 0;
         while (!bestTrapLocations.isEmpty())
         {
             MapLocation currentTryLocation = bestTrapLocations.remove().location;
-            if (currentTryLocation != null && rc.canBuild(TrapType.STUN, currentTryLocation))
+            if (currentTryLocation != null && rc.canBuild(TrapType.EXPLOSIVE, currentTryLocation))
             {
-                if(rc.getCrumbs() > 500)
-                    rc.build(TrapType.STUN, currentTryLocation);
+                rc.build(TrapType.EXPLOSIVE, currentTryLocation);
             }
         }
     }
@@ -214,7 +236,7 @@ return 0;
             {
                 MapLocation tempLocation = rc.adjacentLocation(direction);
                 MapLocation closestFlag = findClosestBroadcastFlags(rc);
-                if(closestFlag != null && rc.canBuild(TrapType.STUN, tempLocation))
+                if(closestFlag != null && rc.canBuild(TrapType.EXPLOSIVE, tempLocation))
                 {
                     bestLocations.add(new MapLocationWithDistance(tempLocation, tempLocation.distanceSquaredTo(closestFlag)));
                 }
@@ -226,7 +248,7 @@ return 0;
             for(Direction direction : directions)
             {
                 MapLocation tempLocation = rc.adjacentLocation(direction);
-                if(rc.canBuild(TrapType.STUN, tempLocation))
+                if(rc.canBuild(TrapType.EXPLOSIVE, tempLocation))
                 {
                     bestLocations.add(new MapLocationWithDistance(tempLocation, tempLocation.distanceSquaredTo(averageEnemyLocation)));
                 }

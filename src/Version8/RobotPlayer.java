@@ -93,6 +93,7 @@ public strictfp class RobotPlayer {
     @SuppressWarnings("unused")
     public static void run(RobotController rc) throws GameActionException {
         rng = new Random(rc.getID());
+        Builder.spawnLocationToDefend = rng.nextInt(3);
         while (true) {
             //changes explorers to soldiers at round 200
             if (rc.getRoundNum() == GameConstants.SETUP_ROUNDS && role == roles.explorer)
