@@ -20,7 +20,14 @@ public class Explorer {
         //condense on dam for when it breaks
         MapLocation centerOfMap = new MapLocation(rc.getMapWidth() / 2, rc.getMapHeight() / 2);
         MapLocation nearestEnemyFlag = findClosestBroadcastFlags(rc);
-        if (turnCount > 150) {
+        if (rc.getRoundNum() >= 198){
+            if(isAdjacentToDam(rc)){
+                if(rc.canMove(rc.getLocation().directionTo(centerOfMap).opposite())){
+                    rc.move(rc.getLocation().directionTo(centerOfMap).opposite());
+                }
+            }
+        }
+        else if (rc.getRoundNum() > 150 && rc.getRoundNum() < 198) {
             if (rc.canFill(rc.adjacentLocation(rc.getLocation().directionTo(centerOfMap)))) {
                 rc.fill(rc.adjacentLocation(rc.getLocation().directionTo(centerOfMap)));
             }
