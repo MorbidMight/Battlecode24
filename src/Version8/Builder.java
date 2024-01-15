@@ -1,13 +1,10 @@
-package Version7;
+package Version8;
 
 import battlecode.common.*;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.Map;
 import java.util.PriorityQueue;
 
-import static Version7.RobotPlayer.*;
+import static Version8.RobotPlayer.*;
 
 public class Builder {
     public static void runBuilder(RobotController rc) throws GameActionException {
