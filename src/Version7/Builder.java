@@ -2,6 +2,11 @@ package Version7;
 
 import battlecode.common.*;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Map;
+import java.util.PriorityQueue;
+
 import static Version7.RobotPlayer.*;
 
 public class Builder {
@@ -15,7 +20,8 @@ public class Builder {
             Clock.yield();
         }
         Task t = Utilities.readTask(rc);
-        if (SittingOnFlag) {
+        if (SittingOnFlag)
+        {
             //sitting where flag should be, but cant see any flags...
             //if we still cant see a flag 50 turns later, then until we do see one we're gonna assume this location should essentially be shut down
             if(rc.senseNearbyFlags(-1, rc.getTeam()).length == 0){
@@ -74,7 +80,9 @@ public class Builder {
                    System.out.println("" + rc.getCrumbs());
                }
             }*/
-        } else if (t != null) {//there is a task to do
+        }
+        else if (t != null)
+        {//there is a task to do
             Pathfinding.bugNav2(rc, t.location);
             if (locationIsActionable(rc, t.location)) {
                 if (rc.canBuild(TrapType.STUN, t.location)) {
@@ -82,29 +90,72 @@ public class Builder {
                     Utilities.clearTask(rc, t.arrayIndex);
                 }
             }
-        } else {//there is no task to be done
+        }
+        else
+        {
+            //there is no task to be done
             //There is no task to be done and all the flags have guys sitting on them
             //Move away from the nearest guys avoiding ops especicially
-            if(rc.getLocation().distanceSquaredTo(findClosestSpawnLocation(rc)) > 15){
-                Pathfinding.bugNav2(rc, findClosestSpawnLocation(rc));
-            }
-            Direction d = directionToMove(rc);
-            for(int i = 0;i<8;i++){
-                if(rc.canMove(d)){
-                    rc.move(d);
+
+            //go towards closest broadcast flag
+
+
+//            if(rc.getLocation().distanceSquaredTo(findClosestSpawnLocation(rc)) > 15){
+//                Pathfinding.bugNav2(rc, findClosestSpawnLocation(rc));
+//            }
+//            Direction d = directionToMove(rc);
+//            for(int i = 0;i<8;i++){
+//                if(rc.canMove(d)){
+//                    rc.move(d);
+//                }
+//                d = d.rotateLeft();
+//            }
+//
+//            if(rc.getRoundNum()%8==0/*&&distanceFromNearestSpawnLocation(rc)>16*/)
+//                UpdateExplosionBorder(rc);
+
+
+            RobotInfo[] enemies = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
+            MapInfo[] possibleTraps = rc.senseNearbyMapInfos(-1);
+            /*int count = 1;
+            int x = rc.getLocation().x;
+            int y = rc.getLocation().y;
+            for(MapInfo info : possibleTraps)
+            {
+                if(!info.getTrapType().equals(TrapType.NONE))
+                {
+                    x += info.getMapLocation().x;
+                    y += info.getMapLocation().y;
                 }
-                d = d.rotateLeft();
+
+            }*/
+
+            runBuild(rc, enemies);
+
+            if(rc.getLocation().distanceSquaredTo(RobotPlayer.findClosestSpawnLocation(rc)) > 100)
+            {
+                Pathfinding.bugNav2(rc, RobotPlayer.findClosestSpawnLocation(rc));
+            }
+            else if (enemies.length == 0)
+            {
+                MapLocation closestBroadcast = findClosestBroadcastFlags(rc);
+                if (closestBroadcast != null) {
+                    if(rc.isMovementReady()) Pathfinding.bugNav2(rc, closestBroadcast);
+                };
+            }
+            else
+            {
+                Pathfinding.tryToMove(rc, rc.adjacentLocation(rc.getLocation().directionTo(Utilities.averageRobotLocation(enemies)).opposite()));
             }
 
-            if(rc.getRoundNum()%8==0/*&&distanceFromNearestSpawnLocation(rc)>16*/)
-                UpdateExplosionBorder(rc);
-
+            runBuild(rc, enemies);
         }
-        RobotInfo[] enemyRobotsAttackRange = rc.senseNearbyRobots(GameConstants.ATTACK_RADIUS_SQUARED, rc.getTeam().opponent());
-        MapLocation toAttack = lowestHealth(enemyRobotsAttackRange);
-        if (toAttack != null && rc.canAttack(toAttack))
-            rc.attack(toAttack);
+
+
+
     }
+
+
 
 
     private static Direction directionToMove(RobotController rc) {
@@ -134,6 +185,62 @@ return 0;
         }
     }
 
+    public static void runBuild(RobotController rc, RobotInfo[] enemies) throws GameActionException
+    {
+        PriorityQueue<MapLocationWithDistance> bestTrapLocations = getBestBombLocations(rc, enemies);
+        while (!bestTrapLocations.isEmpty())
+        {
+            MapLocation currentTryLocation = bestTrapLocations.remove().location;
+            if (currentTryLocation != null && rc.canBuild(TrapType.STUN, currentTryLocation))
+            {
+                rc.build(TrapType.STUN, currentTryLocation);
+            }
+        }
+    }
 
+    public static PriorityQueue<MapLocationWithDistance> getBestBombLocations(RobotController rc, RobotInfo[] enemies)
+    {
+        PriorityQueue<MapLocationWithDistance> bestLocations = new PriorityQueue<>();
+        if(enemies.length == 0)
+        {
+            for(Direction direction : directions)
+            {
+                MapLocation tempLocation = rc.adjacentLocation(direction);
+                MapLocation closestFlag = findClosestBroadcastFlags(rc);
+                if(closestFlag != null && rc.canBuild(TrapType.STUN, tempLocation))
+                {
+                    bestLocations.add(new MapLocationWithDistance(tempLocation, tempLocation.distanceSquaredTo(closestFlag)));
+                }
+            }
+        }
+        else
+        {
+            MapLocation averageEnemyLocation = Utilities.averageRobotLocation(enemies);
+            for(Direction direction : directions)
+            {
+                MapLocation tempLocation = rc.adjacentLocation(direction);
+                if(rc.canBuild(TrapType.STUN, tempLocation))
+                {
+                    bestLocations.add(new MapLocationWithDistance(tempLocation, tempLocation.distanceSquaredTo(averageEnemyLocation)));
+                }
+            }
+        }
+        return bestLocations;
+    }
+}
 
+class MapLocationWithDistance implements Comparable
+{
+    public MapLocation location;
+    public int distanceSquared;
+
+    public MapLocationWithDistance(MapLocation ml, int distanceSquared)
+    {
+        location = ml;
+        this.distanceSquared = distanceSquared;
+    }
+    public int compareTo(Object other)
+    {
+        return Integer.compare(distanceSquared,((MapLocationWithDistance) other).distanceSquared);
+    }
 }
