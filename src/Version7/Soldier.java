@@ -70,7 +70,7 @@ public class Soldier
             rc.attack(toAttack);
         }
         //if we have more allies, or equal allies, to amount of enemies, and havent attacked yet, lets be aggressive
-        if(allyRobots.length >= enemyRobots.length && rc.getActionCooldownTurns() <10){
+        if(allyRobots.length >= enemyRobots.length && rc.getActionCooldownTurns() <10 && rc.getHealth() > 100){
             //can sense an enemy flag - move towards the flag!
             if(rc.senseNearbyFlags(-1, rc.getTeam().opponent()).length != 0){
                 if(rc.canFill(rc.getLocation().add(rc.getLocation().directionTo(rc.senseNearbyFlags(-1,rc.getTeam().opponent())[0].getLocation()))))
