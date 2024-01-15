@@ -71,24 +71,24 @@ public class Builder {
                 }
                 countSinceLocked++;
             }
-            //UpdateExplosionBorder(rc);
-            if(rc.senseNearbyRobots(-1, rc.getTeam().opponent()).length > 0)
-            {
-                //System.out.println("Sensed!!!!!!!!!!!!");
-                Direction directionOfAttack = rc.getLocation().directionTo(rc.senseNearbyRobots(-1, rc.getTeam().opponent())[0].getLocation());
-               if(rc.canBuild(TrapType.EXPLOSIVE, rc.getLocation().add(directionOfAttack)))
-               {
-                    rc.build(TrapType.EXPLOSIVE, rc.getLocation().add(directionOfAttack));
-               }
-               if(rc.canBuild(TrapType.EXPLOSIVE, rc.getLocation().add(directionOfAttack.rotateLeft())))
-               {
-                   rc.build(TrapType.EXPLOSIVE, rc.getLocation().add(directionOfAttack.rotateLeft()));
-               }
-                if(rc.canBuild(TrapType.EXPLOSIVE, rc.getLocation().add(directionOfAttack.rotateRight())))
-                {
-                    rc.build(TrapType.EXPLOSIVE, rc.getLocation().add(directionOfAttack.rotateRight()));
-                }
-            }
+            UpdateExplosionBorder(rc);
+//            if(rc.senseNearbyRobots(-1, rc.getTeam().opponent()).length > 0)
+//            {
+//                //System.out.println("Sensed!!!!!!!!!!!!");
+//                Direction directionOfAttack = rc.getLocation().directionTo(rc.senseNearbyRobots(-1, rc.getTeam().opponent())[0].getLocation());
+//               if(rc.canBuild(TrapType.EXPLOSIVE, rc.getLocation().add(directionOfAttack)))
+//               {
+//                    rc.build(TrapType.EXPLOSIVE, rc.getLocation().add(directionOfAttack));
+//               }
+//               if(rc.canBuild(TrapType.EXPLOSIVE, rc.getLocation().add(directionOfAttack.rotateLeft())))
+//               {
+//                   rc.build(TrapType.EXPLOSIVE, rc.getLocation().add(directionOfAttack.rotateLeft()));
+//               }
+//                if(rc.canBuild(TrapType.EXPLOSIVE, rc.getLocation().add(directionOfAttack.rotateRight())))
+//                {
+//                    rc.build(TrapType.EXPLOSIVE, rc.getLocation().add(directionOfAttack.rotateRight()));
+//                }
+//            }
         }
         else if (t != null)
         {//there is a task to do
