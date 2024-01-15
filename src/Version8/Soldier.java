@@ -69,11 +69,19 @@ public class Soldier
             if (toHeal != null && toHeal.hasFlag() && rc.canHeal(toHeal.getLocation())) {
                 rc.heal(toHeal.getLocation());
             }
+            //high density area, try and place a bomb!
+            if(enemyRobots.length > 6 && enemyRobotsAttackRange.length >= 1){
+                if(rc.canBuild(TrapType.EXPLOSIVE, rc.getLocation().add(rc.getLocation().directionTo(averageRobotLocation(enemyRobots))))){
+                    rc.build(TrapType.EXPLOSIVE, rc.getLocation().add(rc.getLocation().directionTo(averageRobotLocation(enemyRobots))));
+                    System.out.println("I built a bomb!");
+                }
+            }
             //try and attack the best target
             MapLocation toAttack = lowestHealth(enemyRobotsAttackRange);
             if (toAttack != null && rc.canAttack(toAttack)) {
                 rc.attack(toAttack);
             }
+
             //if we have more allies, or equal allies, to amount of enemies, and havent attacked yet, lets be aggressive
             if (allyRobots.length >= enemyRobots.length && rc.getActionCooldownTurns() < 10 && rc.getHealth() > 100) {
                 //can sense an enemy flag - move towards the flag!
@@ -84,7 +92,7 @@ public class Soldier
                         Pathfinding.tryToMove(rc, rc.senseNearbyFlags(-1, rc.getTeam().opponent())[0].getLocation());
                 }
                 //otherwise, if we can see enemies, just move towards their average location
-                else if (enemyRobots.length != 0) {
+                else if (enemyRobots.length != 0 && enemyRobotsAttackRange.length == 0) {
                     if (rc.isMovementReady()) Pathfinding.tryToMove(rc, averageRobotLocation(enemyRobots));
                 }
                 //finally, we cant see enemies or a flag, so lets move towawrds closest broadcast location!
@@ -95,6 +103,11 @@ public class Soldier
             }
             //there are enemies than allies, or we've already attacked this turn
             else {
+                //try to lure them into our traps - need uravs trap thing
+//                MapLocation destination = Builder.getAverageTrapLocation(rc, rc.senseNearbyMapInfos(-1));
+//                if(destination != null){
+//                    if(rc.isMovementReady()) Pathfinding.tryToMove(rc, destination);
+//                }
                 //if we can see any allies, move towards their average location
                 if (allyRobots.length != 0) {
                     if (rc.isMovementReady()) Pathfinding.tryToMove(rc, averageRobotLocation(allyRobots));

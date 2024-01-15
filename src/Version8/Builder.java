@@ -191,7 +191,7 @@ public class Builder {
         while (!bestTrapLocations.isEmpty())
         {
             MapLocation currentTryLocation = bestTrapLocations.remove().location;
-            if (currentTryLocation != null && rc.canBuild(TrapType.STUN, currentTryLocation))
+            if (currentTryLocation != null && rc.canBuild(TrapType.STUN, currentTryLocation) && rc.getCrumbs() > 300)
             {
                 rc.build(TrapType.STUN, currentTryLocation);
             }
