@@ -66,6 +66,7 @@ public class Soldier
             //can sense an enemy flag - move towards the flag!
             if(rc.senseNearbyFlags(-1, rc.getTeam().opponent()).length != 0){
                 if(rc.isMovementReady()) Pathfinding.tryToMove(rc, rc.senseNearbyFlags(-1,rc.getTeam().opponent())[0].getLocation());
+                if(rc.canFill(rc.getLocation().add(rc.getLocation().directionTo(rc.senseNearbyFlags(-1,rc.getTeam())[0].getLocation())))) rc.fill(rc.getLocation().add(rc.getLocation().directionTo(rc.senseNearbyFlags(-1,rc.getTeam())[0].getLocation())));
             }
             //otherwise, if we can see enemies, just move towards their average location
             else if(enemyRobots.length != 0){
