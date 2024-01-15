@@ -6,57 +6,57 @@ import java.util.PriorityQueue;
 
 import static Version8.RobotPlayer.*;
 
+//Current Builder strategy
+//if a builder is spawned on a flag it sits there and places bombs around
+//if there a task to dp the builder goes to the task location and build a different trap based on context
+//Otherwise it wanders around and places traps wherever
+//in addition if a teammate current has a flag they don't place any bombs so that the bomb carrier can live.
 public class Builder {
     public static void runBuilder(RobotController rc) throws GameActionException {
-        if(turnCount == 150){
-            for(int i = 6; i < 28; i++){
+        if (turnCount == 150) {
+            for (int i = 6; i < 28; i++) {
                 Utilities.clearTask(rc, i);
             }
         }
-        if(!rc.isSpawned()) {
+        if (!rc.isSpawned()) {
             Clock.yield();
         }
         Task t = Utilities.readTask(rc);
-        if (SittingOnFlag)
-        {
+        if (SittingOnFlag) {
             //sitting where flag should be, but cant see any flags...
             //if we still cant see a flag 50 turns later, then until we do see one we're gonna assume this location should essentially be shut down
-            if(rc.senseNearbyFlags(-1, rc.getTeam()).length == 0){
+            if (rc.senseNearbyFlags(-1, rc.getTeam()).length == 0) {
                 //shut down this spawn location for now
-                if(countSinceSeenFlag > 40){
+                if (countSinceSeenFlag > 40) {
                     rc.setIndicatorString("Dont come help me!");
                     Clock.yield();
-                }
-                else{
+                } else {
                     countSinceSeenFlag++;
                 }
+            } else {
+                countSinceSeenFlag = 0;
             }
-            else{
-                countSinceSeenFlag=0;
-            }
-            if(countSinceLocked !=0){
+            if (countSinceLocked != 0) {
                 countSinceLocked++;
             }
-            if(countSinceLocked >= 20){
+            if (countSinceLocked >= 20) {
                 countSinceLocked = 0;
                 Utilities.editBitSharedArray(rc, 1021, false);
             }
             //check if nearby enemies are coming to attack, call for robots to prioritize spawning at ur flag
-            if(rc.senseNearbyRobots(-1, rc.getTeam().opponent()).length > rc.senseNearbyRobots(-1, rc.getTeam()).length){
+            if (rc.senseNearbyRobots(-1, rc.getTeam().opponent()).length > rc.senseNearbyRobots(-1, rc.getTeam()).length) {
                 //spawn everyone in 0-8 if possible, also lock so it wont cycle
-                if(rc.getLocation().equals(Utilities.convertIntToLocation(rc.readSharedArray(0)))){
+                if (rc.getLocation().equals(Utilities.convertIntToLocation(rc.readSharedArray(0)))) {
                     Utilities.editBitSharedArray(rc, 1022, false);
                     Utilities.editBitSharedArray(rc, 1023, false);
                     //lock
                     Utilities.editBitSharedArray(rc, 1021, true);
-                }
-                else if(rc.getLocation().equals(Utilities.convertIntToLocation(rc.readSharedArray(1)))){
+                } else if (rc.getLocation().equals(Utilities.convertIntToLocation(rc.readSharedArray(1)))) {
                     Utilities.editBitSharedArray(rc, 1022, false);
                     Utilities.editBitSharedArray(rc, 1023, true);
                     //lock
                     Utilities.editBitSharedArray(rc, 1021, true);
-                }
-                else{
+                } else {
                     Utilities.editBitSharedArray(rc, 1022, true);
                     Utilities.editBitSharedArray(rc, 1023, false);
                     //lock
@@ -77,19 +77,15 @@ public class Builder {
                    System.out.println("" + rc.getCrumbs());
                }
             }*/
-        }
-        else if (t != null)
-        {//there is a task to do
+        } else if (t != null) {//there is a task to do
             Pathfinding.bugNav2(rc, t.location);
             if (locationIsActionable(rc, t.location)) {
-                if (rc.canBuild(TrapType.STUN, t.location)) {
-                    rc.build(TrapType.STUN, t.location);
-                    Utilities.clearTask(rc, t.arrayIndex);
-                }
+                TrapType toBeBuilt = TrapType.STUN;
+                if (rc.getCrumbs() > 2000)
+                    toBeBuilt = TrapType.EXPLOSIVE;
+                Utilities.clearTask(rc, t.arrayIndex);
             }
-        }
-        else
-        {
+        } else {
             //there is no task to be done
             //There is no task to be done and all the flags have guys sitting on them
             //Move away from the nearest guys avoiding ops especicially
@@ -129,19 +125,15 @@ public class Builder {
 
             runBuild(rc, enemies);
 
-            if(rc.getLocation().distanceSquaredTo(RobotPlayer.findClosestSpawnLocation(rc)) > 100)
-            {
+            if (rc.getLocation().distanceSquaredTo(RobotPlayer.findClosestSpawnLocation(rc)) > 100) {
                 Pathfinding.bugNav2(rc, RobotPlayer.findClosestSpawnLocation(rc));
-            }
-            else if (enemies.length == 0)
-            {
+            } else if (enemies.length == 0) {
                 MapLocation closestBroadcast = findClosestBroadcastFlags(rc);
                 if (closestBroadcast != null) {
-                    if(rc.isMovementReady()) Pathfinding.bugNav2(rc, closestBroadcast);
-                };
-            }
-            else
-            {
+                    if (rc.isMovementReady()) Pathfinding.bugNav2(rc, closestBroadcast);
+                }
+                ;
+            } else {
                 Pathfinding.tryToMove(rc, rc.adjacentLocation(rc.getLocation().directionTo(Utilities.averageRobotLocation(enemies)).opposite()));
             }
 
@@ -149,18 +141,15 @@ public class Builder {
         }
 
 
-
     }
-
-
 
 
     private static Direction directionToMove(RobotController rc) {
         return directions[rng.nextInt(8)];
     }
 
-    private static int distanceFromNearestSpawnLocation(RobotController rc){
-return 0;
+    private static int distanceFromNearestSpawnLocation(RobotController rc) {
+        return 0;
     }
 
     public static boolean locationIsActionable(RobotController rc, MapLocation m) throws GameActionException {
@@ -175,49 +164,46 @@ return 0;
     }
 
     public static void UpdateExplosionBorder(RobotController rc) throws GameActionException {
+        TrapType toBeBuilt = TrapType.STUN;
+        if(rc.hasFlag()&&rc.getCrumbs()>=500||rc.getCrumbs()>=2000){
+            toBeBuilt = TrapType.EXPLOSIVE;
+        }
+        if(rc.readSharedArray(58)!=0&&!rc.hasFlag()){
+            return;
+        }
         for (MapInfo t : rc.senseNearbyMapInfos(GameConstants.INTERACT_RADIUS_SQUARED)) {
-            if (rc.canBuild(TrapType.STUN, t.getMapLocation())&&t.getTrapType().equals(TrapType.NONE)) {
-                rc.build(TrapType.STUN, t.getMapLocation());
-            }
+            if(rc.canBuild(toBeBuilt, t.getMapLocation())){
+                rc.build(toBeBuilt,t.getMapLocation());
+               System.out.println(toBeBuilt);
+           }
         }
     }
 
-    public static void runBuild(RobotController rc, RobotInfo[] enemies) throws GameActionException
-    {
+    public static void runBuild(RobotController rc, RobotInfo[] enemies) throws GameActionException {
         PriorityQueue<MapLocationWithDistance> bestTrapLocations = getBestBombLocations(rc, enemies);
-        while (!bestTrapLocations.isEmpty())
-        {
+        while (!bestTrapLocations.isEmpty()) {
             MapLocation currentTryLocation = bestTrapLocations.remove().location;
-            if (currentTryLocation != null && rc.canBuild(TrapType.STUN, currentTryLocation))
-            {
+            if (currentTryLocation != null && rc.canBuild(TrapType.STUN, currentTryLocation)) {
                 rc.build(TrapType.STUN, currentTryLocation);
             }
         }
     }
 
-    public static PriorityQueue<MapLocationWithDistance> getBestBombLocations(RobotController rc, RobotInfo[] enemies)
-    {
+    public static PriorityQueue<MapLocationWithDistance> getBestBombLocations(RobotController rc, RobotInfo[] enemies) {
         PriorityQueue<MapLocationWithDistance> bestLocations = new PriorityQueue<>();
-        if(enemies.length == 0)
-        {
-            for(Direction direction : directions)
-            {
+        if (enemies.length == 0) {
+            for (Direction direction : directions) {
                 MapLocation tempLocation = rc.adjacentLocation(direction);
                 MapLocation closestFlag = findClosestBroadcastFlags(rc);
-                if(closestFlag != null && rc.canBuild(TrapType.STUN, tempLocation))
-                {
+                if (closestFlag != null && rc.canBuild(TrapType.STUN, tempLocation)) {
                     bestLocations.add(new MapLocationWithDistance(tempLocation, tempLocation.distanceSquaredTo(closestFlag)));
                 }
             }
-        }
-        else
-        {
+        } else {
             MapLocation averageEnemyLocation = Utilities.averageRobotLocation(enemies);
-            for(Direction direction : directions)
-            {
+            for (Direction direction : directions) {
                 MapLocation tempLocation = rc.adjacentLocation(direction);
-                if(rc.canBuild(TrapType.STUN, tempLocation))
-                {
+                if (rc.canBuild(TrapType.STUN, tempLocation)) {
                     bestLocations.add(new MapLocationWithDistance(tempLocation, tempLocation.distanceSquaredTo(averageEnemyLocation)));
                 }
             }
@@ -226,18 +212,16 @@ return 0;
     }
 }
 
-class MapLocationWithDistance implements Comparable
-{
+class MapLocationWithDistance implements Comparable {
     public MapLocation location;
     public int distanceSquared;
 
-    public MapLocationWithDistance(MapLocation ml, int distanceSquared)
-    {
+    public MapLocationWithDistance(MapLocation ml, int distanceSquared) {
         location = ml;
         this.distanceSquared = distanceSquared;
     }
-    public int compareTo(Object other)
-    {
-        return Integer.compare(distanceSquared,((MapLocationWithDistance) other).distanceSquared);
+
+    public int compareTo(Object other) {
+        return Integer.compare(distanceSquared, ((MapLocationWithDistance) other).distanceSquared);
     }
 }

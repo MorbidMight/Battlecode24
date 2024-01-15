@@ -270,8 +270,7 @@ public strictfp class RobotPlayer {
                     }
                     //if we have an enemy flag, bring it to the closest area
                     if (rc.hasFlag() && rc.getRoundNum() >= GameConstants.SETUP_ROUNDS) {
-                        rc.writeSharedArray(58, Utilities.convertLocationToInt(rc.getLocation()));
-                        Pathfinding.tryToMove(rc, findClosestSpawnLocation(rc));
+                        Carrier.runCarrier(rc);
                     }
 //                    if(rc.getRoundNum() < 10)
 //                        MoveAwayFromSpawnLocations(rc);
