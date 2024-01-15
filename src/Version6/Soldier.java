@@ -32,6 +32,8 @@ public class Soldier
         }
         FlagInfo[] nearbyOppFlags = rc.senseNearbyFlags(-1, rc.getTeam().opponent());
         if(nearbyOppFlags.length != 0 && !nearbyOppFlags[0].isPickedUp()){
+            if(rc.canFill(rc.getLocation().add(rc.getLocation().directionTo(nearbyOppFlags[0].getLocation()))))
+                rc.fill(rc.getLocation().add(rc.getLocation().directionTo(nearbyOppFlags[0].getLocation())));
             Pathfinding.bugNav2(rc, nearbyOppFlags[0].getLocation());
         }
         //pickup enemy flag if we can
