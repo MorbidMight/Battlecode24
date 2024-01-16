@@ -117,7 +117,7 @@ public class Builder {
 //            }
 //
 //            if(rc.getRoundNum()%8==0/*&&distanceFromNearestSpawnLocation(rc)>16*/)
-//                UpdateExplosionBorder(rc);
+                UpdateExplosionBorder(rc);
 
 
             RobotInfo[] enemies = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
