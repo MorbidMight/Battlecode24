@@ -144,7 +144,9 @@ public class Pathfinding
     public static void tryToMove(RobotController rc, MapLocation l) throws GameActionException {//rl is false for right and true for left
         try {
             Direction dir = basicPathfinding(rc, l, false);
-
+            if(rc.canFill(rc.adjacentLocation(dir))){
+                rc.canFill(rc.adjacentLocation(dir));
+            }
             if (dir != null && rc.canMove(dir)) {
                 rc.move(dir);
                 RobotPlayer.alreadyBeen.add(rc.getLocation());
@@ -180,6 +182,9 @@ public class Pathfinding
         if(bugState == 0)
         {
             bugDirection = rc.getLocation().directionTo(destination);
+            if(rc.canFill(rc.adjacentLocation(bugDirection))){
+                rc.fill(rc.adjacentLocation(bugDirection));
+            }
             if(rc.canMove(bugDirection))
             {
                 rc.move(bugDirection);
@@ -242,7 +247,9 @@ public class Pathfinding
             if(turnDirection == 0)
             {
                 for (int i = 0; i < 8; i++)
-                {
+                {   if(rc.canFill(rc.adjacentLocation(bugDirection)))
+                        rc.fill(rc.adjacentLocation(bugDirection));
+
                     if (rc.canMove(bugDirection))
                     {
                         rc.move(bugDirection);

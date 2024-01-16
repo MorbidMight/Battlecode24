@@ -93,7 +93,7 @@ public class Builder {
                 TrapType toBeBuilt = TrapType.STUN;
                 if (rc.getCrumbs() > 2000)
                     toBeBuilt = TrapType.EXPLOSIVE;
-                else if(damNearby(rc)&&!(rc.getLocation().x<5||rc.getLocation().y<5||rc.getMapWidth()-rc.getLocation().x<5 || rc.getMapHeight()-rc.getLocation().y<5))
+                if(damNearby(rc)&&!(rc.getLocation().x<5||rc.getLocation().y<5||rc.getMapWidth()-rc.getLocation().x<5 || rc.getMapHeight()-rc.getLocation().y<5))
                     toBeBuilt = TrapType.WATER;
                 if(rc.canBuild(toBeBuilt, t.location))
                     rc.build(toBeBuilt, t.location);
@@ -193,12 +193,23 @@ public class Builder {
                 return true;
         return false;
     }
+
+    public static void escortPlaceWaterBombs(RobotController rc) throws GameActionException {
+        MapLocation C = Utilities.convertIntToLocation(rc.readSharedArray(58));
+        if(findClosestSpawnLocation(rc).distanceSquaredTo(rc.getLocation())>findClosestSpawnLocation(rc,C).distanceSquaredTo(C)&&findClosestSpawnLocation(rc).distanceSquaredTo(rc.getLocation())>100){//if it's behind the carrier
+            for(MapInfo i:rc.senseNearbyMapInfos(GameConstants.INTERACT_RADIUS_SQUARED)){
+                if (rc.canDig(i.getMapLocation())) {
+                    rc.dig(i.getMapLocation());
+                    return;
+                }
+
+            }
+        }
+    }
     private static boolean tryToPlaceDamBombs(RobotController rc) throws GameActionException {
         boolean nearADam = true;
         boolean nearAWaterbomb = true;
         for(MapInfo i : rc.senseNearbyMapInfos()){
-            if(!i.getTrapType().equals(TrapType.NONE))
-                nearAWaterbomb = false;
             if(i.isDam()){
                nearADam = false;
             }
@@ -206,8 +217,7 @@ public class Builder {
         if(rc.getLocation().x<5||rc.getLocation().y<5||rc.getMapWidth()-rc.getLocation().x<5 || rc.getMapHeight()-rc.getLocation().y<5){
             return false;
         }
-        boolean needsAWaterBomb = nearADam && !nearAWaterbomb;
-        if(needsAWaterBomb) {
+        if(nearADam) {
             for (MapInfo AT : rc.senseNearbyMapInfos(GameConstants.INTERACT_RADIUS_SQUARED)) {
                 if (rc.canBuild(TrapType.WATER,AT.getMapLocation())) {
                     rc.build(TrapType.WATER, AT.getMapLocation());
@@ -231,9 +241,14 @@ public class Builder {
     }
 
     public static void UpdateExplosionBorder(RobotController rc) throws GameActionException {
+        if(rc.getRoundNum()<200){
+            return;
+        }
         for (MapInfo t : rc.senseNearbyMapInfos(GameConstants.INTERACT_RADIUS_SQUARED)) {
             TrapType toBeBuilt = TrapType.STUN;
-            if(rc.getCrumbs()>1500)
+            if(rc.getLocation().distanceSquaredTo(findClosestSpawnLocation(rc))>25)
+                toBeBuilt = TrapType.WATER;
+            else if(rc.getCrumbs()>1500)
                 toBeBuilt = TrapType.EXPLOSIVE;
             if(rc.canBuild(toBeBuilt,t.getMapLocation()))
                 rc.build(toBeBuilt,t.getMapLocation());

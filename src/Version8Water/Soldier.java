@@ -45,6 +45,7 @@ public class Soldier
             if (rc.readSharedArray(58) != 0) {
                 Pathfinding.tryToMove(rc, Utilities.convertIntToLocation(rc.readSharedArray(58)));
                 rc.setIndicatorString("Helping teammate @ " + Utilities.convertIntToLocation(rc.readSharedArray(58)));
+                Builder.escortPlaceWaterBombs(rc);
             }
             //try to pick up enemy flag
             if (rc.canPickupFlag(rc.getLocation()) && rc.getRoundNum() > GameConstants.SETUP_ROUNDS) {

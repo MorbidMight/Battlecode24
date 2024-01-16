@@ -32,8 +32,8 @@ public class Explorer {
                 rc.fill(rc.adjacentLocation(rc.getLocation().directionTo(centerOfMap)));
             }
             //if adjacent to dam, maybe try and lay a trap?
-            if (isAdjacentToDam(rc) && rc.canBuild(TrapType.STUN, rc.getLocation()))
-                rc.build(TrapType.STUN, rc.getLocation());
+            if (isAdjacentToDam(rc) && rc.canBuild(TrapType.WATER, rc.getLocation()))
+                rc.build(TrapType.WATER, rc.getLocation());
             Pathfinding.bugNav2(rc, centerOfMap);
         } else {
             //tries to get neary crumbs
