@@ -2,7 +2,7 @@ package Version8Water;
 
 import battlecode.common.*;
 
-import static Version8.RobotPlayer.findClosestBroadcastFlags;
+import static Version8Water.RobotPlayer.findClosestBroadcastFlags;
 
 public class Healer
 {

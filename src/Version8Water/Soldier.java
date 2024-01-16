@@ -2,10 +2,10 @@ package Version8Water;
 
 import battlecode.common.*;
 
-import static Version8.RobotPlayer.findCoordinatedBroadcastFlag;
-import static Version8.RobotPlayer.lowestHealth;
-import static Version8.Utilities.averageRobotLocation;
-import static Version8.Utilities.bestHeal;
+import static Version8Water.RobotPlayer.findCoordinatedBroadcastFlag;
+import static Version8Water.RobotPlayer.lowestHealth;
+import static Version8Water.Utilities.averageRobotLocation;
+import static Version8Water.Utilities.bestHeal;
 
 public class Soldier
 {

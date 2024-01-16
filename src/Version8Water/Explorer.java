@@ -2,7 +2,7 @@ package Version8Water;
 
 import battlecode.common.*;
 
-import static Version8.RobotPlayer.*;
+import static Version8Water.RobotPlayer.*;
 
 public class Explorer {
     public static void runExplorer(RobotController rc) throws GameActionException {

@@ -5,7 +5,7 @@ import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
 
-import static Version8.RobotPlayer.findClosestSpawnLocation;
+import static Version8Water.RobotPlayer.findClosestSpawnLocation;
 public class Carrier {
     public static void runCarrier(RobotController rc) throws GameActionException {
         rc.writeSharedArray(58, Utilities.convertLocationToInt(rc.getLocation()));

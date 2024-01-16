@@ -4,7 +4,7 @@ import battlecode.common.*;
 
 import java.util.PriorityQueue;
 
-import static Version8.RobotPlayer.*;
+import static Version8Water.RobotPlayer.*;
 
 //Current Builder strategy
 //if a builder is spawned on a flag it sits there and places bombs around
