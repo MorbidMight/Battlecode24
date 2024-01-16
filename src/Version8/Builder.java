@@ -91,6 +91,8 @@ public class Builder {
                 TrapType toBeBuilt = TrapType.STUN;
                 if (rc.getCrumbs() > 2000)
                     toBeBuilt = TrapType.EXPLOSIVE;
+                if(rc.canBuild(toBeBuilt, t.location))
+                    rc.build(toBeBuilt, t.location);
                 Utilities.clearTask(rc, t.arrayIndex);
             }
         }
@@ -182,7 +184,7 @@ public class Builder {
 
     public static void UpdateExplosionBorder(RobotController rc) throws GameActionException {
         for (MapInfo t : rc.senseNearbyMapInfos(GameConstants.INTERACT_RADIUS_SQUARED)) {
-            if (rc.canBuild(TrapType.STUN, t.getMapLocation())&&t.getTrapType().equals(TrapType.NONE)) {
+            if (rc.canBuild(TrapType.STUN, t.getMapLocation())&&t.getTrapType().equals(TrapType.NONE) && rc.getCrumbs() > 300) {
                 rc.build(TrapType.STUN, t.getMapLocation());
             }
         }
