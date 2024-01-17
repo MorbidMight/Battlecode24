@@ -10,7 +10,8 @@ public class Carrier {
         rc.writeSharedArray(58, Utilities.convertLocationToInt(rc.getLocation()));
         if(rc.getHealth()<100 || !rc.hasFlag()) {//Probobly gonna die soon
             rc.writeSharedArray(58,0);
-            rc.dropFlag(rc.getLocation());
+            if(rc.canDropFlag(rc.getLocation()))
+                rc.dropFlag(rc.getLocation());
         }
         MapLocation closestSpawnLoc = findClosestSpawnLocation(rc);
         Direction d = rc.getLocation().directionTo(closestSpawnLoc);

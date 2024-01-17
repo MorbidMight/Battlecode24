@@ -36,8 +36,6 @@ public class Soldier
             if(toHeal != null && rc.canHeal(toHeal.getLocation())){
                 rc.heal(toHeal.getLocation());
             }
-            if(rc.senseNearbyFlags(-1, rc.getTeam().opponent()).length != 0)
-                Pathfinding.tryToMove(rc, rc.getLocation().add(rc.getLocation().directionTo(averageRobotLocation(rc.senseNearbyRobots(-1, rc.getTeam().opponent()))).opposite()));
         }
         else {
             //support any flag heist or defense
@@ -45,9 +43,15 @@ public class Soldier
                 Pathfinding.tryToMove(rc, Utilities.convertIntToLocation(rc.readSharedArray(58)));
                 rc.setIndicatorString("Helping teammate @ " + Utilities.convertIntToLocation(rc.readSharedArray(58)));
             }
-            //try to pick up enemy flag
-            if (rc.canPickupFlag(rc.getLocation()) && rc.getRoundNum() > GameConstants.SETUP_ROUNDS) {
-                rc.pickupFlag(rc.getLocation());
+            if(rc.senseNearbyFlags(-1, rc.getTeam().opponent()).length != 0){
+                //store location just in case we move out of vision radius before second part
+                MapLocation loc = rc.senseNearbyFlags(-1, rc.getTeam().opponent())[0].getLocation();
+                //move towards the flag
+                Pathfinding.tryToMove(rc, loc);
+                //try to pick up that flag
+                if (rc.canPickupFlag(loc) && rc.getRoundNum() > GameConstants.SETUP_ROUNDS) {
+                    rc.pickupFlag(loc);
+                }
             }
             //if you have the flag, just run back, and maybe fill in water on the way
             if (rc.hasFlag()) {
