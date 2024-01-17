@@ -184,7 +184,7 @@ public class Builder {
 
     public static void UpdateExplosionBorder(RobotController rc) throws GameActionException {
         for (MapInfo t : rc.senseNearbyMapInfos(GameConstants.INTERACT_RADIUS_SQUARED)) {
-            if (rc.canBuild(TrapType.STUN, t.getMapLocation())&&t.getTrapType().equals(TrapType.NONE) && rc.getCrumbs() > 300) {
+            if (rc.canBuild(TrapType.STUN, t.getMapLocation())&&t.getTrapType().equals(TrapType.NONE)) {
                 rc.build(TrapType.STUN, t.getMapLocation());
             }
         }
@@ -196,7 +196,7 @@ public class Builder {
         while (!bestTrapLocations.isEmpty())
         {
             MapLocation currentTryLocation = bestTrapLocations.remove().location;
-            if (currentTryLocation != null && rc.canBuild(TrapType.STUN, currentTryLocation)) {
+            if (currentTryLocation != null && rc.canBuild(TrapType.STUN, currentTryLocation) && rc.getCrumbs() > 300) {
                 rc.build(TrapType.STUN, currentTryLocation);
             }
         }
