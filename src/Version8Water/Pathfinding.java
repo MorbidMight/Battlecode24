@@ -188,7 +188,6 @@ public class Pathfinding
             if(rc.canMove(bugDirection))
             {
                 rc.move(bugDirection);
-                RobotPlayer.movedLastTurn = false;
             }
             else
             {
@@ -256,7 +255,6 @@ public class Pathfinding
                         if(rc.canFill(rc.adjacentLocation(bugDirection)))
                             rc.fill(rc.adjacentLocation(bugDirection));
                         rc.move(bugDirection);
-                        RobotPlayer.movedLastTurn = true;
                         bugDirection = bugDirection.rotateRight();
                         break;
                     }
@@ -275,7 +273,6 @@ public class Pathfinding
                         if(rc.canFill(rc.adjacentLocation(bugDirection)))
                             rc.fill(rc.adjacentLocation(bugDirection));
                         rc.move(bugDirection);
-                        RobotPlayer.movedLastTurn = true;
                         bugDirection = bugDirection.rotateLeft();
                         break;
                     }
@@ -286,7 +283,6 @@ public class Pathfinding
                 }
             }
         }
-        RobotPlayer.movedLastTurn=false;
     }
 
     public static HashSet<MapLocation> createLine(MapLocation a, MapLocation b)
