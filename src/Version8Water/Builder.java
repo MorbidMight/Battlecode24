@@ -153,27 +153,21 @@ public class Builder {
                     Pathfinding.bugNav2(rc,rc.adjacentLocation(d.opposite()));
                 }
 
-            }else if(rc.getLocation().distanceSquaredTo(RobotPlayer.findClosestSpawnLocation(rc)) > 100)
-            {
-                Direction d = rc.getLocation().directionTo(findClosestSpawnLocation(rc));
-                if(rc.getID()%2==0) {
-                    d = d.rotateLeft();
-                }else {
-                    d = d.rotateRight();
+            }else {
+                MapLocation center = findClosestSpawnLocation(rc);//Will orbit around the flag
+                if(rc.getLocation().distanceSquaredTo(center)<81)
+                    Pathfinding.bugNav2(rc,rc.adjacentLocation(center.directionTo(rc.getLocation())));
+                else if (rc.getLocation().distanceSquaredTo(center)>121)
+                    Pathfinding.bugNav2(rc,rc.adjacentLocation(center.directionTo(rc.getLocation()).opposite()));
+                else{
+                    if((rc.getRoundNum()/75)%2==0)
+                    Pathfinding.bugNav2(rc,rc.adjacentLocation(center.directionTo(rc.getLocation()).rotateLeft().rotateLeft()));
+                    else
+                        Pathfinding.bugNav2(rc,rc.adjacentLocation(center.directionTo(rc.getLocation()).rotateRight().rotateRight()));
+
                 }
-                rc.setIndicatorString(d.toString());
-                Pathfinding.bugNav2(rc, rc.adjacentLocation(d));
-            }
-            else if (enemies.length == 0)
-            {
-                MapLocation closestBroadcast = findClosestBroadcastFlags(rc);
-                if (closestBroadcast != null) {
-                    if(rc.isMovementReady()) Pathfinding.bugNav2(rc, closestBroadcast);
-                }
-            }
-            else
-            {
-                Pathfinding.tryToMove(rc, rc.adjacentLocation(rc.getLocation().directionTo(Utilities.averageRobotLocation(enemies)).opposite()));
+
+
             }
 
 
@@ -241,12 +235,12 @@ public class Builder {
     }
 
     public static void UpdateExplosionBorder(RobotController rc) throws GameActionException {
-        if(rc.getRoundNum()<200){
+        if(rc.getRoundNum()<200||rc.getCrumbs()<300){
             return;
         }
         for (MapInfo t : rc.senseNearbyMapInfos(GameConstants.INTERACT_RADIUS_SQUARED)) {
             TrapType toBeBuilt = TrapType.STUN;
-            if(rc.getLocation().distanceSquaredTo(findClosestSpawnLocation(rc))>25)
+            if(rc.getLocation().distanceSquaredTo(findClosestSpawnLocation(rc))>25&&!(rc.getLocation().x<5||rc.getLocation().y<5||rc.getMapWidth()-rc.getLocation().x<5 || rc.getMapHeight()-rc.getLocation().y<5))
                 toBeBuilt = TrapType.WATER;
             else if(rc.getCrumbs()>1500)
                 toBeBuilt = TrapType.EXPLOSIVE;
