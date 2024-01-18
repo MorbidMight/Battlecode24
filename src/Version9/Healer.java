@@ -2,7 +2,7 @@ package Version9;
 
 import battlecode.common.*;
 
-import static Version8.RobotPlayer.findClosestBroadcastFlags;
+import static Version9.RobotPlayer.findClosestBroadcastFlags;
 
 public class Healer
 {

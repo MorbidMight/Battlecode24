@@ -7,7 +7,7 @@ import static Version9.RobotPlayer.*;
 public class Explorer {
     public static void runExplorer(RobotController rc) throws GameActionException {
         if (!rc.isSpawned()) {
-            Clock.yield();
+            return;
         }
         if (isAdjacentToDam(rc) && turnCount < 150 && rc.senseMapInfo(rc.getLocation()).getTrapType() == TrapType.NONE) {
             Task bomb = new Task(rc.getLocation(), false);
@@ -43,6 +43,9 @@ public class Explorer {
                 targetCrumb = chooseTargetCrumb(rc, nearbyCrumbs);
             if (targetCrumb != null) {
                 MapInfo targetLoc = rc.senseMapInfo(targetCrumb);
+                if (rc.canFill(rc.adjacentLocation(rc.getLocation().directionTo(targetCrumb))) && targetLoc.getCrumbs() > 30) {
+                    rc.fill(rc.adjacentLocation(rc.getLocation().directionTo(targetCrumb)));
+                }
                 //check if crumb is on water
                 if (!targetLoc.isPassable() && rc.canFill(targetCrumb)) {
                     rc.fill(targetCrumb);
@@ -55,9 +58,6 @@ public class Explorer {
                 Pathfinding.bugNav2(rc, targetLoc);
                 turnsSinceLocGen = 1;
             } else {
-                if (rc.canFill(rc.adjacentLocation(rc.getLocation().directionTo(targetLoc)))) {
-                    rc.fill(rc.adjacentLocation(rc.getLocation().directionTo(targetLoc)));
-                }
                 Pathfinding.bugNav2(rc, targetLoc);
                 turnsSinceLocGen++;
             }

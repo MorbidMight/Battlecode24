@@ -4,7 +4,7 @@ import battlecode.common.*;
 
 import java.util.PriorityQueue;
 
-import static Version8.RobotPlayer.*;
+import static Version9.RobotPlayer.*;
 public class Carrier {
     public static void runCarrier(RobotController rc) throws GameActionException {
         rc.writeSharedArray(58, Utilities.convertLocationToInt(rc.getLocation()));

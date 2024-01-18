@@ -7,8 +7,9 @@ import java.util.Comparator;
 import java.util.Map;
 import java.util.PriorityQueue;
 
-import static Version8Water.RobotPlayer.findClosestSpawnLocation;
+import static Version9.RobotPlayer.findClosestSpawnLocation;
 import static Version9.RobotPlayer.*;
+
 
 //Current Builder strategy
 //if a builder is spawned on a flag it sits there and places bombs around
@@ -16,6 +17,8 @@ import static Version9.RobotPlayer.*;
 //Otherwise it wanders around and places traps wherever
 //in addition if a teammate current has a flag they don't place any bombs so that the bomb carrier can live.
 public class Builder {
+    final static int ROUND_TO_BUILD_EXPLOSION_BORDER = 0;
+
     public static void runBuilder(RobotController rc) throws GameActionException {
         if (turnCount == 150) {
             for (int i = 6; i < 28; i++) {
@@ -23,7 +26,7 @@ public class Builder {
             }
         }
         if (!rc.isSpawned()) {
-            Clock.yield();
+            return;
         }
         Task t = Utilities.readTask(rc);
         if (SittingOnFlag) {
@@ -33,7 +36,7 @@ public class Builder {
                 //shut down this spawn location for now
                 if (countSinceSeenFlag > 40) {
                     rc.setIndicatorString("Dont come help me!");
-                    Clock.yield();
+                    return;
                 } else {
                     countSinceSeenFlag++;
                 }
@@ -71,7 +74,7 @@ public class Builder {
                 }
                 countSinceLocked++;
             }
-            if(rc.getRoundNum()>200){
+            if(rc.getRoundNum()>ROUND_TO_BUILD_EXPLOSION_BORDER){
                 UpdateExplosionBorder(rc);
             }
             /*if(rc.senseNearbyRobots(-1, rc.getTeam().opponent()).length > 0)
@@ -196,7 +199,7 @@ public class Builder {
     }
 
     public static void UpdateExplosionBorder(RobotController rc) throws GameActionException {
-        if(rc.getCrumbs()<300){
+        if(rc.getCrumbs()<300 && !SittingOnFlag){
             return;
         }
         for (MapInfo t : rc.senseNearbyMapInfos(GameConstants.INTERACT_RADIUS_SQUARED)) {
