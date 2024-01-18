@@ -102,14 +102,16 @@ public class Soldier
                 rc.heal(toHeal.getLocation());
             }
             //high density area, try and place a bomb! - place forward if possible, but if its super high density we'll settle for placing on ourselves
-            if(enemyRobots.length > 6 && enemyRobotsAttackRange.length >= 1){
+            if(enemyRobots.length > 5 && enemyRobotsAttackRange.length >= 1){
                 if(rc.canBuild(TrapType.STUN, rc.getLocation().add(rc.getLocation().directionTo(averageRobotLocation(enemyRobots))))){
                     rc.build(TrapType.STUN, rc.getLocation().add(rc.getLocation().directionTo(averageRobotLocation(enemyRobots))));
+                    System.out.println("I built a bomb!: " + rc.getLocation());
                 }
             }
             if(rc.isActionReady() && enemyRobots.length > 6 && enemyRobotsAttackRange.length >= 3){
                 if(rc.canBuild(TrapType.STUN, rc.getLocation())){
                     rc.build(TrapType.STUN, rc.getLocation());
+                    System.out.println("I built a high density bomb!: " + rc.getLocation());
                 }
             }
             MapLocation toAttack = lowestHealth(enemyRobotsAttackRange);
@@ -146,7 +148,7 @@ public class Soldier
                 }
                 //finally, we cant see enemies or a flag, so lets move towawrds closest broadcast location!
                 else {
-                    //if (rc.isMovementReady()) Pathfinding.tryToMove(rc, findClosestBroadcastFlags(rc));
+                    //will be used for a variety of different movement goals
                     MapLocation target = findCoordinatedBroadcastFlag(rc);
                     if (enemyRobots.length == 0 && target != null && rc.canFill(rc.adjacentLocation(rc.getLocation().directionTo(target)))) {
                         rc.fill(rc.adjacentLocation(rc.getLocation().directionTo(target)));
@@ -161,13 +163,20 @@ public class Soldier
             }
             //there are enemies than allies, or we've already attacked this turn
             else {
-                //if we can see any allies, move towards their average location
-                if (allyRobots.length != 0) {
-                    if (rc.isMovementReady()) Pathfinding.tryToMove(rc, averageRobotLocation(allyRobots));
-                }
-                //otherwise, move towards opposite of average of enemies
-                else if (enemyRobots.length != 0) {
-                    if (rc.isMovementReady()) Pathfinding.tryToMove(rc, rc.getLocation().add(rc.getLocation().directionTo(averageRobotLocation(enemyRobots)).opposite()));
+                if(rc.isMovementReady()) {
+                    //lets try to lure them into traps
+                    MapLocation target = Builder.getAverageTrapLocation(rc, rc.senseNearbyMapInfos(-1));
+                    if (target != null) {
+                        Pathfinding.tryToMove(rc, target);
+                    }
+                    //otherwise, move towards opposite of average of enemies
+                    else if (enemyRobots.length != 0) {
+                            Pathfinding.tryToMove(rc, rc.getLocation().add(rc.getLocation().directionTo(averageRobotLocation(enemyRobots)).opposite()));
+                    }
+                    //if we can see any allies, move towards their average location
+                    else if (allyRobots.length != 0) {
+                        Pathfinding.tryToMove(rc, averageRobotLocation(allyRobots));
+                    }
                 }
             }
             if (rc.isActionReady()) {
@@ -215,15 +224,12 @@ public class Soldier
         if(!enemyFlag1.equals(flagLoc) && !enemyFlag1.isAdjacentTo(flagLoc) && !enemyFlag2.equals(flagLoc) && !enemyFlag2.isAdjacentTo(flagLoc) && !enemyFlag3.equals(flagLoc) && !enemyFlag3.isAdjacentTo(flagLoc)){
             if(index3 == 0){
                 rc.writeSharedArray(3, flagLocInt);
-                System.out.println("FlagLoc 1: " + flagLoc);
             }
             else if(index4 == 0){
                 rc.writeSharedArray(4, flagLocInt);
-                System.out.println("FlagLoc 2: " + flagLoc);
             }
             else if(index5 == 0){
                 rc.writeSharedArray(5, flagLocInt);
-                System.out.println("FlagLoc 3: " + flagLoc);
             }
         }
     }
@@ -266,7 +272,6 @@ public class Soldier
             //we can see it, but couldnt sense any flags earlier... its been removed
             if(rc.canSenseLocation(enemyFlag1)) {
                 eraseEnemyFlag(rc, enemyFlag1);
-                System.out.println("Erasing location: " + enemyFlag1);
             }
             else{
                 return enemyFlag1;
@@ -276,7 +281,6 @@ public class Soldier
             //we can see it, but couldnt sense any flags earlier... its been removed
             if(rc.canSenseLocation(enemyFlag2)) {
                 eraseEnemyFlag(rc, enemyFlag2);
-                System.out.println("Erasing location: " + enemyFlag2);
             }
             else{
                 return enemyFlag2;
@@ -286,7 +290,6 @@ public class Soldier
             //we can see it, but couldnt sense any flags earlier... its been removed
             if(rc.canSenseLocation(enemyFlag3)) {
                 eraseEnemyFlag(rc, enemyFlag3);
-                System.out.println("Erasing location: " + enemyFlag3);
             }
             else{
                 return enemyFlag3;

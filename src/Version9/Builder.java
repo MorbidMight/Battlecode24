@@ -185,8 +185,6 @@ static int radius = 0;
             TrapType toBeBuilt = TrapType.STUN;
             if (rc.getCrumbs() > 3500)
                 toBeBuilt = TrapType.EXPLOSIVE;
-            if(rng.nextInt(10)==1)
-                toBeBuilt = TrapType.WATER;
             if (rc.canBuild(toBeBuilt, t.getMapLocation())) {
                 rc.build(toBeBuilt, t.getMapLocation());
                 trapsPlaced++;
@@ -238,6 +236,28 @@ static int radius = 0;
             }
         }
         return bestLocations;
+    }
+    public static MapLocation getAverageTrapLocation(RobotController rc, MapInfo[] possibleTraps)
+    {
+        int count = 0;
+        int x = 0;
+        int y = 0;
+        for(MapInfo info : possibleTraps)
+        {
+            if(!info.getTrapType().equals(TrapType.NONE))
+            {
+                x += info.getMapLocation().x;
+                y += info.getMapLocation().y;
+                count++;
+            }
+        }
+
+        MapLocation averageTrapLocation = null;
+        if(count != 0)
+        {
+            averageTrapLocation = new MapLocation(x / count, y / count);
+        }
+        return averageTrapLocation;
     }
 }
 
