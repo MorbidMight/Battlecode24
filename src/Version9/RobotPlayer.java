@@ -41,10 +41,11 @@ public strictfp class RobotPlayer {
     static ArrayList<MapLocation> prevDestinations;
 
     //Ratios for spawning
-    public static final int NUMSOLDIERS = 35;
+    public static final int NUMSOLDIERS = 37;
     public static final int NUMBUILDERS = 5;
 
-    public static final int NUMHEALERS = 10;
+    public static final int NUMHEALERS = 5;
+    //flag sitters will always be 3, heals is 50 - (soldiers + builders + flag sitters)
 
     static Random rng;
 
@@ -94,9 +95,12 @@ public strictfp class RobotPlayer {
                 role = roles.soldier;
             }
             //if can buy upgrade, buy an upgrade
-            if (rc.canBuyGlobal(GlobalUpgrade.ACTION)) {
-                rc.buyGlobal(GlobalUpgrade.ACTION);
-            } else if (rc.canBuyGlobal(GlobalUpgrade.HEALING)) {
+            if (rc.canBuyGlobal(GlobalUpgrade.ATTACK)) {
+                rc.buyGlobal(GlobalUpgrade.ATTACK);
+            } else if (rc.canBuyGlobal(GlobalUpgrade.CAPTURING)) {
+                rc.buyGlobal(GlobalUpgrade.CAPTURING);
+            }
+            else if(rc.canBuyGlobal(GlobalUpgrade.HEALING)){
                 rc.buyGlobal(GlobalUpgrade.HEALING);
             }
             // This code runs during the entire lifespan of the robot, which is why it is in an infinite

@@ -82,7 +82,7 @@ public strictfp class RobotPlayer {
      * run() is the method that is called when a robot is instantiated in the Battlecode world.
      * It is like the main function for your robot. If this method returns, the robot dies!
      *
-     * @param rc The RobotController object. You use it to perform actions from this robot, and to get
+     * @param rc The RobotController object. You use it to perform ATTACKs from this robot, and to get
      *           information on its current status. Essentially your portal to interacting with the world.
      **/
     @SuppressWarnings("unused")
@@ -94,8 +94,8 @@ public strictfp class RobotPlayer {
                 role = roles.soldier;
             }
             //if can buy upgrade, buy an upgrade
-            if (rc.canBuyGlobal(GlobalUpgrade.ACTION)) {
-                rc.buyGlobal(GlobalUpgrade.ACTION);
+            if (rc.canBuyGlobal(GlobalUpgrade.ATTACK)) {
+                rc.buyGlobal(GlobalUpgrade.ATTACK);
             } else if (rc.canBuyGlobal(GlobalUpgrade.HEALING)) {
                 rc.buyGlobal(GlobalUpgrade.HEALING);
             }
@@ -107,8 +107,8 @@ public strictfp class RobotPlayer {
 
             // Try/catch blocks stop unhandled exceptions, which cause your robot to explode.
             try {
-                // Make sure you spawn your robot in before you attempt to take any actions!
-                // Robots not spawned in do not have vision of any tiles and cannot perform any actions.
+                // Make sure you spawn your robot in before you attempt to take any ATTACKs!
+                // Robots not spawned in do not have vision of any tiles and cannot perform any ATTACKs.
                 if (turnCount == 1) {//first turn fill the spawn location into the array ranked
                     SpawnLocations = rc.getAllySpawnLocations();
                 }
