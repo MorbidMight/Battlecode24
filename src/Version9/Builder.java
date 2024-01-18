@@ -77,6 +77,9 @@ public class Builder {
             if(rc.getRoundNum()>ROUND_TO_BUILD_EXPLOSION_BORDER){
                 UpdateExplosionBorder(rc);
             }
+            if(rc.getActionCooldownTurns() < 10){
+
+            }
             /*if(rc.senseNearbyRobots(-1, rc.getTeam().opponent()).length > 0)
             {
                 System.out.println("Sensed!!!!!!!!!!!!");

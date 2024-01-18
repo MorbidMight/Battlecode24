@@ -76,7 +76,7 @@ public class Soldier
                     rc.build(TrapType.STUN, rc.getLocation().add(rc.getLocation().directionTo(averageRobotLocation(enemyRobots))));
                 }
             }
-            if(rc.getActionCooldownTurns() < 10 && enemyRobots.length > 6 && enemyRobotsAttackRange.length >= 2){
+            if(rc.isActionReady() && enemyRobots.length > 6 && enemyRobotsAttackRange.length >= 3){
                 if(rc.canBuild(TrapType.STUN, rc.getLocation())){
                     rc.build(TrapType.STUN, rc.getLocation());
                 }
@@ -88,7 +88,7 @@ public class Soldier
             }
 
             //if we have more allies, or equal allies, to amount of enemies, and havent attacked yet, lets be aggressive
-            if (allyRobots.length >= enemyRobots.length && rc.getActionCooldownTurns() < 10 && rc.getHealth() > 100) {
+            if (allyRobots.length >= enemyRobots.length && rc.isActionReady() && rc.getHealth() > 100) {
                 //can sense an enemy flag - move towards the flag!
                 if (rc.senseNearbyFlags(-1, rc.getTeam().opponent()).length != 0) {
                     if (rc.canFill(rc.getLocation().add(rc.getLocation().directionTo(rc.senseNearbyFlags(-1, rc.getTeam().opponent())[0].getLocation()))))
@@ -98,7 +98,7 @@ public class Soldier
                 }
                 //otherwise, if we can see enemies, just move towards their average location
                 else if (enemyRobots.length != 0 && enemyRobotsAttackRange.length == 0) {
-                    MapLocation averageEnemy = averageRobotLocation(enemyRobots);
+                    //MapLocation averageEnemy = averageRobotLocation(enemyRobots);
 //                    if (rc.canFill(rc.getLocation().add(rc.getLocation().directionTo(averageEnemy))))
 //                        rc.fill(rc.getLocation().add(rc.getLocation().directionTo(averageEnemy)));
                     if (rc.isMovementReady()) Pathfinding.tryToMove(rc, averageRobotLocation(enemyRobots));
@@ -131,7 +131,7 @@ public class Soldier
                 }
             }
             //now, we try to attack again - re-sense robots because we've probably moved
-            if (rc.getActionCooldownTurns() < 10) {
+            if (rc.isActionReady()) {
                 toAttack = lowestHealth(rc.senseNearbyRobots(GameConstants.ATTACK_RADIUS_SQUARED, rc.getTeam().opponent()));
                 if (toAttack != null && rc.canAttack(toAttack)) {
                     rc.attack(toAttack);
