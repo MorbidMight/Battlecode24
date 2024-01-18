@@ -11,6 +11,9 @@ public class Carrier {
         if(index != -1) Utilities.writeFlagToSharedArray(rc, new StolenFlag(rc.getLocation(), false), index);
         MapLocation closestSpawnLoc = findClosestSpawnLocation(rc);
         Direction d = rc.getLocation().directionTo(closestSpawnLoc);
+        if(rc.canMove(d) && rc.senseMapInfo(rc.getLocation().add(d)).getSpawnZoneTeamObject().equals(rc.getTeam())){
+            rc.move(d);
+        }
         if (rc.canFill(rc.getLocation().add(d))) {
             rc.fill(rc.getLocation().add(d));
         }
