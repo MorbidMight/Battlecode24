@@ -55,12 +55,32 @@ static int radius = 0;
                 //shut down this spawn location for now
                 if (countSinceSeenFlag > 40) {
                     rc.setIndicatorString("Dont come help me!");
+                    int locInt = Utilities.convertLocationToInt(rc.getLocation());
+                    if(rc.readSharedArray(0) == locInt){
+                        rc.writeSharedArray(1018, 0);
+                    }
+                    else if(rc.readSharedArray(1) == locInt){
+                        rc.writeSharedArray(1019, 0);
+                    }
+                    else if(rc.readSharedArray(2) == locInt){
+                        rc.writeSharedArray(1020, 0);
+                    }
                     return;
                 } else {
                     countSinceSeenFlag++;
                 }
             } else {
                 countSinceSeenFlag = 0;
+                int locInt = Utilities.convertLocationToInt(rc.getLocation());
+                if(rc.readSharedArray(0) == locInt){
+                    rc.writeSharedArray(1018, 1);
+                }
+                else if(rc.readSharedArray(1) == locInt){
+                    rc.writeSharedArray(1019, 1);
+                }
+                else if(rc.readSharedArray(2) == locInt){
+                    rc.writeSharedArray(1020, 1);
+                }
             }
             if (countSinceLocked != 0) {
                 countSinceLocked++;
