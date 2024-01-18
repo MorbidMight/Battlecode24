@@ -286,6 +286,7 @@ public class Utilities {
     public static void verifyFlagLocations(RobotController rc) throws GameActionException
     {
         StolenFlag index1 = Utilities.readFlag(rc, 58);
+        rc.setIndicatorDot(index1.location, 50, 50, 50);
         if(!index1.location.equals(new MapLocation(0,0)) && rc.canSenseLocation(index1.location))
         {
             if(!rc.canSenseRobotAtLocation(index1.location) || !rc.senseRobotAtLocation(index1.location).hasFlag)
@@ -294,6 +295,7 @@ public class Utilities {
             }
         }
         StolenFlag index2 = Utilities.readFlag(rc, 59);
+        rc.setIndicatorDot(index1.location, 50, 50, 50);
         if(!index2.location.equals(new MapLocation(0,0)) && rc.canSenseLocation(index2.location))
         {
             if(!rc.canSenseRobotAtLocation(index2.location) || !rc.senseRobotAtLocation(index2.location).hasFlag)
@@ -302,7 +304,8 @@ public class Utilities {
             }
         }
         StolenFlag index3 = Utilities.readFlag(rc, 60);
-        if(!index3.location.equals(new MapLocation(0,0)) && rc.canSenseRobotAtLocation(index3.location))
+        rc.setIndicatorDot(index1.location, 50, 50, 50);
+        if(!index3.location.equals(new MapLocation(0,0)) && rc.canSenseLocation(index3.location))
         {
             if(!rc.canSenseRobotAtLocation(index3.location) || !rc.senseRobotAtLocation(index3.location).hasFlag)
             {

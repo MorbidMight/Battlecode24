@@ -231,8 +231,8 @@ public strictfp class RobotPlayer {
                                 rc.setIndicatorString("healer");
                                 break;
                             case soldier:
-                                Soldier.runSoldier(rc);
                                 rc.setIndicatorString("soldier");
+                                Soldier.runSoldier(rc);
                                 break;
                         }
                     }

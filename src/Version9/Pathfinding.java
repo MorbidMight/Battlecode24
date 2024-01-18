@@ -120,7 +120,8 @@ public class Pathfinding
             if (alreadyBeen.contains(tempLocation)) {
                 continue;
             }
-            else if(!rc.getLocation().equals(Utilities.convertIntToLocation(rc.readSharedArray(58))) && rc.readSharedArray(58) != 0 && tempLocation.distanceSquaredTo(Utilities.convertIntToLocation(rc.readSharedArray(58))) < 9)
+            //FIX SECOND CONDITION!!
+            else if( !rc.getLocation().equals(Utilities.convertIntToLocation(rc.readSharedArray(58))) && rc.readSharedArray(58) != 0 && tempLocation.distanceSquaredTo(Utilities.convertIntToLocation(rc.readSharedArray(58))) < 9)
             {
                 continue;
             }
@@ -151,6 +152,67 @@ public class Pathfinding
             }
         } catch (Exception ignored) {
         }
+    }
+    public static void tryToMoveTowardsFlag(RobotController rc, MapLocation l, StolenFlag flag) throws GameActionException {//rl is false for right and true for left
+        try {
+            Direction dir = moveTowardsFlag(rc, l, flag);
+
+            if (dir != null && rc.canMove(dir)) {
+                rc.move(dir);
+            }
+        } catch (Exception ignored) {
+        }
+    }
+
+    public static Direction moveTowardsFlag(RobotController rc, MapLocation targetLocation, StolenFlag flag) throws GameActionException
+    {
+        if (RobotPlayer.turnCount % 15 == 0)
+            resetBasicPathfinding();
+        //get current location of the robot
+        MapLocation currentLocation = rc.getLocation();
+        //assign a score to all possible move locations (null means not passable)
+        Float[] possibleMoveDirections = new Float[8];
+        //clouds should be given a higher score (worse)
+        int numNull = 0;
+        int lowestIndex = -1;
+        float lowestScore = Float.MAX_VALUE;
+        for (int x = 0; x < RobotPlayer.directions.length; x++)
+        {
+            boolean skipDir = false;
+            if (!rc.canMove(RobotPlayer.directions[x]))
+                skipDir = true;
+            if (skipDir) continue;
+            MapLocation tempLocation = rc.adjacentLocation(RobotPlayer.directions[x]);
+            MapInfo locationInfo = rc.senseMapInfo(tempLocation);
+            // does the location have these features?
+
+            if (alreadyBeen.contains(tempLocation))
+            {
+                continue;
+            }
+
+            else if (!rc.getLocation().equals(flag.location) && (!flag.team) && tempLocation.distanceSquaredTo(flag.location) < 9)
+            {
+                continue;
+            }
+            else
+            {
+                //distance squared to the target location
+                possibleMoveDirections[x] = tempLocation.distanceSquaredTo(targetLocation) * 1.0f;
+                if (possibleMoveDirections[x] < lowestScore)
+                {
+                    lowestScore = possibleMoveDirections[x];
+                    lowestIndex = x;
+                }
+            }
+        }
+        if (lowestIndex != -1) {
+            if (rc.adjacentLocation(RobotPlayer.directions[lowestIndex]).equals(targetLocation)) {
+                alreadyBeen.clear();
+            }
+            return RobotPlayer.directions[lowestIndex];
+        } else
+            return null;
     }
 
     public static void resetBasicPathfinding() {

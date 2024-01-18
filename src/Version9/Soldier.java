@@ -44,7 +44,7 @@ public class Soldier
             //support any flag heist or defense
             StolenFlag closestFlag = Utilities.getClosestFlag(rc);
             if (closestFlag != null) {
-                Pathfinding.tryToMove(rc, closestFlag.location);
+                Pathfinding.tryToMoveTowardsFlag(rc, closestFlag.location, closestFlag);
                 rc.setIndicatorString("Helping teammate @ " + closestFlag.location);
             }
             if(rc.senseNearbyFlags(-1, rc.getTeam().opponent()).length != 0){
