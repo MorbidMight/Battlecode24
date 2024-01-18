@@ -28,6 +28,7 @@ public class Builder {
         if (!rc.isSpawned()) {
             return;
         }
+
         Task t = Utilities.readTask(rc);
         if (SittingOnFlag) {
             //sitting where flag should be, but cant see any flags...
@@ -35,7 +36,6 @@ public class Builder {
             if (rc.senseNearbyFlags(-1, rc.getTeam()).length == 0) {
                 //shut down this spawn location for now
                 if (countSinceSeenFlag > 40) {
-                    rc.setIndicatorString("Dont come help me!");
                     return;
                 } else {
                     countSinceSeenFlag++;
@@ -152,7 +152,7 @@ public class Builder {
         }
         for (MapInfo t : rc.senseNearbyMapInfos(GameConstants.INTERACT_RADIUS_SQUARED))
         {
-            if(rc.getLocation().distanceSquaredTo(findClosestSpawnLocation(rc)) < 81) continue;
+            if(rc.getLocation().distanceSquaredTo(findClosestSpawnLocation(rc)) < 81 && !SittingOnFlag) continue;
             TrapType toBeBuilt = TrapType.STUN;
             if(rc.getCrumbs()>1500)
                 toBeBuilt = TrapType.EXPLOSIVE;
