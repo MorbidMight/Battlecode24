@@ -18,7 +18,7 @@ public class Carrier {
         if (rc.canFill(rc.getLocation().add(d))) {
             rc.fill(rc.getLocation().add(d));
         }
-        Pathfinding.tryToMove(rc, findClosestSpawnLocation(rc));
+        Pathfinding.bugNav2(rc, findClosestSpawnLocation(rc));
     }
 
 }

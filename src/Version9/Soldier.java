@@ -75,11 +75,13 @@ public class Soldier
             if(enemyRobots.length > 6 && enemyRobotsAttackRange.length >= 1){
                 if(rc.canBuild(TrapType.STUN, rc.getLocation().add(rc.getLocation().directionTo(averageRobotLocation(enemyRobots))))){
                     rc.build(TrapType.STUN, rc.getLocation().add(rc.getLocation().directionTo(averageRobotLocation(enemyRobots))));
+                    System.out.println("I built a bomb");
                 }
             }
             if(rc.isActionReady() && enemyRobots.length > 6 && enemyRobotsAttackRange.length >= 3){
                 if(rc.canBuild(TrapType.STUN, rc.getLocation())){
                     rc.build(TrapType.STUN, rc.getLocation());
+                    System.out.println("I built a bomb");
                 }
             }
             MapLocation toAttack = lowestHealth(enemyRobotsAttackRange);
@@ -105,9 +107,6 @@ public class Soldier
                 }
                 //otherwise, if we can see enemies, just move towards their average location
                 else if (enemyRobots.length != 0 && enemyRobotsAttackRange.length == 0) {
-                    //MapLocation averageEnemy = averageRobotLocation(enemyRobots);
-//                    if (rc.canFill(rc.getLocation().add(rc.getLocation().directionTo(averageEnemy))))
-//                        rc.fill(rc.getLocation().add(rc.getLocation().directionTo(averageEnemy)));
                     if (rc.isMovementReady()) Pathfinding.tryToMove(rc, averageRobotLocation(enemyRobots));
                 }
                 //finally, we cant see enemies or a flag, so lets move towawrds closest broadcast location!
