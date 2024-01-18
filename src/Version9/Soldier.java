@@ -8,6 +8,7 @@ import static Version9.Utilities.bestHeal;
 
 public class Soldier
 {
+    public static final float STOLEN_FLAG_CONSTANT = 2.5f;
     public static void runSoldier(RobotController rc) throws GameActionException {
         if (!rc.isSpawned())
             return;
@@ -43,7 +44,8 @@ public class Soldier
         else {
             //support any flag heist or defense
             StolenFlag closestFlag = Utilities.getClosestFlag(rc);
-            if (closestFlag != null && rc.getLocation().distanceSquaredTo(closestFlag.location) < 100)
+            //make this change based on the map
+            if (closestFlag != null && rc.getLocation().distanceSquaredTo(closestFlag.location) < (rc.getMapWidth() + rc.getMapHeight()) * STOLEN_FLAG_CONSTANT)
             {
                 Pathfinding.tryToMoveTowardsFlag(rc, closestFlag.location, closestFlag);
                 rc.setIndicatorString("Helping teammate @ " + closestFlag.location);
