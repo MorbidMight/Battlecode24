@@ -42,9 +42,11 @@ public class Soldier
         }
         else {
             //support any flag heist or defense
-            if (rc.readSharedArray(58) != 0) {
-                Pathfinding.tryToMove(rc, Utilities.convertIntToLocation(rc.readSharedArray(58)));
-                rc.setIndicatorString("Helping teammate @ " + Utilities.convertIntToLocation(rc.readSharedArray(58)));
+            StolenFlag closestFlag = Utilities.getClosestFlag(rc);
+            System.out.println(closestFlag);
+            if (closestFlag != null) {
+                Pathfinding.tryToMove(rc, closestFlag.location);
+                rc.setIndicatorString("Helping teammate @ " + closestFlag.location);
             }
             if(rc.senseNearbyFlags(-1, rc.getTeam().opponent()).length != 0){
                 //store location just in case we move out of vision radius before second part

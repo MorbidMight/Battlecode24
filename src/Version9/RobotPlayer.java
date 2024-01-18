@@ -32,7 +32,7 @@ public strictfp class RobotPlayer {
 
     static HashMap<MapLocation, MapInfo> seenLocations = new HashMap<MapLocation, MapInfo>();
 
-    static HashSet<MapLocation> alreadyBeen = new HashSet<>();
+    static HashMap<MapLocation, Integer> alreadyBeen = new HashMap<>();
 
 
     static final int BombFrequency = 5; //number of turns between defensive builders trying to place a mine
@@ -206,7 +206,8 @@ public strictfp class RobotPlayer {
                             rc.setIndicatorString("look at me!!");
                         }
                     }
-                    alreadyBeen.add(rc.getLocation());
+                    if(!alreadyBeen.containsKey(rc.getLocation())) alreadyBeen.put(rc.getLocation(), 1);
+                    else alreadyBeen.put(rc.getLocation(), alreadyBeen.get(rc.getLocation()) + 1);
                     if (!rc.hasFlag()) {
                         switch (role) {
                             case builder:
@@ -231,8 +232,8 @@ public strictfp class RobotPlayer {
                     RobotInfo[] enemyRobots = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
                     Utilities.recordEnemies(rc, enemyRobots);
                     Utilities.clearObsoleteEnemies(rc);
-                    checkEnemyHasOurFlag(rc);
-                    checkFlagDropped(rc);
+                    Utilities.verifyFlagLocations(rc);
+                    Utilities.writeFlagLocations(rc);
 
                     //pickup enemy flag after setup phase ends
                     if (rc.canPickupFlag(rc.getLocation()) && rc.getRoundNum() > GameConstants.SETUP_ROUNDS) {

@@ -6,6 +6,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.PriorityQueue;
 
+import static Version9.RobotPlayer.alreadyBeen;
+
 public class Pathfinding
 {
 
@@ -96,7 +98,7 @@ public class Pathfinding
         if (newRoute) {
             resetBasicPathfinding();
         }
-        if(RobotPlayer.alreadyBeen.size() >= 15)
+        if(RobotPlayer.turnCount % 15 == 0)
             resetBasicPathfinding();
         //get current location of the robot
         MapLocation currentLocation = rc.getLocation();
@@ -115,7 +117,7 @@ public class Pathfinding
             MapInfo locationInfo = rc.senseMapInfo(tempLocation);
             // does the location have these features?
 
-            if (RobotPlayer.alreadyBeen.contains(tempLocation)) {
+            if (alreadyBeen.containsKey(tempLocation)) {
                 continue;
             }
             else if(!rc.getLocation().equals(Utilities.convertIntToLocation(rc.readSharedArray(58))) && rc.readSharedArray(58) != 0 && tempLocation.distanceSquaredTo(Utilities.convertIntToLocation(rc.readSharedArray(58))) < 4)
@@ -133,9 +135,8 @@ public class Pathfinding
         }
         if (lowestIndex != -1) {
             if (rc.adjacentLocation(RobotPlayer.directions[lowestIndex]).equals(targetLocation)) {
-                RobotPlayer.alreadyBeen.clear();
+                alreadyBeen.clear();
             }
-            RobotPlayer.alreadyBeen.add(rc.adjacentLocation(RobotPlayer.directions[lowestIndex]));
             return RobotPlayer.directions[lowestIndex];
         } else
             return null;
@@ -147,14 +148,13 @@ public class Pathfinding
 
             if (dir != null && rc.canMove(dir)) {
                 rc.move(dir);
-                RobotPlayer.alreadyBeen.add(rc.getLocation());
             }
         } catch (Exception ignored) {
         }
     }
 
     public static void resetBasicPathfinding() {
-        RobotPlayer.alreadyBeen.clear();
+        alreadyBeen.clear();
     }
 
     public static void bugNav2(RobotController rc, MapLocation destination) throws GameActionException {

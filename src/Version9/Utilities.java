@@ -89,7 +89,22 @@ public class Utilities {
         return new Task(convertIntToLocation(value & 4095), (value & 8192) != 0, arrayIndex);
     }
 
+    public static int openFlagIndex(RobotController rc) throws GameActionException
+    {
+        int index1 = rc.readSharedArray(58);
+        if(index1 == 0) return 58;
+        int index2 = rc.readSharedArray(59);
+        if(index2 == 0) return 59;
+        int index3 = rc.readSharedArray(60);
+        if(index3 == 0) return 60;
+        return -1;
+    }
 
+    public static StolenFlag readFlag(RobotController rc, int index) throws GameActionException
+    {
+        int value = rc.readSharedArray(index);
+        return new StolenFlag(convertIntToLocation(value & 4095), (value & 8192) != 0);
+    }
 
 
     public static void storeLocationAtBitIndexShared(MapLocation mapLocation, int bitIndex)
@@ -248,12 +263,74 @@ public class Utilities {
         return possibleHeals[lowIndex];
     }
 
-    public static void writeFlagToSharedArray(RobotController rc, Flag flag, int flagIndex) throws GameActionException
+    public static void writeFlagToSharedArray(RobotController rc, StolenFlag flag, int flagIndex) throws GameActionException
     {
         int value = Utilities.convertLocationToInt(flag.location);
-        value = value | (flag.isStolen ? 1: 0) << 13;
+        value = value | (flag.team ? 1: 0) << 13;
         rc.writeSharedArray(flagIndex, value);
     }
+
+    public static void writeFlagLocations(RobotController rc) throws GameActionException
+    {
+        RobotInfo[] robots = rc.senseNearbyRobots(-1);
+        for(RobotInfo robot : robots)
+        {
+            if(robot.hasFlag)
+            {
+                int openIndex = Utilities.openFlagIndex(rc);
+                if(openIndex != -1) Utilities.writeFlagToSharedArray(rc, new StolenFlag(robot.location, !robot.getTeam().equals(rc.getTeam())) , openIndex);
+            }
+        }
+    }
+
+    public static void verifyFlagLocations(RobotController rc) throws GameActionException
+    {
+        StolenFlag index1 = Utilities.readFlag(rc, 58);
+        if(!index1.location.equals(new MapLocation(0,0)) && rc.canSenseLocation(index1.location))
+        {
+            if(!rc.canSenseRobotAtLocation(index1.location) || !rc.senseRobotAtLocation(index1.location).hasFlag)
+            {
+                rc.writeSharedArray(58, 0);
+            }
+        }
+        StolenFlag index2 = Utilities.readFlag(rc, 59);
+        if(!index2.location.equals(new MapLocation(0,0)) && rc.canSenseLocation(index2.location))
+        {
+            if(!rc.canSenseRobotAtLocation(index2.location) || !rc.senseRobotAtLocation(index2.location).hasFlag)
+            {
+                rc.writeSharedArray(59, 0);
+            }
+        }
+        StolenFlag index3 = Utilities.readFlag(rc, 60);
+        if(!index3.location.equals(new MapLocation(0,0)) && rc.canSenseRobotAtLocation(index3.location))
+        {
+            if(!rc.canSenseRobotAtLocation(index3.location) || !rc.senseRobotAtLocation(index3.location).hasFlag)
+            {
+                rc.writeSharedArray(60, 0);
+            }
+        }
+    }
+
+    public static StolenFlag getClosestFlag(RobotController rc) throws GameActionException
+    {
+        StolenFlag closest = null;
+        int closestDistance = Integer.MAX_VALUE;
+        for(int i = 58; i <= 60; i++)
+        {
+            if(rc.readSharedArray(i) != 0)
+            {
+                StolenFlag tempFlag = Utilities.readFlag(rc, i);
+                int tempDistance = rc.getLocation().distanceSquaredTo(tempFlag.location);
+                if(tempDistance < closestDistance)
+                {
+                    closest = tempFlag;
+                    closestDistance = tempDistance;
+                }
+            }
+        }
+        return closest;
+    }
+
     public static MapLocation randomMapLocation(RobotController rc)
     {
         return new MapLocation(RobotPlayer.rng.nextInt(rc.getMapWidth()), RobotPlayer.rng.nextInt(rc.getMapHeight()));
