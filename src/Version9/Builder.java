@@ -90,9 +90,8 @@ static int radius = 0;
                 }
                 countSinceLocked++;
             }
-            if (rc.getRoundNum() > ROUND_TO_BUILD_EXPLOSION_BORDER) {
-                UpdateExplosionBorder(rc);
-            }
+                UpdateExplosionBorder2(rc);
+
         } else if (/*t != null*/ false) {//there is a task to do
             Pathfinding.bugNav2(rc, t.location);
             if (locationIsActionable(rc, t.location)) {
@@ -113,7 +112,12 @@ static int radius = 0;
 
             RobotInfo[] enemies = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
             if (enemies.length > 0) {
-                Pathfinding.tryToMove(rc, rc.adjacentLocation(rc.getLocation().directionTo(Utilities.averageRobotLocation(enemies)).opposite()));
+                MapLocation ops = Utilities.averageRobotLocation(enemies);
+                Pathfinding.tryToMove(rc, rc.adjacentLocation(rc.getLocation().directionTo(ops).opposite()));
+                if(rc.canBuild(TrapType.EXPLOSIVE,rc.adjacentLocation(rc.getLocation().directionTo(ops)))){
+                    rc.canBuild(TrapType.EXPLOSIVE,rc.adjacentLocation(rc.getLocation().directionTo(ops)));
+                }
+
             }
             UpdateExplosionBorder(rc);
             rc.setIndicatorLine(rc.getLocation(), center, 255, 255, 255);
@@ -170,29 +174,39 @@ static int radius = 0;
         return false;
     }
 
+
+    public static void UpdateExplosionBorder2(RobotController rc) throws GameActionException {
+        for (MapInfo t : rc.senseNearbyMapInfos(GameConstants.INTERACT_RADIUS_SQUARED)) {
+            TrapType toBeBuilt = TrapType.STUN;
+            if (rc.getCrumbs() > 3500)
+                toBeBuilt = TrapType.EXPLOSIVE;
+            if (rc.canBuild(toBeBuilt, t.getMapLocation())) {
+                rc.build(toBeBuilt, t.getMapLocation());
+            }
+        }
+    }
     public static void UpdateExplosionBorder(RobotController rc) throws GameActionException {
 
-        if(rc.getCrumbs()<300 && !SittingOnFlag || builderBombCircleCenter!=null && rc.getLocation().distanceSquaredTo(builderBombCircleCenter)<=Math.pow(radius-3,2)){
+        if(builderBombCircleCenter!=null && rc.getLocation().distanceSquaredTo(builderBombCircleCenter)<=Math.pow(radius-3,2)){
             return;
         }
-        int trapsPlaced = 0;
-        boolean out = false;
+
         for (MapInfo t : rc.senseNearbyMapInfos(GameConstants.INTERACT_RADIUS_SQUARED))
         {
+
             if(t.getMapLocation().directionTo(findClosestSpawnLocation(rc))==findClosestSpawnLocation(rc).directionTo(new MapLocation(rc.getMapWidth()/2,rc.getMapHeight()/2)))
                 continue;
 
             TrapType toBeBuilt = TrapType.STUN;
             if (rc.getCrumbs() > 3500)
                 toBeBuilt = TrapType.EXPLOSIVE;
+            /*if(rng.nextInt(30)==1)
+                toBeBuilt = TrapType.WATER;*/
             if (rc.canBuild(toBeBuilt, t.getMapLocation())) {
                 rc.build(toBeBuilt, t.getMapLocation());
-                trapsPlaced++;
-                out=true;
 
             }
-            if(trapsPlaced>1)
-                return;
+
         }
     }
 
