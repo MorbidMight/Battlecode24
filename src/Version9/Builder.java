@@ -175,7 +175,7 @@ static int radius = 0;
     }
 
 
-    public static void UpdateExplosionBorder2(RobotController rc) throws GameActionException {
+    public static void UpdateExplosionBorder2(RobotController rc) throws GameActionException {//For flag sitters
         for (MapInfo t : rc.senseNearbyMapInfos(GameConstants.INTERACT_RADIUS_SQUARED)) {
             TrapType toBeBuilt = TrapType.STUN;
             if (rc.getCrumbs() > 3500)
@@ -185,9 +185,12 @@ static int radius = 0;
             }
         }
     }
-    public static void UpdateExplosionBorder(RobotController rc) throws GameActionException {
+    public static void UpdateExplosionBorder(RobotController rc) throws GameActionException {//For normal
 
         if(builderBombCircleCenter!=null && rc.getLocation().distanceSquaredTo(builderBombCircleCenter)<=Math.pow(radius-3,2)){
+            return;
+        }
+        if(rc.getCrumbs()<350){
             return;
         }
 
