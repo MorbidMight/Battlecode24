@@ -26,7 +26,7 @@ public strictfp class RobotPlayer {
     static int turnCount = 0;
     static MapLocation[] SpawnLocations = new MapLocation[27]; //All the spawn locations. low:close to center high:away from center
     static roles role;
-
+static MapLocation builderBombCircleCenter = null;
     static boolean SittingOnFlag = false; //for builders if they sit on the flag and spam explosion bombs
     static final int MoatRadius = 9; //Radius of the moat squared
 
@@ -42,7 +42,7 @@ public strictfp class RobotPlayer {
 
     //Ratios for spawning
     public static final int NUMSOLDIERS = 37;
-    public static final int NUMBUILDERS = 5;
+    public static final int NUMBUILDERS = 6;
 
     public static final int NUMHEALERS = 5;
     //flag sitters will always be 3, heals is 50 - (soldiers + builders + flag sitters)
@@ -95,8 +95,8 @@ public strictfp class RobotPlayer {
                 role = roles.soldier;
             }
             //if can buy upgrade, buy an upgrade
-            if (rc.canBuyGlobal(GlobalUpgrade.ATTACK)) {
-                rc.buyGlobal(GlobalUpgrade.ATTACK);
+            if (rc.canBuyGlobal(GlobalUpgrade.ACTION)) {
+                rc.buyGlobal(GlobalUpgrade.ACTION);
             } else if (rc.canBuyGlobal(GlobalUpgrade.CAPTURING)) {
                 rc.buyGlobal(GlobalUpgrade.CAPTURING);
             }
@@ -127,6 +127,13 @@ public strictfp class RobotPlayer {
                         }
                         if (rc.canSpawn(spawnLocs[spawnIndex]) && spawnIndex <= 26) {
                             rc.spawn(spawnLocs[spawnIndex]);
+                            if (spawnIndex % 9 == 0 && rc.readSharedArray(53)<NUMBUILDERS){
+                                role = roles.builder;
+                                incrementBuilder(rc);
+
+                            } else
+
+
                             if (rc.senseNearbyFlags(0).length != 0) {
                                 role = roles.builder;
                                 incrementBuilder(rc);
@@ -142,10 +149,7 @@ public strictfp class RobotPlayer {
                                 role = roles.builder;
                                 incrementBuilder(rc);
                             } else {
-                                if (numBuilders < NUMBUILDERS) {
-                                    role = roles.builder;
-                                    incrementBuilder(rc);
-                                } else if (numSoldiers < NUMSOLDIERS) {
+                                 if (numSoldiers < NUMSOLDIERS) {
                                     if (rc.getRoundNum() < 200) role = roles.explorer;
                                     else role = roles.soldier;
                                     incrementSoldier(rc);
@@ -166,9 +170,11 @@ public strictfp class RobotPlayer {
                             }
                         } else {
                             if (!rc.isSpawned()) {
+
                                 //decide which place to spawn at based on last two bits of shared array
                                 //loop through spawn locations, try adjacent ones, then try non adjacent ones
                                 MapLocation targetSpawn = null;
+
                                 if (Utilities.readBitSharedArray(rc, 1022)) {
                                     targetSpawn = Utilities.convertIntToLocation(rc.readSharedArray(2));
                                 } else if (Utilities.readBitSharedArray(rc, 1021)) {
@@ -216,6 +222,7 @@ public strictfp class RobotPlayer {
                             rc.setIndicatorString("look at me!!");
                         }
                     }
+
                     if (!rc.hasFlag()) {
                         switch (role) {
                             case builder:
