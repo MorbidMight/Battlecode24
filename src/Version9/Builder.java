@@ -57,13 +57,13 @@ static int radius = 0;
                     rc.setIndicatorString("Dont come help me!");
                     int locInt = Utilities.convertLocationToInt(rc.getLocation());
                     if(rc.readSharedArray(0) == locInt){
-                        rc.writeSharedArray(1018, 0);
+                        Utilities.editBitSharedArray(rc, 1018, false);
                     }
                     else if(rc.readSharedArray(1) == locInt){
-                        rc.writeSharedArray(1019, 0);
+                        Utilities.editBitSharedArray(rc, 1019, false);
                     }
                     else if(rc.readSharedArray(2) == locInt){
-                        rc.writeSharedArray(1020, 0);
+                        Utilities.editBitSharedArray(rc, 1020, false);
                     }
                     return;
                 } else {
@@ -73,13 +73,13 @@ static int radius = 0;
                 countSinceSeenFlag = 0;
                 int locInt = Utilities.convertLocationToInt(rc.getLocation());
                 if(rc.readSharedArray(0) == locInt){
-                    rc.writeSharedArray(1018, 1);
+                    Utilities.editBitSharedArray(rc, 1018, true);
                 }
                 else if(rc.readSharedArray(1) == locInt){
-                    rc.writeSharedArray(1019, 1);
+                    Utilities.editBitSharedArray(rc, 1019, true);
                 }
                 else if(rc.readSharedArray(2) == locInt){
-                    rc.writeSharedArray(1020, 1);
+                    Utilities.editBitSharedArray(rc, 1020, true);
                 }
             }
             if (countSinceLocked != 0) {
