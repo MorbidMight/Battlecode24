@@ -2,6 +2,9 @@ package Version9;
 
 import battlecode.common.*;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Map;
 import java.util.PriorityQueue;
 
 import static Version9.RobotPlayer.findClosestSpawnLocation;

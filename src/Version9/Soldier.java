@@ -8,9 +8,36 @@ import static Version9.Utilities.bestHeal;
 
 public class Soldier
 {
+    public static final float STOLEN_FLAG_CONSTANT = 2.5f;
     public static void runSoldier(RobotController rc) throws GameActionException {
         if (!rc.isSpawned())
             return;
+        //update where we want soldiers to spawn
+        if(!Utilities.readBitSharedArray(rc, 1021)){
+            int x;
+            if(knowFlag(rc))
+                x = RobotPlayer.findClosestSpawnLocationToCoordinatedTarget(rc);
+            else {
+                x = RobotPlayer.findClosestSpawnLocationToCoordinatedBroadcast(rc);
+            }
+            if (x != -1){
+                //00
+                if(x == 0 && (Utilities.readBitSharedArray(rc, 1023) || Utilities.readBitSharedArray(rc, 1023))){
+                    Utilities.editBitSharedArray(rc, 1023, false);
+                    Utilities.editBitSharedArray(rc, 1022, false);
+                }
+                //01
+                else if(x == 1 && (!Utilities.readBitSharedArray(rc, 1023) || Utilities.readBitSharedArray(rc, 1023))){
+                    Utilities.editBitSharedArray(rc, 1022, false);
+                    Utilities.editBitSharedArray(rc, 1023, true);
+                }
+                //x == 2, desire 10
+                else if (x == 2 && (Utilities.readBitSharedArray(rc, 1023) || !Utilities.readBitSharedArray(rc, 1023))){
+                    Utilities.editBitSharedArray(rc, 1023, false);
+                    Utilities.editBitSharedArray(rc, 1022, true);
+                }
+            }
+        }
         //tries to get neary crumbs
         MapLocation[] nearbyCrumbs = rc.senseNearbyCrumbs(-1);
         MapLocation targetCrumb = null;
@@ -43,11 +70,14 @@ public class Soldier
         else {
             //support any flag heist or defense
             StolenFlag closestFlag = Utilities.getClosestFlag(rc);
-            if (closestFlag != null) {
+            //make this change based on the map
+            if (closestFlag != null && rc.getLocation().distanceSquaredTo(closestFlag.location) < (rc.getMapWidth() + rc.getMapHeight()) * STOLEN_FLAG_CONSTANT)
+            {
                 Pathfinding.tryToMoveTowardsFlag(rc, closestFlag.location, closestFlag);
                 rc.setIndicatorString("Helping teammate @ " + closestFlag.location);
             }
             if(rc.senseNearbyFlags(-1, rc.getTeam().opponent()).length != 0){
+                checkRecordEnemyFlag(rc, rc.senseNearbyFlags(-1, rc.getTeam().opponent())[0]);
                 //store location just in case we move out of vision radius before second part
                 MapLocation loc = rc.senseNearbyFlags(-1, rc.getTeam().opponent())[0].getLocation();
                 //move towards the flag
@@ -75,13 +105,11 @@ public class Soldier
             if(enemyRobots.length > 6 && enemyRobotsAttackRange.length >= 1){
                 if(rc.canBuild(TrapType.STUN, rc.getLocation().add(rc.getLocation().directionTo(averageRobotLocation(enemyRobots))))){
                     rc.build(TrapType.STUN, rc.getLocation().add(rc.getLocation().directionTo(averageRobotLocation(enemyRobots))));
-                    System.out.println("I built a bomb");
                 }
             }
             if(rc.isActionReady() && enemyRobots.length > 6 && enemyRobotsAttackRange.length >= 3){
                 if(rc.canBuild(TrapType.STUN, rc.getLocation())){
                     rc.build(TrapType.STUN, rc.getLocation());
-                    System.out.println("I built a bomb");
                 }
             }
             MapLocation toAttack = lowestHealth(enemyRobotsAttackRange);
@@ -109,6 +137,13 @@ public class Soldier
                 else if (enemyRobots.length != 0 && enemyRobotsAttackRange.length == 0) {
                     if (rc.isMovementReady()) Pathfinding.tryToMove(rc, averageRobotLocation(enemyRobots));
                 }
+                //we know of at least one flag location, so lets move towards that
+                else if(knowFlag(rc)){
+                    MapLocation target = findCoordinatedActualFlag(rc);
+                    if(target != null){
+                        Pathfinding.bugNav2(rc, target);
+                    }
+                }
                 //finally, we cant see enemies or a flag, so lets move towawrds closest broadcast location!
                 else {
                     //if (rc.isMovementReady()) Pathfinding.tryToMove(rc, findClosestBroadcastFlags(rc));
@@ -116,7 +151,12 @@ public class Soldier
                     if (enemyRobots.length == 0 && target != null && rc.canFill(rc.adjacentLocation(rc.getLocation().directionTo(target)))) {
                         rc.fill(rc.adjacentLocation(rc.getLocation().directionTo(target)));
                     }
-                    if (rc.isMovementReady()) Pathfinding.bugNav2(rc, findCoordinatedBroadcastFlag(rc));
+                    MapLocation targetBroadcast = findCoordinatedBroadcastFlag(rc);
+                    if(rc.isMovementReady()) {
+                        if (rc.getLocation().equals(targetBroadcast)) {
+                        }
+                        else Pathfinding.bugNav2(rc, findCoordinatedBroadcastFlag(rc));
+                    }
                 }
             }
             //there are enemies than allies, or we've already attacked this turn
@@ -150,5 +190,108 @@ public class Soldier
                 }
             }
         }
+    }
+    public static void checkRecordEnemyFlag(RobotController rc, FlagInfo flag) throws GameActionException {
+        int index3 = rc.readSharedArray(3);
+        int index4 = rc.readSharedArray(4);
+        int index5 = rc.readSharedArray(5);
+        if(index3 != 0 && index4 != 0 && index5 != 0)
+            return;
+        MapLocation flagLoc = flag.getLocation();
+        MapInfo flagLocInfo;
+        if(rc.canSenseLocation(flagLoc)){
+            flagLocInfo = rc.senseMapInfo(flagLoc);
+        }
+        else{
+            return;
+        }
+        if(flagLocInfo.getSpawnZoneTeamObject() != rc.getTeam().opponent())
+            return;
+        int flagLocInt = Utilities.convertLocationToInt(flagLoc);
+
+        MapLocation enemyFlag1 = Utilities.convertIntToLocation(index3);
+        MapLocation enemyFlag2 = Utilities.convertIntToLocation(index4);
+        MapLocation enemyFlag3 = Utilities.convertIntToLocation(index5);
+        if(!enemyFlag1.equals(flagLoc) && !enemyFlag1.isAdjacentTo(flagLoc) && !enemyFlag2.equals(flagLoc) && !enemyFlag2.isAdjacentTo(flagLoc) && !enemyFlag3.equals(flagLoc) && !enemyFlag3.isAdjacentTo(flagLoc)){
+            if(index3 == 0){
+                rc.writeSharedArray(3, flagLocInt);
+                System.out.println("FlagLoc 1: " + flagLoc);
+            }
+            else if(index4 == 0){
+                rc.writeSharedArray(4, flagLocInt);
+                System.out.println("FlagLoc 2: " + flagLoc);
+            }
+            else if(index5 == 0){
+                rc.writeSharedArray(5, flagLocInt);
+                System.out.println("FlagLoc 3: " + flagLoc);
+            }
+        }
+    }
+
+    //erase an enemy flag from the array if we see the location and it isnt there
+    public static void eraseEnemyFlag(RobotController rc, MapLocation m) throws GameActionException {
+        int flagLocInt = Utilities.convertLocationToInt(m);
+        int index3 = rc.readSharedArray(3);
+        int index4 = rc.readSharedArray(4);
+        int index5 = rc.readSharedArray(5);
+        if(index3 == flagLocInt){
+            rc.writeSharedArray(3, 0);
+        }
+        else if(index4 == flagLocInt){
+            rc.writeSharedArray(4, 0);
+        }
+        else if(index5 == flagLocInt){
+            rc.writeSharedArray(5, 0);
+        }
+    }
+
+    //returns false if we dont know any flag locations, true otherwise
+    public static boolean knowFlag(RobotController rc) throws GameActionException {
+        int index3 = rc.readSharedArray(3);
+        int index4 = rc.readSharedArray(4);
+        int index5 = rc.readSharedArray(5);
+        return index3 != 0 || index4 != 0 || index5 != 0;
+    }
+
+    //findCoordinatedActualFlag - returns lowest index flag that we know location of
+    public static MapLocation findCoordinatedActualFlag(RobotController rc) throws GameActionException {
+        int index3 = rc.readSharedArray(3);
+        int index4 = rc.readSharedArray(4);
+        int index5 = rc.readSharedArray(5);
+        MapLocation enemyFlag1 = Utilities.convertIntToLocation(index3);
+        MapLocation enemyFlag2 = Utilities.convertIntToLocation(index4);
+        MapLocation enemyFlag3 = Utilities.convertIntToLocation(index5);
+        MapLocation nullChecker = new MapLocation(0,0);
+        if(index3 != 0){
+            //we can see it, but couldnt sense any flags earlier... its been removed
+            if(rc.canSenseLocation(enemyFlag1)) {
+                eraseEnemyFlag(rc, enemyFlag1);
+                System.out.println("Erasing location: " + enemyFlag1);
+            }
+            else{
+                return enemyFlag1;
+            }
+        }
+        else if(index4 != 0){
+            //we can see it, but couldnt sense any flags earlier... its been removed
+            if(rc.canSenseLocation(enemyFlag2)) {
+                eraseEnemyFlag(rc, enemyFlag2);
+                System.out.println("Erasing location: " + enemyFlag2);
+            }
+            else{
+                return enemyFlag2;
+            }
+        }
+        else if(index5 != 0){
+            //we can see it, but couldnt sense any flags earlier... its been removed
+            if(rc.canSenseLocation(enemyFlag3)) {
+                eraseEnemyFlag(rc, enemyFlag3);
+                System.out.println("Erasing location: " + enemyFlag3);
+            }
+            else{
+                return enemyFlag3;
+            }
+        }
+        return null;
     }
 }
