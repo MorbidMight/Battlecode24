@@ -77,18 +77,6 @@ public class Builder {
             if(rc.getRoundNum()>ROUND_TO_BUILD_EXPLOSION_BORDER){
                 UpdateExplosionBorder(rc);
             }
-            /*if(rc.senseNearbyRobots(-1, rc.getTeam().opponent()).length > 0)
-            {
-                System.out.println("Sensed!!!!!!!!!!!!");
-               if(rc.canBuild(TrapType.EXPLOSIVE, rc.getLocation().add(rc.getLocation().directionTo(rc.senseNearbyRobots(-1, rc.getTeam().opponent())[0].getLocation()))))
-                {
-                   rc.build(TrapType.EXPLOSIVE, rc.getLocation().add(rc.getLocation().directionTo(rc.senseNearbyRobots(-1, rc.getTeam().opponent())[0].getLocation())));
-                }
-               else
-               {
-                   System.out.println("" + rc.getCrumbs());
-               }
-            }*/
         }
         else if (t != null)
         {//there is a task to do
@@ -104,66 +92,25 @@ public class Builder {
         }
         else
         {
-            //there is no task to be done
-            //There is no task to be done and all the flags have guys sitting on them
-            //Move away from the nearest guys avoiding ops especicially
-
-            //go towards closest broadcast flag
-
-
-//            if(rc.getLocation().distanceSquaredTo(findClosestSpawnLocation(rc)) > 15){
-//                Pathfinding.bugNav2(rc, findClosestSpawnLocation(rc));
-//            }
-//            Direction d = directionToMove(rc);
-//            for(int i = 0;i<8;i++){
-//                if(rc.canMove(d)){
-//                    rc.move(d);
-//                }
-//                d = d.rotateLeft();
-//            }
-//
-//            if(rc.getRoundNum()%8==0/*&&distanceFromNearestSpawnLocation(rc)>16*/)
-                UpdateExplosionBorder(rc);
-
+            UpdateExplosionBorder(rc);
+            MapLocation center = findClosestSpawnLocation(rc);//Will orbit around the flag
 
             RobotInfo[] enemies = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
-            MapInfo[] possibleTraps = rc.senseNearbyMapInfos(-1);
-            /*int count = 1;
-            int x = rc.getLocation().x;
-            int y = rc.getLocation().y;
-            for(MapInfo info : possibleTraps)
+            if(enemies.length > 0)
             {
-                if(!info.getTrapType().equals(TrapType.NONE))
-                {
-                    x += info.getMapLocation().x;
-                    y += info.getMapLocation().y;
-                }
-
-            }*/
-
-
-            MapLocation center = findClosestSpawnLocation(rc);//Will orbit around the flag
+                Pathfinding.tryToMove(rc, rc.adjacentLocation(rc.getLocation().directionTo(Utilities.averageRobotLocation(enemies)).opposite()));
+            }
             if (rc.getLocation().distanceSquaredTo(center) < 81) {
-                Pathfinding.bugNav2(rc, rc.adjacentLocation(center.directionTo(rc.getLocation())));
-                if(rc.getID()==11599) System.out.println("Too close");
+                Pathfinding.tryToMove(rc, rc.adjacentLocation(center.directionTo(rc.getLocation())));
             }else if (rc.getLocation().distanceSquaredTo(center) > 121) {
-                Pathfinding.bugNav2(rc, rc.adjacentLocation(center.directionTo(rc.getLocation()).opposite()));
-                if(rc.getID()==11599) System.out.println("Too Far");
-            }else if(numBombsNearby(rc)>=9){
-
+                Pathfinding.tryToMove(rc, rc.adjacentLocation(center.directionTo(rc.getLocation()).opposite()));
+            }else if(true){
                 if ((rc.getRoundNum() / 65) % 2 == 0)
-                   Pathfinding.bugNav2(rc, rc.adjacentLocation(center.directionTo(rc.getLocation()).rotateLeft().rotateLeft()));
+                   Pathfinding.tryToMove(rc, rc.adjacentLocation(center.directionTo(rc.getLocation()).rotateLeft().rotateLeft()));
                 else
-                   Pathfinding.bugNav2(rc, rc.adjacentLocation(center.directionTo(rc.getLocation()).rotateRight().rotateRight()));
-            }else if(rc.getID()==11599) System.out.println("Not enough bombs nearby");
-
-
-
-
+                   Pathfinding.tryToMove(rc, rc.adjacentLocation(center.directionTo(rc.getLocation()).rotateRight().rotateRight()));
+            }
         }
-
-
-
     }
 
 
@@ -189,11 +136,12 @@ public class Builder {
 
     public static boolean locationIsActionable(RobotController rc, MapLocation m) throws GameActionException {
         MapInfo[] ActionableTiles = rc.senseNearbyMapInfos(GameConstants.INTERACT_RADIUS_SQUARED);
-        for (MapInfo curr : ActionableTiles) {
-            if (m.equals(curr.getMapLocation())) {
+        for (MapInfo curr : ActionableTiles)
+        {
+            if (m.equals(curr.getMapLocation()))
+            {
                 return true;
             }
-
         }
         return false;
     }
@@ -202,7 +150,9 @@ public class Builder {
         if(rc.getCrumbs()<300 && !SittingOnFlag){
             return;
         }
-        for (MapInfo t : rc.senseNearbyMapInfos(GameConstants.INTERACT_RADIUS_SQUARED)) {
+        for (MapInfo t : rc.senseNearbyMapInfos(GameConstants.INTERACT_RADIUS_SQUARED))
+        {
+            if(rc.getLocation().distanceSquaredTo(findClosestSpawnLocation(rc)) < 81) continue;
             TrapType toBeBuilt = TrapType.STUN;
             if(rc.getCrumbs()>1500)
                 toBeBuilt = TrapType.EXPLOSIVE;
