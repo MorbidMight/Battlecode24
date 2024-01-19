@@ -9,7 +9,8 @@ import static Version10.Utilities.bestHeal;
 
 public class Soldier
 {
-    public static final float STOLEN_FLAG_CONSTANT = 2.5f;
+    //higher means more likely to help
+    public static final float STOLEN_FLAG_CONSTANT = 1.0f;
     public static void runSoldier(RobotController rc) throws GameActionException {
         if (!rc.isSpawned())
             return;
@@ -69,13 +70,14 @@ public class Soldier
             }
         }
         else {
+
             //support any flag heist or defense
             StolenFlag closestFlag = Utilities.getClosestFlag(rc);
             //make this change based on the map
             if (closestFlag != null && rc.getLocation().distanceSquaredTo(closestFlag.location) < (rc.getMapWidth() + rc.getMapHeight()) * STOLEN_FLAG_CONSTANT)
             {
-                Pathfinding.tryToMoveTowardsFlag(rc, closestFlag.location, closestFlag);
-                rc.setIndicatorString("Helping teammate @ " + closestFlag.location);
+                    Pathfinding.tryToMoveTowardsFlag(rc, closestFlag.location, closestFlag);
+                    rc.setIndicatorString("Helping teammate @ " + closestFlag.location);
             }
             if(rc.senseNearbyFlags(-1, rc.getTeam().opponent()).length != 0){
                 checkRecordEnemyFlag(rc, rc.senseNearbyFlags(-1, rc.getTeam().opponent())[0]);
@@ -97,6 +99,18 @@ public class Soldier
             RobotInfo[] enemyRobotsAttackRange = rc.senseNearbyRobots(GameConstants.ATTACK_RADIUS_SQUARED, rc.getTeam().opponent());
             RobotInfo[] allyRobots = rc.senseNearbyRobots(GameConstants.VISION_RADIUS_SQUARED, rc.getTeam());
             RobotInfo[] allyRobotsHealRange = rc.senseNearbyRobots(GameConstants.HEAL_RADIUS_SQUARED, rc.getTeam());
+            MapLocation toAttack = lowestHealth(enemyRobotsAttackRange);
+            if(toAttack != null && rc.canAttack(toAttack)){
+                rc.attack(toAttack);
+            }
+            //potentially attack again
+            if(rc.isActionReady()){
+                toAttack = lowestHealth(enemyRobotsAttackRange);
+                if(toAttack != null && rc.canAttack(toAttack)){
+                    rc.attack(toAttack);
+                }
+            }
+
             RobotInfo toHeal = bestHeal(rc, allyRobotsHealRange);
             //immediately try to heal your ally if they have a flag
             if (toHeal != null && toHeal.hasFlag() && rc.canHeal(toHeal.getLocation())) {
@@ -115,20 +129,10 @@ public class Soldier
                     System.out.println("I built a high density bomb!: " + rc.getLocation());
                 }
             }
-            MapLocation toAttack = lowestHealth(enemyRobotsAttackRange);
-            if(toAttack != null && rc.canAttack(toAttack)){
-                rc.attack(toAttack);
-            }
-            //potentially attack again
-            if(rc.isActionReady()){
-                toAttack = lowestHealth(enemyRobotsAttackRange);
-                if(toAttack != null && rc.canAttack(toAttack)){
-                    rc.attack(toAttack);
-                }
-            }
+
 
             //if we have more allies, or equal allies, to amount of enemies, and havent attacked yet, lets be aggressive
-            if (allyRobots.length >= enemyRobots.length && (rc.isActionReady() || enemyRobots.length == 0) && rc.getHealth() > 100) {
+            if (allyRobots.length >= (enemyRobots.length - 1) && (rc.isActionReady() || enemyRobots.length == 0) && rc.getHealth() > 50) {
                 //can sense an enemy flag - move towards the flag!
                 if (rc.senseNearbyFlags(-1, rc.getTeam().opponent()).length != 0) {
                     if (rc.canFill(rc.getLocation().add(rc.getLocation().directionTo(rc.senseNearbyFlags(-1, rc.getTeam().opponent())[0].getLocation()))))
@@ -138,7 +142,11 @@ public class Soldier
                 }
                 //otherwise, if we can see enemies, just move towards their average location
                 else if (enemyRobots.length != 0 && enemyRobotsAttackRange.length == 0) {
-                    if (rc.isMovementReady()) Pathfinding.tryToMove(rc, averageRobotLocation(enemyRobots));
+                    MapLocation toChase = lowestHealth(enemyRobots);
+                    if(rc.senseNearbyRobots(toChase, -1,rc.getTeam().opponent()).length <= rc.senseNearbyRobots(toChase, -1, rc.getTeam()).length)
+                        if(rc.isMovementReady()) Pathfinding.tryToMove(rc, toChase);
+                    else
+                        if (rc.isMovementReady()) Pathfinding.tryToMove(rc, averageRobotLocation(enemyRobots));
                 }
                 //we know of at least one flag location, so lets move towards that
                 else if(knowFlag(rc)){
