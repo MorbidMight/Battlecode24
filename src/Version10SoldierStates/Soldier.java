@@ -2,8 +2,7 @@ package Version10SoldierStates;
 
 import battlecode.common.*;
 
-import static Version10SoldierStates.RobotPlayer.findCoordinatedBroadcastFlag;
-import static Version10SoldierStates.RobotPlayer.lowestHealth;
+import static Version10SoldierStates.RobotPlayer.*;
 import static Version10SoldierStates.Utilities.averageRobotLocation;
 import static Version10SoldierStates.Utilities.bestHeal;
 
@@ -81,6 +80,9 @@ public class Soldier
     //considers the situation, and decides what state the robot should be - with a bias towards current state,
     // b/c if conditions aren't strong enough to switch just default to current state
     public static states trySwitchState(RobotController rc) throws GameActionException {
+        if(state == states.flagCarrier && !rc.hasFlag()){
+            state = states.attack;
+        }
         if(rc.hasFlag()) {
             return states.flagCarrier;
         }
@@ -193,12 +195,22 @@ public class Soldier
             }
             else if(knowFlag(rc)){
                 MapLocation target = findCoordinatedActualFlag(rc);
+
                 if(target != null){
+                    if(rc.canFill(rc.getLocation().add(rc.getLocation().directionTo(target)))){
+                        rc.fill(rc.getLocation().add(rc.getLocation().directionTo(target)));
+                    }
                     Pathfinding.bugNav2(rc, target);
                 }
             }
             else{
-                Pathfinding.bugNav2(rc, findCoordinatedBroadcastFlag(rc));
+                MapLocation target = findCoordinatedBroadcastFlag(rc);
+                if(target != null) {
+                    if (rc.canFill(rc.getLocation().add(rc.getLocation().directionTo(target)))) {
+                        rc.fill(rc.getLocation().add(rc.getLocation().directionTo(target)));
+                    }
+                    Pathfinding.bugNav2(rc, findCoordinatedBroadcastFlag(rc));
+                }
             }
         }
     }

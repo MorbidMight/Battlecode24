@@ -177,7 +177,7 @@ static MapLocation builderBombCircleCenter = null;
 
                                 if (Utilities.readBitSharedArray(rc, 1022)) {
                                     targetSpawn = Utilities.convertIntToLocation(rc.readSharedArray(2));
-                                } else if (Utilities.readBitSharedArray(rc, 1021)) {
+                                } else if (Utilities.readBitSharedArray(rc, 1023)) {
                                     targetSpawn = Utilities.convertIntToLocation(rc.readSharedArray(1));
                                 } else {
                                     targetSpawn = Utilities.convertIntToLocation(rc.readSharedArray(0));
