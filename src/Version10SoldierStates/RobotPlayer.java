@@ -41,8 +41,8 @@ static MapLocation builderBombCircleCenter = null;
     static ArrayList<MapLocation> prevDestinations;
 
     //Ratios for spawning
-    public static final int NUMSOLDIERS = 43;
-    public static final int NUMBUILDERS = 3;
+    public static final int NUMSOLDIERS = 45;
+    public static final int NUMBUILDERS = 2;
 
     public static final int NUMHEALERS = 0;
     //flag sitters will always be 3, heals is 50 - (soldiers + builders + flag sitters)
