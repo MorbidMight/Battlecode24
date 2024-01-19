@@ -41,10 +41,10 @@ static MapLocation builderBombCircleCenter = null;
     static ArrayList<MapLocation> prevDestinations;
 
     //Ratios for spawning
-    public static final int NUMSOLDIERS = 38;
+    public static final int NUMSOLDIERS = 41;
     public static final int NUMBUILDERS = 6;
 
-    public static final int NUMHEALERS = 3;
+    public static final int NUMHEALERS = 0;
     //flag sitters will always be 3, heals is 50 - (soldiers + builders + flag sitters)
 
     static Random rng;
@@ -238,7 +238,6 @@ static MapLocation builderBombCircleCenter = null;
                                 rc.setIndicatorString("healer");
                                 break;
                             case soldier:
-                                rc.setIndicatorString("soldier");
                                 Soldier.runSoldier(rc);
                                 break;
                         }

@@ -45,6 +45,31 @@ static int radius = 0;
         }
         Task t = Utilities.readTask(rc);
         if (SittingOnFlag) {
+            //update where we want soldiers to spawn
+            if(!Utilities.readBitSharedArray(rc, 1021)){
+                int x;
+                if(Soldier.knowFlag(rc))
+                    x = RobotPlayer.findClosestSpawnLocationToCoordinatedTarget(rc);
+                else {
+                    x = RobotPlayer.findClosestSpawnLocationToCoordinatedBroadcast(rc);
+                }
+                if (x != -1){
+                    //00
+                    if(x == 0 && (Utilities.readBitSharedArray(rc, 1023) || Utilities.readBitSharedArray(rc, 1023))){
+                        Utilities.editBitSharedArray(rc, 1023, false);
+                        Utilities.editBitSharedArray(rc, 1022, false);
+                    }
+                    //01
+                    else if(x == 1 && (!Utilities.readBitSharedArray(rc, 1023) || Utilities.readBitSharedArray(rc, 1023))){
+                        Utilities.editBitSharedArray(rc, 1022, false);
+                        Utilities.editBitSharedArray(rc, 1023, true); }
+                    //x == 2, desire 10
+                    else if (x == 2 && (Utilities.readBitSharedArray(rc, 1023) || !Utilities.readBitSharedArray(rc, 1023))){
+                        Utilities.editBitSharedArray(rc, 1023, false);
+                        Utilities.editBitSharedArray(rc, 1022, true);
+                    }
+                }
+            }
             //sitting where flag should be, but cant see any flags...
             //if we still cant see a flag 50 turns later, then until we do see one we're gonna assume this location should essentially be shut down
             if (rc.senseNearbyFlags(-1, rc.getTeam()).length == 0) {

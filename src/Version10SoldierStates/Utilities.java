@@ -275,7 +275,7 @@ public class Utilities {
         RobotInfo[] robots = rc.senseNearbyRobots(-1);
         for(RobotInfo robot : robots)
         {
-            if(robot.hasFlag)
+            if(robot.hasFlag && robot.getTeam() == rc.getTeam().opponent())
             {
                 int openIndex = Utilities.openFlagIndex(rc);
                 if(openIndex != -1) Utilities.writeFlagToSharedArray(rc, new StolenFlag(robot.location, !robot.getTeam().equals(rc.getTeam())) , openIndex);

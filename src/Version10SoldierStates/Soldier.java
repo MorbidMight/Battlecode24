@@ -12,37 +12,55 @@ enum states{
 }
 public class Soldier
 {
-    //higher means more likely to help
-    public static final float STOLEN_FLAG_CONSTANT = 1.0f;
+    //might be better to switching to using more variables up here, can be accessed/changed across various states - also persist across turns
+    static RobotInfo[] enemyRobots;
+    static RobotInfo[] enemyRobotsAttackRange;
+    static RobotInfo[] allyRobots;
+    static RobotInfo[] allyRobotsHealRange;
+    static FlagInfo[] nearbyFlagsAlly;
+    static FlagInfo[] nearbyFlagsEnemy;
+    static RobotInfo escortee;
+    static RobotInfo lastSeenEnemy;
+    final static float STOLEN_FLAG_CONSTANT = 2.5f;
+
+
+
     static states state;
     public static void runSoldier(RobotController rc) throws GameActionException {
-        if (!rc.isSpawned())
+        if (!rc.isSpawned()) {
+            lastSeenEnemy = null;
             return;
-        //update where we want soldiers to spawn
-        if(!Utilities.readBitSharedArray(rc, 1021)){
-            int x;
-            if(knowFlag(rc))
-                x = RobotPlayer.findClosestSpawnLocationToCoordinatedTarget(rc);
-            else {
-                x = RobotPlayer.findClosestSpawnLocationToCoordinatedBroadcast(rc);
-            }
-            if (x != -1){
-                //00
-                if(x == 0 && (Utilities.readBitSharedArray(rc, 1023) || Utilities.readBitSharedArray(rc, 1023))){
-                    Utilities.editBitSharedArray(rc, 1023, false);
-                    Utilities.editBitSharedArray(rc, 1022, false);
-                }
-                //01
-                else if(x == 1 && (!Utilities.readBitSharedArray(rc, 1023) || Utilities.readBitSharedArray(rc, 1023))){
-                    Utilities.editBitSharedArray(rc, 1022, false);
-                    Utilities.editBitSharedArray(rc, 1023, true); }
-                //x == 2, desire 10
-                else if (x == 2 && (Utilities.readBitSharedArray(rc, 1023) || !Utilities.readBitSharedArray(rc, 1023))){
-                    Utilities.editBitSharedArray(rc, 1023, false);
-                    Utilities.editBitSharedArray(rc, 1022, true);
-                }
-            }
         }
+        tryGetCrumbs(rc);
+        updateInfo(rc);
+        //make sure we store the location of at least one enemy, so we know where one was if we need it next turn and can't see any
+        if(enemyRobots.length > 0)
+            lastSeenEnemy = enemyRobots[0];
+        else if(lastSeenEnemy != null && rc.canSenseRobotAtLocation(lastSeenEnemy.getLocation())){
+            lastSeenEnemy = null;
+        }
+        state = trySwitchState(rc);
+        rc.setIndicatorString(state.toString());
+        switch (state)
+        {
+            case defense:
+                defense(rc);
+                break;
+            case attack:
+                attack(rc);
+                break;
+            case heist:
+                heist(rc);
+                break;
+            case escort:
+                escort(rc);
+                break;
+            case flagCarrier:
+                Carrier.runCarrier(rc);
+                break;
+        }
+    }
+    public static void tryGetCrumbs(RobotController rc) throws GameActionException {
         //tries to get neary crumbs
         MapLocation[] nearbyCrumbs = rc.senseNearbyCrumbs(-1);
         MapLocation targetCrumb = null;
@@ -59,97 +77,315 @@ public class Soldier
             }
             Pathfinding.bugNav2(rc, targetCrumb);
         }
-        //take in important info around you
-        RobotInfo[] enemyRobots = rc.senseNearbyRobots(GameConstants.VISION_RADIUS_SQUARED, rc.getTeam().opponent());
-        RobotInfo[] enemyRobotsAttackRange = rc.senseNearbyRobots(GameConstants.ATTACK_RADIUS_SQUARED, rc.getTeam().opponent());
-        RobotInfo[] allyRobots = rc.senseNearbyRobots(GameConstants.VISION_RADIUS_SQUARED, rc.getTeam());
-        RobotInfo[] allyRobotsHealRange = rc.senseNearbyRobots(GameConstants.HEAL_RADIUS_SQUARED, rc.getTeam());
-        if(rc.hasFlag())
-            state = states.flagCarrier;
-        if(enemyRobots.length > 0)
-            state = states.attack;
-        //if flag stolen/ enemy attacking flag state = defense
-        switch (state)
-        {
-            case defense:
-                defense(rc);
-                break;
-            case attack:
-                attack(rc);
-                break;
-            case heist:
-                heist(rc);
-                break;
-            case escort:
-                escort(rc);
-                break;
-        }
     }
-    public static void defense(RobotController rc)
-    {
+    //considers the situation, and decides what state the robot should be - with a bias towards current state,
+    // b/c if conditions aren't strong enough to switch just default to current state
+    public static states trySwitchState(RobotController rc) throws GameActionException {
+        if(rc.hasFlag()) {
+            return states.flagCarrier;
+        }
+        for (FlagInfo flag : nearbyFlagsAlly) {
+            if (flag.isPickedUp())
+                return states.defense;
+        }
 
+        for (FlagInfo flag : nearbyFlagsEnemy) {
+            checkRecordEnemyFlag(rc, flag);
+            if (flag.isPickedUp()) {
+                escortee = rc.senseRobotAtLocation(flag.getLocation());
+                return states.escort;
+            }
+        }
+        StolenFlag closestFlag = Utilities.getClosestFlag(rc);
+        if (closestFlag != null && rc.getLocation().distanceSquaredTo(closestFlag.location) < (rc.getMapWidth() + rc.getMapHeight()) * STOLEN_FLAG_CONSTANT)
+        {
+            return states.defense;
+        }
+        if (allyRobots.length >= enemyRobots.length && nearbyFlagsEnemy.length != 0)
+            return states.heist;
+        //if it seems like the escort or heist is over, return to attack
+        if((state == states.escort || state == states.heist) && nearbyFlagsEnemy.length == 0)
+            return states.attack;
+        //similarly, if we are on defense but the shared array asking for help is clear, seems they no longer need defense
+        else if (state == states.defense && Utilities.getClosestFlag(rc) == null){
+            return states.attack;
+        }
+        if(state == null){
+            //have our bots start in attack if nothing else compels them on the first turn
+            return states.attack;
+        }
+        return state;
+    }
+
+    //updates the info arrays used
+    public static void updateInfo(RobotController rc) throws GameActionException {
+        //take in important info around you
+        enemyRobots = rc.senseNearbyRobots(GameConstants.VISION_RADIUS_SQUARED, rc.getTeam().opponent());
+        enemyRobotsAttackRange = rc.senseNearbyRobots(GameConstants.ATTACK_RADIUS_SQUARED, rc.getTeam().opponent());
+        allyRobots = rc.senseNearbyRobots(GameConstants.VISION_RADIUS_SQUARED, rc.getTeam());
+        allyRobotsHealRange = rc.senseNearbyRobots(GameConstants.HEAL_RADIUS_SQUARED, rc.getTeam());
+        nearbyFlagsAlly = rc.senseNearbyFlags(-1, rc.getTeam());
+        nearbyFlagsEnemy = rc.senseNearbyFlags(-1, rc.getTeam().opponent());
+    }
+    public static void defense(RobotController rc) throws GameActionException {
+        StolenFlag closestFlag = Utilities.getClosestFlag(rc);
+        attemptAttack(rc);
+        if(closestFlag != null){
+            if(rc.canSenseLocation(closestFlag.location)){
+                if (rc.isActionReady() || ((allyRobots.length - enemyRobots.length > 6) &&  enemyRobotsAttackRange.length == 0)){
+                    runMicroAttack(rc);
+                    updateInfo(rc);
+                    if(enemyRobots.length > 6 && enemyRobotsAttackRange.length > 1){
+                        if(rc.canBuild(TrapType.STUN, rc.getLocation().add(rc.getLocation().directionTo(averageRobotLocation(enemyRobots))))){
+                            rc.build(TrapType.STUN, rc.getLocation().add(rc.getLocation().directionTo(averageRobotLocation(enemyRobots))));
+                        }
+                    }
+                    attemptAttack(rc);
+                    attemptHeal(rc);
+                }
+                //try and kite backwards, wait for cooldown to refresh
+                else {
+                    runMicroKite(rc);
+                    updateInfo(rc);
+                    attemptAttack(rc);
+                    attemptHeal(rc);
+                }
+            }
+            else{
+                Pathfinding.bugNav2(rc, closestFlag.location);
+            }
+        }
+        if(rc.isActionReady()){
+            updateInfo(rc);
+            attemptAttack(rc);
+            attemptHeal(rc);
+        }
     }
     public static void attack(RobotController rc) throws GameActionException{
-        RobotInfo[] enemyRobots = rc.senseNearbyRobots(GameConstants.VISION_RADIUS_SQUARED, rc.getTeam().opponent());
-        RobotInfo[] enemyRobotsAttackRange = rc.senseNearbyRobots(GameConstants.ATTACK_RADIUS_SQUARED, rc.getTeam().opponent());
-        RobotInfo[] allyRobots = rc.senseNearbyRobots(GameConstants.VISION_RADIUS_SQUARED, rc.getTeam());
-        RobotInfo[] allyRobotsHealRange = rc.senseNearbyRobots(GameConstants.HEAL_RADIUS_SQUARED, rc.getTeam());
-        if (allyRobots.length > enemyRobots.length - 1 && enemyRobots.length == 0) {
-            //can sense an enemy flag - move towards the flag!
-            if (rc.senseNearbyFlags(-1, rc.getTeam().opponent()).length != 0) {
-                if (rc.canFill(rc.getLocation().add(rc.getLocation().directionTo(rc.senseNearbyFlags(-1, rc.getTeam().opponent())[0].getLocation()))))
-                    rc.fill(rc.getLocation().add(rc.getLocation().directionTo(rc.senseNearbyFlags(-1, rc.getTeam().opponent())[0].getLocation())));
-                if (rc.isMovementReady())
-                    Pathfinding.tryToMove(rc, rc.senseNearbyFlags(-1, rc.getTeam().opponent())[0].getLocation());
+        if(rc.isActionReady()){
+            attemptAttack(rc);
+        }
+        if(enemyRobots.length != 0) {
+            //try and move into attack range of any nearby enemies
+            if ((rc.isActionReady() || ((allyRobots.length - enemyRobots.length > 6) &&  enemyRobotsAttackRange.length == 0) && rc.getHealth() > 100)){
+                runMicroAttack(rc);
+                updateInfo(rc);
+                if(enemyRobots.length > 6 && enemyRobotsAttackRange.length > 1){
+                    if(rc.canBuild(TrapType.STUN, rc.getLocation().add(rc.getLocation().directionTo(averageRobotLocation(enemyRobots))))){
+                        rc.build(TrapType.STUN, rc.getLocation().add(rc.getLocation().directionTo(averageRobotLocation(enemyRobots))));
+                    }
+                }
+                attemptAttack(rc);
+                attemptHeal(rc);
             }
-            //otherwise, if we can see enemies, just move towards their average location
-            else if (enemyRobots.length != 0 && enemyRobotsAttackRange.length == 0) {
-                MapLocation toChase = RobotPlayer.lowestHealth(enemyRobots);
-                if (rc.senseNearbyRobots(toChase, -1, rc.getTeam().opponent()).length <= rc.senseNearbyRobots(toChase, -1, rc.getTeam()).length)
-                    if (rc.isMovementReady()) Pathfinding.tryToMove(rc, toChase);
-                    else if (rc.isMovementReady())
-                        Pathfinding.tryToMove(rc, Utilities.averageRobotLocation(enemyRobots));
-            }
-            //finally, we cant see enemies or a flag, so lets move towawrds closest broadcast location!
+            //try and kite backwards, wait for cooldown to refresh
             else {
-                //will be used for a variety of different movement goals
-                MapLocation target = RobotPlayer.findCoordinatedBroadcastFlag(rc);
-                if (enemyRobots.length == 0 && target != null && rc.canFill(rc.adjacentLocation(rc.getLocation().directionTo(target)))) {
-                    rc.fill(rc.adjacentLocation(rc.getLocation().directionTo(target)));
-                }
-                MapLocation targetBroadcast = RobotPlayer.findCoordinatedBroadcastFlag(rc);
-                if (rc.isMovementReady()) {
-                    if (rc.getLocation().equals(targetBroadcast)) {
-                    } else Pathfinding.bugNav2(rc, RobotPlayer.findCoordinatedBroadcastFlag(rc));
+                runMicroKite(rc);
+                updateInfo(rc);
+                attemptAttack(rc);
+                attemptHeal(rc);
+            }
+        }
+        //if we cant see any enemies, run macro not micro - move towards known flags, and if not possible, move towards broadcast flags
+        else{
+            if(lastSeenEnemy != null){
+                Pathfinding.tryToMove(rc, lastSeenEnemy.getLocation());
+            }
+            else if(knowFlag(rc)){
+                MapLocation target = findCoordinatedActualFlag(rc);
+                if(target != null){
+                    Pathfinding.bugNav2(rc, target);
                 }
             }
-            if (rc.isActionReady()) {
-                //now, we try to attack again - re-sense robots because we've probably moved
-                MapLocation toAttack = RobotPlayer.lowestHealth(rc.senseNearbyRobots(GameConstants.ATTACK_RADIUS_SQUARED, rc.getTeam().opponent()));
-                if (toAttack != null && rc.canAttack(toAttack)) {
-                    rc.attack(toAttack);
-                }
+            else{
+                Pathfinding.bugNav2(rc, findCoordinatedBroadcastFlag(rc));
             }
-            //finally, we try to heal if nothing else can be done
-            RobotInfo toHeal = Utilities.bestHeal(rc, rc.senseNearbyRobots(GameConstants.HEAL_RADIUS_SQUARED, rc.getTeam()));
-            if (toHeal != null && rc.canHeal(toHeal.getLocation())) {
-                rc.heal(toHeal.getLocation());
-            }
+        }
+    }
+
+    //heist! we have more or equal allies to enemies in vision, and can see a flag, so we are gonna rush their flag
+    public static void heist(RobotController rc) throws GameActionException {
+        FlagInfo targetFlag = nearbyFlagsEnemy[0];
+        if(rc.canPickupFlag(targetFlag.getLocation())) {
+            rc.pickupFlag(targetFlag.getLocation());
         }
         else {
-            if (allyRobots.length != 0) {
-                Pathfinding.tryToMove(rc, Utilities.averageRobotLocation(allyRobots));
+            if(rc.getLocation().distanceSquaredTo(targetFlag.getLocation()) < 9) {
+                if (rc.canMove(rc.getLocation().directionTo(targetFlag.getLocation()))) {
+                    rc.move(rc.getLocation().directionTo(targetFlag.getLocation()));
+                }
+            }
+            else if(rc.isActionReady()){
+                runMicroAttack(rc);
+                updateInfo(rc);
+                attemptAttack(rc);
+                attemptHeal(rc);
+            }
+            else{
+                runMicroKite(rc);
+                updateInfo(rc);
+                attemptAttack(rc);
+                attemptHeal(rc);
+            }
+        }
+        if(rc.hasFlag())
+            state = states.flagCarrier;
+    }
+    public static void escort(RobotController rc) throws GameActionException {
+        if(rc.isActionReady()) {
+            attemptHealCarrier(rc);
+            attemptAttack(rc);
+        }
+        if(enemyRobots.length != 0){
+            //try and move into attack range of any nearby enemies
+            if (rc.isActionReady() || ((allyRobots.length - enemyRobots.length > 6) &&  enemyRobotsAttackRange.length == 0)){
+                runMicroAttack(rc);
+                updateInfo(rc);
+                if(enemyRobots.length > 6 && enemyRobotsAttackRange.length > 1){
+                    if(rc.canBuild(TrapType.STUN, rc.getLocation().add(rc.getLocation().directionTo(averageRobotLocation(enemyRobots))))){
+                        rc.build(TrapType.STUN, rc.getLocation().add(rc.getLocation().directionTo(averageRobotLocation(enemyRobots))));
+                    }
+                }
+                attemptAttack(rc);
+                attemptHeal(rc);
+            }
+            //try and kite backwards, wait for cooldown to refresh
+            else {
+                runMicroKite(rc);
+                updateInfo(rc);
+                attemptAttack(rc);
+                attemptHeal(rc);
+            }
+        }
+        //**CHANGE
+        StolenFlag temp = new StolenFlag(escortee.getLocation(), false);
+        //**CHANGE ^^^
+        Pathfinding.tryToMoveTowardsFlag(rc, temp.location, temp);
+        if(rc.isActionReady()) {
+            updateInfo(rc);
+            attemptHealCarrier(rc);
+            attemptAttack(rc);
+            attemptHeal(rc);
+        }
+    }
+    //find the location that will move us into attack range of the least amount of enemies, while moving us towards at least one
+    //move there, and fire
+    public static void runMicroAttack(RobotController rc) throws GameActionException {
+        engagementMicroSquare[] options = new engagementMicroSquare[8];
+        populateMicroArray(rc, options);
+        engagementMicroSquare best = null;
+        int highScore = Integer.MIN_VALUE;
+        for(engagementMicroSquare square : options){
+            if(square.passable){
+                int score = 0;
+                if(square.enemiesAttackRangedX == 1){
+                    score = 1000000 + square.enemiesVisiondX + square.alliesVisiondX + square.alliesHealRangedX;
+                }
+                else {
+                    score = square.enemiesAttackRangedX * 5 + square.enemiesVisiondX * 4 + square.alliesVisiondX + square.alliesHealRangedX * 2;
+                }
+                if(score > highScore){
+                    highScore = score;
+                    best = square;
+                }
+            }
+        }
+        if(best != null && rc.canMove(rc.getLocation().directionTo(best.location))){
+            rc.move(rc.getLocation().directionTo(best.location));
+        }
+    }
+    //find the location that will be in attack range of the least amount of enemies, and move there
+    //tiebreaker between multiple locations is location in vision range of least amount of enemies
+    public static void runMicroKite(RobotController rc) throws GameActionException {
+        engagementMicroSquare[] options = new engagementMicroSquare[8];
+        populateMicroArray(rc, options);
+        engagementMicroSquare best = null;
+        int highScore = Integer.MIN_VALUE;
+        for(engagementMicroSquare square : options){
+            if(square.passable){
+                int score = square.enemiesAttackRangedX * -8 + square.enemiesVisiondX * 2 + square.alliesVisiondX * 2 + square.alliesHealRangedX * 2;
+                if(score > highScore){
+                    highScore = score;
+                    best = square;
+                }
+            }
+        }
+        if(best != null && rc.canMove(rc.getLocation().directionTo(best.location))){
+            rc.move(rc.getLocation().directionTo(best.location));
+        }
+    }
+    public static void populateMicroArray(RobotController rc, engagementMicroSquare[] options) throws GameActionException {
+        int index = 0;
+        MapLocation curLoc = rc.getLocation();
+        int mapWidth = rc.getMapWidth();
+        int mapHeight = rc.getMapHeight();
+        int curX = curLoc.x;
+        int curY = curLoc.y;
+        int newX = 0;
+        int newY = 0;
+        for(int i = -1; i <= 1; i++){
+            for(int k = -1; k <= 1; k++){
+                if(i == 0 && k == 0)
+                    continue;
+                newX = curX + i;
+                newY = curY + k;
+                if(newX < mapWidth && newX >= 0 && newY >= 0 && newY < mapHeight){
+                    options[index] = new engagementMicroSquare(newX, newY);
+                    MapLocation tempSquare = new MapLocation(newX, newY);
+                    MapInfo tempInfo = rc.senseMapInfo(tempSquare);
+                    options[index].passable = (tempInfo.isPassable() && rc.senseRobotAtLocation(tempSquare) == null);
+                    if(options[index].passable){
+                        RobotInfo[] enemyRobotsNewLoc = rc.senseNearbyRobots(tempSquare, -1, rc.getTeam().opponent());
+                        RobotInfo[] allyRobotsNewLoc = rc.senseNearbyRobots(tempSquare, -1, rc.getTeam());
+                        RobotInfo[] enemyRobotsAttackRangeNewLoc = rc.senseNearbyRobots(tempSquare, GameConstants.ATTACK_RADIUS_SQUARED, rc.getTeam().opponent());
+                        RobotInfo[] allyRobotsHealRangeNewLoc = rc.senseNearbyRobots(tempSquare, GameConstants.HEAL_RADIUS_SQUARED, rc.getTeam());
+                        options[index].enemiesVisiondX = enemyRobotsNewLoc.length - enemyRobots.length;
+                        options[index].enemiesAttackRangedX =  enemyRobotsAttackRangeNewLoc.length - enemyRobotsAttackRange.length;
+                        options[index].alliesVisiondX =  allyRobotsNewLoc.length - allyRobots.length;
+                        options[index].alliesHealRangedX = allyRobotsHealRangeNewLoc.length - allyRobotsHealRange.length;
+                    }
+                }
+                else{
+                    options[index] = new engagementMicroSquare(false);
+                }
+                index++;
             }
         }
     }
-    public static void heist(RobotController rc)
-    {
 
+    public static void attemptAttack(RobotController rc) throws GameActionException {
+        MapLocation toAttack = RobotPlayer.lowestHealth(enemyRobotsAttackRange);
+        if (toAttack != null && rc.canAttack(toAttack)) {
+            rc.attack(toAttack);
+        }
+        if(rc.isActionReady()){
+            if (toAttack != null && rc.canAttack(toAttack)) {
+                rc.attack(toAttack);
+            }
+        }
     }
-    public static void escort(RobotController rc)
-    {
+    public static void attemptHeal(RobotController rc) throws GameActionException{
+        RobotInfo toHeal = bestHeal(rc, allyRobotsHealRange);
+        if(toHeal != null && rc.canHeal(toHeal.getLocation()))
+            rc.heal(toHeal.getLocation());
+    }
 
+    //attempts to heal a flag carrier nearby - including moving towards them to get the heal done
+    public static void attemptHealCarrier(RobotController rc) throws GameActionException {
+        RobotInfo toHeal = bestHeal(rc, allyRobotsHealRange);
+        if(toHeal != null && toHeal.hasFlag()){
+            if(rc.canHeal(toHeal.getLocation()))
+                rc.heal(toHeal.getLocation());
+//            else if(rc.getLocation().distanceSquaredTo(toHeal.getLocation()) > GameConstants.HEAL_RADIUS_SQUARED && rc.getLocation().add(rc.getLocation().directionTo(toHeal.getLocation())).distanceSquaredTo(toHeal.getLocation()) <= GameConstants.HEAL_RADIUS_SQUARED){
+//                if(rc.canMove(rc.getLocation().directionTo(toHeal.getLocation()))){
+//                    rc.move(rc.getLocation().directionTo(toHeal.getLocation()));
+//                    if(rc.canHeal(toHeal.getLocation()))
+//                        rc.heal(toHeal.getLocation());
+//                }
+//            }
+        }
     }
+
     public static void checkRecordEnemyFlag(RobotController rc, FlagInfo flag) throws GameActionException {
         int index3 = rc.readSharedArray(3);
         int index4 = rc.readSharedArray(4);
@@ -247,4 +483,41 @@ public class Soldier
         }
         return null;
     }
+}
+
+//used to keep track of the eight squares around a robot during engagement, only considers relevant details
+//note - passability only takes into account if this robot can move there, so a square can be impassable due
+//to either terrain, or just a robot being there, makes no difference to us - false passability could also indicate that
+//the location is not on the map
+class engagementMicroSquare{
+    public MapLocation location;
+    public boolean passable;
+    public int enemiesAttackRangedX;
+    public int enemiesVisiondX;
+    public int alliesVisiondX;
+    public int alliesHealRangedX;
+    public engagementMicroSquare(){
+
+    }
+    public engagementMicroSquare(boolean p){
+        passable = p;
+    }
+    public engagementMicroSquare(int x, int y){
+        location = new MapLocation(x, y);
+    }
+    public engagementMicroSquare(boolean passability, int x, int y){
+        passable = passability;
+        this.enemiesAttackRangedX = 0;
+        this.enemiesVisiondX = 0;
+        location = new MapLocation(x, y);
+
+    }
+//    public engagementMicroSquare(boolean passabillity, int enemiesAttackRangedX, int enemiesVisiondX, int x, int y){
+//        passable = passabillity;
+//        this.enemiesAttackRangedX = enemiesAttackRangedX;
+//        this.enemiesVisiondX = enemiesVisiondX;
+//        this.x = x;
+//        this.y = y;
+//    }
+
 }
