@@ -132,6 +132,7 @@ public class Soldier
 
 
             //if we have more allies, or equal allies, to amount of enemies, and havent attacked yet, lets be aggressive
+            //note: would enemyRobots.length == 0 be true when allyRobots.length >= (enemyRobots.length - 1)
             if (allyRobots.length >= (enemyRobots.length - 1) && (rc.isActionReady() || enemyRobots.length == 0) && rc.getHealth() > 50) {
                 //can sense an enemy flag - move towards the flag!
                 if (rc.senseNearbyFlags(-1, rc.getTeam().opponent()).length != 0) {
@@ -164,6 +165,7 @@ public class Soldier
                     }
                     MapLocation targetBroadcast = findCoordinatedBroadcastFlag(rc);
                     if(rc.isMovementReady()) {
+                        //note: what is empty if for?
                         if (rc.getLocation().equals(targetBroadcast)) {
                         }
                         else Pathfinding.bugNav2(rc, findCoordinatedBroadcastFlag(rc));
