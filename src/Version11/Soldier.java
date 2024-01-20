@@ -1,6 +1,10 @@
 package Version11;
 
 import battlecode.common.*;
+import battlecode.world.Trap;
+
+import java.util.ArrayList;
+import java.util.Arrays;
 
 import static Version11.RobotPlayer.findCoordinatedBroadcastFlag;
 import static Version11.Utilities.averageRobotLocation;
@@ -21,6 +25,10 @@ public class Soldier
     static RobotInfo escortee;
     static RobotInfo lastSeenEnemy;
     final static float STOLEN_FLAG_CONSTANT = 2.5f;
+    //records the enemies seen last round, to create the stunlist
+    static ArrayList<RobotInfo> seenLast = new ArrayList<>();
+    //keeps track of enemies we can see this round that we could see last round, which haven't moved
+    static ArrayList<RobotInfo> stunList = new ArrayList<>();
 
 
 
@@ -32,6 +40,7 @@ public class Soldier
         }
         tryGetCrumbs(rc);
         updateInfo(rc);
+        //createStunList();
         //make sure we store the location of at least one enemy, so we know where one was if we need it next turn and can't see any
         if(enemyRobots.length > 0)
             lastSeenEnemy = enemyRobots[0];
@@ -57,6 +66,19 @@ public class Soldier
             case flagCarrier:
                 Carrier.runCarrier(rc);
                 break;
+        }
+//        updateInfo(rc);
+//        seenLast.clear();
+//        seenLast.addAll(Arrays.asList(enemyRobots));
+    }
+    public static void createStunList(){
+        stunList.clear();
+        for(RobotInfo robot : seenLast){
+            for(RobotInfo rob : enemyRobots){
+                if(robot.getID() == rob.getID() && robot.getLocation().equals(rob.getLocation())){
+                    stunList.add(robot);
+                }
+            }
         }
     }
     public static void tryGetCrumbs(RobotController rc) throws GameActionException {
@@ -164,6 +186,17 @@ public class Soldier
         }
     }
     public static void attack(RobotController rc) throws GameActionException{
+        if(enemyRobots.length > 6 && enemyRobotsAttackRange.length > 1){
+            TrapType toBeBuilt = TrapType.STUN;
+            if(rc.canBuild(toBeBuilt, rc.getLocation().add(rc.getLocation().directionTo(averageRobotLocation(enemyRobots))))){
+                System.out.println("I built a bomb");
+                rc.build(toBeBuilt, rc.getLocation().add(rc.getLocation().directionTo(averageRobotLocation(enemyRobots))));
+            }
+            else if(rc.canBuild(toBeBuilt, rc.getLocation())){
+                System.out.println("i built a slightly worse bomb!");
+                rc.build(toBeBuilt, rc.getLocation());
+            }
+        }
         if(rc.isActionReady()){
             attemptAttack(rc);
         }
@@ -172,11 +205,6 @@ public class Soldier
             if ((rc.isActionReady() || ((allyRobots.length - enemyRobots.length > 6) &&  enemyRobotsAttackRange.length == 0) && rc.getHealth() > 100)){
                 runMicroAttack(rc);
                 updateInfo(rc);
-                if(enemyRobots.length > 6 && enemyRobotsAttackRange.length > 1){
-                    if(rc.canBuild(TrapType.STUN, rc.getLocation().add(rc.getLocation().directionTo(averageRobotLocation(enemyRobots))))){
-                        rc.build(TrapType.STUN, rc.getLocation().add(rc.getLocation().directionTo(averageRobotLocation(enemyRobots))));
-                    }
-                }
                 attemptAttack(rc);
                 attemptHeal(rc);
             }

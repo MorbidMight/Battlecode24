@@ -463,6 +463,42 @@ static MapLocation builderBombCircleCenter = null;
         return toAttack;
     }
 
+    public static MapLocation lowestHealthOrStunned(RobotInfo[] enemies, ArrayList<RobotInfo> stunList){
+        if (enemies.length == 0)
+            return null;
+        int lowHealth = enemies[0].health;
+        boolean isSame = true;
+        MapLocation toAttack = enemies[0].getLocation();
+        for (RobotInfo enemy : enemies) {
+            if (enemy.hasFlag) {
+                return enemy.getLocation();
+            }
+            //give priority to stunned enemies
+            if(stunList.contains(enemy)){
+                if ((enemy.health - 500) < lowHealth) {
+                    lowHealth = enemy.health - 500;
+                    toAttack = enemy.location;
+                    isSame = false;
+                }
+            }
+            if (enemy.health < lowHealth) {
+                lowHealth = enemy.health;
+                toAttack = enemy.location;
+                isSame = false;
+            }
+        }
+        if (isSame) {
+            int lowestID = enemies[0].ID;
+            for (RobotInfo enemy : enemies) {
+                if (enemy.ID < lowestID) {
+                    lowestID = enemy.ID;
+                    toAttack = enemy.getLocation();
+                }
+            }
+        }
+        return toAttack;
+    }
+
     static void updateSeenLocations(RobotController rc) {
         MapInfo[] locations = rc.senseNearbyMapInfos();
         //this might be inefficient maybe switch to for loop
