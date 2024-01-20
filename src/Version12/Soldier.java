@@ -167,13 +167,16 @@ public class Soldier
                     attemptAttack(rc);
                     attemptHeal(rc);
                 }
-                //try and kite backwards, wait for cooldown to refresh
-                else {
-                    runMicroKite(rc);
-                    updateInfo(rc);
-                    attemptAttack(rc);
-                    attemptHeal(rc);
+                else{
+                    Pathfinding.combinedPathfinding(rc, closestFlag.location);
                 }
+//                //try and kite backwards, wait for cooldown to refresh
+//                else {
+//                    runMicroKite(rc);
+//                    updateInfo(rc);
+//                    attemptAttack(rc);
+//                    attemptHeal(rc);
+//                }
             }
             else{
                 Pathfinding.combinedPathfinding(rc, closestFlag.location);
@@ -218,9 +221,9 @@ public class Soldier
         }
         //if we cant see any enemies, run macro not micro - move towards known flags, and if not possible, move towards broadcast flags
         else{
-            rc.setIndicatorString("i'm not moving");
             if(lastSeenEnemy != null){
-                Pathfinding.combinedPathfinding(rc, lastSeenEnemy.getLocation());
+                //Pathfinding.combinedPathfinding(rc, lastSeenEnemy.getLocation());
+                Pathfinding.bellmanFord5x5(rc, lastSeenEnemy.getLocation());
             }
             else if(knowFlag(rc)){
                 MapLocation target = findCoordinatedActualFlag(rc);
@@ -254,6 +257,9 @@ public class Soldier
             if(rc.getLocation().distanceSquaredTo(targetFlag.getLocation()) < 9) {
                 if (rc.canMove(rc.getLocation().directionTo(targetFlag.getLocation()))) {
                     rc.move(rc.getLocation().directionTo(targetFlag.getLocation()));
+                }
+                else{
+                    Pathfinding.bellmanFord5x5(rc, targetFlag.getLocation());
                 }
             }
             else if(rc.isActionReady()){
@@ -369,33 +375,80 @@ public class Soldier
         int curY = curLoc.y;
         int newX = 0;
         int newY = 0;
-        for(int i = -1; i <= 1; i++){
-            for(int k = -1; k <= 1; k++){
-                if(i == 0 && k == 0)
-                    continue;
-                newX = curX + i;
-                newY = curY + k;
-                if(newX < mapWidth && newX >= 0 && newY >= 0 && newY < mapHeight){
-                    options[index] = new engagementMicroSquare(newX, newY);
-                    MapLocation tempSquare = new MapLocation(newX, newY);
-                    MapInfo tempInfo = rc.senseMapInfo(tempSquare);
-                    options[index].passable = (tempInfo.isPassable() && rc.senseRobotAtLocation(tempSquare) == null);
-                    if(options[index].passable){
-                        RobotInfo[] enemyRobotsNewLoc = rc.senseNearbyRobots(tempSquare, -1, rc.getTeam().opponent());
-                        RobotInfo[] allyRobotsNewLoc = rc.senseNearbyRobots(tempSquare, -1, rc.getTeam());
-                        RobotInfo[] enemyRobotsAttackRangeNewLoc = rc.senseNearbyRobots(tempSquare, GameConstants.ATTACK_RADIUS_SQUARED, rc.getTeam().opponent());
-                        RobotInfo[] allyRobotsHealRangeNewLoc = rc.senseNearbyRobots(tempSquare, GameConstants.HEAL_RADIUS_SQUARED, rc.getTeam());
-                        options[index].enemiesVisiondX = enemyRobotsNewLoc.length - enemyRobots.length;
-                        options[index].enemiesAttackRangedX =  enemyRobotsAttackRangeNewLoc.length - enemyRobotsAttackRange.length;
-                        options[index].alliesVisiondX =  allyRobotsNewLoc.length - allyRobots.length;
-                        options[index].alliesHealRangedX = allyRobotsHealRangeNewLoc.length - allyRobotsHealRange.length;
-                    }
+        for (int k = -1; k <= 1; k++) {
+//            if (-1 == 0 && k == 0)
+//                continue;
+            newX = curX + -1;
+            newY = curY + k;
+            if (newX < mapWidth && newX >= 0 && newY >= 0 && newY < mapHeight) {
+                options[index] = new engagementMicroSquare(newX, newY);
+                MapLocation tempSquare = new MapLocation(newX, newY);
+                MapInfo tempInfo = rc.senseMapInfo(tempSquare);
+                options[index].passable = (tempInfo.isPassable() && rc.senseRobotAtLocation(tempSquare) == null);
+                if (options[index].passable) {
+                    RobotInfo[] enemyRobotsNewLoc = rc.senseNearbyRobots(tempSquare, -1, rc.getTeam().opponent());
+                    RobotInfo[] allyRobotsNewLoc = rc.senseNearbyRobots(tempSquare, -1, rc.getTeam());
+                    RobotInfo[] enemyRobotsAttackRangeNewLoc = rc.senseNearbyRobots(tempSquare, GameConstants.ATTACK_RADIUS_SQUARED, rc.getTeam().opponent());
+                    RobotInfo[] allyRobotsHealRangeNewLoc = rc.senseNearbyRobots(tempSquare, GameConstants.HEAL_RADIUS_SQUARED, rc.getTeam());
+                    options[index].enemiesVisiondX = enemyRobotsNewLoc.length - enemyRobots.length;
+                    options[index].enemiesAttackRangedX = enemyRobotsAttackRangeNewLoc.length - enemyRobotsAttackRange.length;
+                    options[index].alliesVisiondX = allyRobotsNewLoc.length - allyRobots.length;
+                    options[index].alliesHealRangedX = allyRobotsHealRangeNewLoc.length - allyRobotsHealRange.length;
                 }
-                else{
-                    options[index] = new engagementMicroSquare(false);
-                }
-                index++;
+            } else {
+                options[index] = new engagementMicroSquare(false);
             }
+            index++;
+        }
+        for (int k = -1; k <= 1; k++) {
+            if (0 == 0 && k == 0)
+                continue;
+            newX = curX + 0;
+            newY = curY + k;
+            if (newX < mapWidth && newX >= 0 && newY >= 0 && newY < mapHeight) {
+                options[index] = new engagementMicroSquare(newX, newY);
+                MapLocation tempSquare = new MapLocation(newX, newY);
+                MapInfo tempInfo = rc.senseMapInfo(tempSquare);
+                options[index].passable = (tempInfo.isPassable() && rc.senseRobotAtLocation(tempSquare) == null);
+                if (options[index].passable) {
+                    RobotInfo[] enemyRobotsNewLoc = rc.senseNearbyRobots(tempSquare, -1, rc.getTeam().opponent());
+                    RobotInfo[] allyRobotsNewLoc = rc.senseNearbyRobots(tempSquare, -1, rc.getTeam());
+                    RobotInfo[] enemyRobotsAttackRangeNewLoc = rc.senseNearbyRobots(tempSquare, GameConstants.ATTACK_RADIUS_SQUARED, rc.getTeam().opponent());
+                    RobotInfo[] allyRobotsHealRangeNewLoc = rc.senseNearbyRobots(tempSquare, GameConstants.HEAL_RADIUS_SQUARED, rc.getTeam());
+                    options[index].enemiesVisiondX = enemyRobotsNewLoc.length - enemyRobots.length;
+                    options[index].enemiesAttackRangedX = enemyRobotsAttackRangeNewLoc.length - enemyRobotsAttackRange.length;
+                    options[index].alliesVisiondX = allyRobotsNewLoc.length - allyRobots.length;
+                    options[index].alliesHealRangedX = allyRobotsHealRangeNewLoc.length - allyRobotsHealRange.length;
+                }
+            } else {
+                options[index] = new engagementMicroSquare(false);
+            }
+            index++;
+        }
+        for (int k = -1; k <= 1; k++) {
+//            if (1 == 0 && k == 0)
+//                continue;
+            newX = curX + 1;
+            newY = curY + k;
+            if (newX < mapWidth && newX >= 0 && newY >= 0 && newY < mapHeight) {
+                options[index] = new engagementMicroSquare(newX, newY);
+                MapLocation tempSquare = new MapLocation(newX, newY);
+                MapInfo tempInfo = rc.senseMapInfo(tempSquare);
+                options[index].passable = (tempInfo.isPassable() && rc.senseRobotAtLocation(tempSquare) == null);
+                if (options[index].passable) {
+                    RobotInfo[] enemyRobotsNewLoc = rc.senseNearbyRobots(tempSquare, -1, rc.getTeam().opponent());
+                    RobotInfo[] allyRobotsNewLoc = rc.senseNearbyRobots(tempSquare, -1, rc.getTeam());
+                    RobotInfo[] enemyRobotsAttackRangeNewLoc = rc.senseNearbyRobots(tempSquare, GameConstants.ATTACK_RADIUS_SQUARED, rc.getTeam().opponent());
+                    RobotInfo[] allyRobotsHealRangeNewLoc = rc.senseNearbyRobots(tempSquare, GameConstants.HEAL_RADIUS_SQUARED, rc.getTeam());
+                    options[index].enemiesVisiondX = enemyRobotsNewLoc.length - enemyRobots.length;
+                    options[index].enemiesAttackRangedX = enemyRobotsAttackRangeNewLoc.length - enemyRobotsAttackRange.length;
+                    options[index].alliesVisiondX = allyRobotsNewLoc.length - allyRobots.length;
+                    options[index].alliesHealRangedX = allyRobotsHealRangeNewLoc.length - allyRobotsHealRange.length;
+                }
+            } else {
+                options[index] = new engagementMicroSquare(false);
+            }
+            index++;
         }
     }
 

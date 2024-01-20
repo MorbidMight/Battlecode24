@@ -43,9 +43,13 @@ static MapLocation builderBombCircleCenter = null;
 
     //Ratios for spawning
     public static final int NUMSOLDIERS = 45;
-    public static final int NUMBUILDERS = 2;
+    public static final int NUMBUILDERS = 1;
+    public static final int OFFENSIVEBUILDERS = 1;
+
 
     public static final int NUMHEALERS = 0;
+    //offensive builders is 50 - numsoldiers - numbuilders - 3
+
     //flag sitters will always be 3, heals is 50 - (soldiers + builders + flag sitters)
 
     static Random rng;
@@ -76,7 +80,7 @@ static MapLocation builderBombCircleCenter = null;
     };
 
     enum roles {
-        explorer, soldier, builder, healer
+        explorer, soldier, builder, healer, offensiveBuilder
     }
 
 
@@ -155,8 +159,9 @@ static MapLocation builderBombCircleCenter = null;
                                     else role = roles.soldier;
                                     incrementSoldier(rc);
                                 } else {
-                                    role = roles.healer;
-                                    incrementHealer(rc);
+                                     role = roles.offensiveBuilder;
+                                    //role = roles.healer;
+                                    //incrementHealer(rc);
                                 }
                             }
                         }
@@ -239,17 +244,21 @@ static MapLocation builderBombCircleCenter = null;
                             case soldier:
                                 Soldier.runSoldier(rc);
                                 break;
+                            case offensiveBuilder:
+                                OffensiveBuilder.runOffensiveBuilder(rc);
+                                break;
+
                         }
                     }
-
-                    //pickup enemy flag after setup phase ends
-                    if (rc.canPickupFlag(rc.getLocation()) && rc.getRoundNum() > GameConstants.SETUP_ROUNDS) {
-                        rc.pickupFlag(rc.getLocation());
-                    }
-                    //if we have an enemy flag, bring it to the closest area
-                    if (rc.hasFlag() && rc.getRoundNum() >= GameConstants.SETUP_ROUNDS) {
-                        Carrier.runCarrier(rc);
-                    }
+//
+//                    //pickup enemy flag after setup phase ends
+//                    if (rc.canPickupFlag(rc.getLocation()) && rc.getRoundNum() > GameConstants.SETUP_ROUNDS) {
+//                        rc.pickupFlag(rc.getLocation());
+//                    }
+//                    //if we have an enemy flag, bring it to the closest area
+//                    if (rc.hasFlag() && rc.getRoundNum() >= GameConstants.SETUP_ROUNDS) {
+//                        Carrier.runCarrier(rc);
+//                    }
 //                    if(rc.getRoundNum() < 10)
 //                        MoveAwayFromSpawnLocations(rc);
                     /*

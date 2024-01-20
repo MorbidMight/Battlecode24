@@ -42,9 +42,11 @@ static MapLocation builderBombCircleCenter = null;
 
     //Ratios for spawning
     public static final int NUMSOLDIERS = 45;
-    public static final int NUMBUILDERS = 2;
+    public static final int NUMBUILDERS = 1;
+    public static final int OFFENSIVEBUILDERS = 1;
 
     public static final int NUMHEALERS = 0;
+    //offensive builders is 50 - numsoldiers - numbuilders - 3
     //flag sitters will always be 3, heals is 50 - (soldiers + builders + flag sitters)
 
     static Random rng;
@@ -75,7 +77,7 @@ static MapLocation builderBombCircleCenter = null;
     };
 
     enum roles {
-        explorer, soldier, builder, healer
+        explorer, soldier, builder, healer, offensiveBuilder
     }
 
 
@@ -131,10 +133,7 @@ static MapLocation builderBombCircleCenter = null;
                                 role = roles.builder;
                                 incrementBuilder(rc);
 
-                            } else
-
-
-                            if (rc.senseNearbyFlags(0).length != 0) {
+                            } else if (rc.senseNearbyFlags(0).length != 0) {
                                 role = roles.builder;
                                 incrementBuilder(rc);
                                 SittingOnFlag = true;
@@ -148,14 +147,16 @@ static MapLocation builderBombCircleCenter = null;
                             if ((numSoldiers + numBuilders + numHealers) == 0) {
                                 role = roles.builder;
                                 incrementBuilder(rc);
-                            } else {
+                            }
+                            else {
                                  if (numSoldiers < NUMSOLDIERS) {
                                     if (rc.getRoundNum() < 200) role = roles.explorer;
                                     else role = roles.soldier;
                                     incrementSoldier(rc);
                                 } else {
-                                    role = roles.healer;
-                                    incrementHealer(rc);
+                                    //role = roles.healer;
+                                    //incrementHealer(rc);
+                                     role = roles.offensiveBuilder;
                                 }
                             }
                         }
@@ -239,6 +240,11 @@ static MapLocation builderBombCircleCenter = null;
                                 break;
                             case soldier:
                                 Soldier.runSoldier(rc);
+                                break;
+                            case offensiveBuilder:
+                                OffensiveBuilder.runOffensiveBuilder(rc);
+                                rc.setIndicatorString("offensive builder");
+                                rc.setIndicatorDot(rc.getLocation(), 200, 100, 150);
                                 break;
                         }
                     }
