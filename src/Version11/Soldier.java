@@ -186,14 +186,14 @@ public class Soldier
         }
     }
     public static void attack(RobotController rc) throws GameActionException{
+        // a temporary macro band-aid that calls this more often only to reap the part that removes flags we can see aren't there
+        findCoordinatedActualFlag(rc);
         if(enemyRobots.length > 6 && enemyRobotsAttackRange.length > 1){
             TrapType toBeBuilt = TrapType.STUN;
             if(rc.canBuild(toBeBuilt, rc.getLocation().add(rc.getLocation().directionTo(averageRobotLocation(enemyRobots))))){
-                System.out.println("I built a bomb");
                 rc.build(toBeBuilt, rc.getLocation().add(rc.getLocation().directionTo(averageRobotLocation(enemyRobots))));
             }
             else if(rc.canBuild(toBeBuilt, rc.getLocation())){
-                System.out.println("i built a slightly worse bomb!");
                 rc.build(toBeBuilt, rc.getLocation());
             }
         }
@@ -317,7 +317,7 @@ public class Soldier
         int highScore = Integer.MIN_VALUE;
         for(engagementMicroSquare square : options){
             if(square.passable){
-                int score = 0;
+                int score;
                 if(square.enemiesAttackRangedX == 1){
                     score = 1000000 + square.enemiesVisiondX + square.alliesVisiondX + square.alliesHealRangedX;
                 }
@@ -330,8 +330,11 @@ public class Soldier
                 }
             }
         }
-        if(best != null && rc.canMove(rc.getLocation().directionTo(best.location))){
-            rc.move(rc.getLocation().directionTo(best.location));
+        if(best != null) {
+            //make sure the move isnt outright harmful, or too stupid
+            if (best.enemiesAttackRangedX >= 0 && best.enemiesAttackRangedX <= 2 && rc.canMove(rc.getLocation().directionTo(best.location))) {
+                rc.move(rc.getLocation().directionTo(best.location));
+            }
         }
     }
     //find the location that will be in attack range of the least amount of enemies, and move there
@@ -350,8 +353,10 @@ public class Soldier
                 }
             }
         }
-        if(best != null && rc.canMove(rc.getLocation().directionTo(best.location))){
-            rc.move(rc.getLocation().directionTo(best.location));
+        if(best != null) {
+            if (best.enemiesAttackRangedX <= 0 && rc.canMove(rc.getLocation().directionTo(best.location))) {
+                rc.move(rc.getLocation().directionTo(best.location));
+            }
         }
     }
     public static void populateMicroArray(RobotController rc, engagementMicroSquare[] options) throws GameActionException {

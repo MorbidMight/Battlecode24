@@ -174,7 +174,6 @@ static MapLocation builderBombCircleCenter = null;
                                 //decide which place to spawn at based on last two bits of shared array
                                 //loop through spawn locations, try adjacent ones, then try non adjacent ones
                                 MapLocation targetSpawn = null;
-
                                 if (Utilities.readBitSharedArray(rc, 1022)) {
                                     targetSpawn = Utilities.convertIntToLocation(rc.readSharedArray(2));
                                 } else if (Utilities.readBitSharedArray(rc, 1023)) {

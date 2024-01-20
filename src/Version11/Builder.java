@@ -55,18 +55,18 @@ static int radius = 0;
                 }
                 if (x != -1){
                     //00
-                    if(x == 0 && (Utilities.readBitSharedArray(rc, 1023) || Utilities.readBitSharedArray(rc, 1023))){
+                    if(x == 0){
                         Utilities.editBitSharedArray(rc, 1023, false);
                         Utilities.editBitSharedArray(rc, 1022, false);
                     }
                     //01
-                    else if(x == 1 && (!Utilities.readBitSharedArray(rc, 1023) || Utilities.readBitSharedArray(rc, 1023))){
+                    else if(x == 1){
                         Utilities.editBitSharedArray(rc, 1022, false);
                         Utilities.editBitSharedArray(rc, 1023, true); }
                     //x == 2, desire 10
-                    else if (x == 2 && (Utilities.readBitSharedArray(rc, 1023) || !Utilities.readBitSharedArray(rc, 1023))){
-                        Utilities.editBitSharedArray(rc, 1023, false);
+                    else if (x == 2){
                         Utilities.editBitSharedArray(rc, 1022, true);
+                        Utilities.editBitSharedArray(rc, 1023, false);
                     }
                 }
             }
