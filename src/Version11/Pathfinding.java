@@ -2,15 +2,18 @@ package Version11;
 
 import battlecode.common.*;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.PriorityQueue;
+import java.util.*;
 
-import static Version11.RobotPlayer.alreadyBeen;
+import static Version11.RobotPlayer.*;
 
 public class Pathfinding
 {
 
+    enum PathfindingState{bugNav2, bellmanFord}
+    static PathfindingState pathfindingState = PathfindingState.bellmanFord;
+    public static final int BUG_NAV_TURNS = 50;
+    public static int turnsUsingBugNav = 0;
+    public static final int MAX_BYTECODE_USAGE = 10000;
     //for bugNav2
     private static MapLocation previousDestination = null;
     private static HashSet<MapLocation> lineLocations = null;
@@ -19,6 +22,260 @@ public class Pathfinding
     private static int turnDirection = -1;
     private static Direction bugDirection;
 
+    public static final int[][] adjacencyMatrix5x5 = new int[][]{
+            {0,1,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+            {1,0,1,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+            {0,1,0,1,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+            {0,0,1,0,1,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+            {0,0,0,1,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+            {1,1,0,0,0,0,1,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0},
+            {1,1,1,0,0,1,0,1,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0},
+            {0,1,1,1,0,0,1,0,1,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0},
+            {0,0,1,1,1,0,0,1,0,1,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0},
+            {0,0,0,1,1,0,0,0,1,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0},
+            {0,0,0,0,0,1,1,0,0,0,0,1,0,0,0,1,1,0,0,0,0,0,0,0,0},
+            {0,0,0,0,0,1,1,1,0,0,1,0,1,0,0,1,1,1,0,0,0,0,0,0,0},
+            {0,0,0,0,0,0,1,1,1,0,0,1,0,1,0,0,1,1,1,0,0,0,0,0,0},
+            {0,0,0,0,0,0,0,1,1,1,0,0,1,0,1,0,0,1,1,1,0,0,0,0,0},
+            {0,0,0,0,0,0,0,0,1,1,0,0,0,1,0,0,0,0,1,1,0,0,0,0,0},
+            {0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,1,0,0,0,1,1,0,0,0},
+            {0,0,0,0,0,0,0,0,0,0,1,1,1,0,0,1,0,1,0,0,1,1,1,0,0},
+            {0,0,0,0,0,0,0,0,0,0,0,1,1,1,0,0,1,0,1,0,0,1,1,1,0},
+            {0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,0,0,1,0,1,0,0,1,1,1},
+            {0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,1,0,0,0,0,1,1},
+            {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,1,0,0,0},
+            {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,0,0,1,0,1,0,0},
+            {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,0,0,1,0,1,0},
+            {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,0,0,1,0,1},
+            {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,1,0}};
+
+    public static final int[][] neighborLookup5x5 = new int[][]{
+            {1,5,6},
+            {0,2,5,6,7},
+            {1,3,6,7,8},
+            {2,4,7,8,9},
+            {3,8,9},
+            {0,1,6,10,11},
+            {0,1,2,5,7,10,11,12},
+            {1,2,3,6,8,11,12,13},
+            {2,3,4,7,9,12,13,14},
+            {3,4,8,13,14},
+            {5,6,11,15,16},
+            {5,6,7,10,12,15,16,17},
+            {7,8,13,18,17,16,11,6},
+            {7,8,9,12,14,17,18,19},
+            {8,9,13,18,19},
+            {10,11,16,20,21},
+            {10,11,12,15,17,20,21,22},
+            {11,12,13,16,18,21,22,23},
+            {12,13,14,17,19,22,23,24},
+            {13,14,18,23,24},
+            {15,16,21},
+            {15,16,17,20,22},
+            {16,17,18,21,23},
+            {17,18,19,22,24},
+            {18,19,23}};
+    public static final int[] BELLMAN_FORD_NODE_RELAX_ORDER_5X5 = {7,6,11,16,17,18,13,8,3,2,1,0,5,10,15,20,21,22,23,24,19,14,9,4,3,2,1,0};
+
+    public static void combinedPathfinding(RobotController rc, MapLocation destination) throws GameActionException {
+        switch (pathfindingState)
+        {
+            case bellmanFord:
+                bellmanFord5x5(rc, destination);
+                updateAlreadyBeen(rc);
+                if(alreadyBeen.get(rc.getLocation()) > 2)
+                {
+                    alreadyBeen.clear();
+                    pathfindingState = PathfindingState.bugNav2;
+                }
+                break;
+            case bugNav2:
+                bugNav2(rc, destination);
+                turnsUsingBugNav++;
+                if(turnsUsingBugNav >= BUG_NAV_TURNS)
+                {
+                    turnsUsingBugNav = 0;
+                    pathfindingState = PathfindingState.bellmanFord;
+                }
+                break;
+        }
+        rc.setIndicatorString(pathfindingState.toString());
+    }
+
+    public static void bellmanFord5x5(RobotController rc, MapLocation destination) throws GameActionException
+    {
+        HashSet<Integer> unreachableNodes = new HashSet<>();
+        MapLocation center = rc.getLocation();
+        int[][] adjacencyMatrix = adjacencyMatrix5x5.clone();
+        int[] distanceMatrix = new int[25];
+        int count = 0;
+        for (int i = center.y + 2; i >= center.y - 2; i--) {
+            for (int j = center.x - 2; j <= center.x + 2; j++) {
+                MapLocation temp = new MapLocation(j,i);
+                if(InBounds(rc, temp) && rc.sensePassability(temp) && !rc.canSenseRobotAtLocation(temp))
+                {
+                    //distanceMatrix[count / 5][count % 5] = destination.distanceSquaredTo(new MapLocation(j, i)) * 100;
+                    distanceMatrix[count] = destination.distanceSquaredTo(new MapLocation(j, i)) * 100;
+                }else
+                {
+                    unreachableNodes.add(count);
+                    adjacencyMatrix[count] = new int[25];
+                }
+                count++;
+            }
+        }
+
+        if(rc.getID() == 12723)
+        {
+            System.out.println(printDistanceMatrix(rc.getLocation(),distanceMatrix));
+        }
+        int numIterations = 2;
+        for(int i = 0; i < numIterations ; i++)
+        {
+            for (int nodeIndex : BELLMAN_FORD_NODE_RELAX_ORDER_5X5)
+            {
+                if (unreachableNodes.contains(nodeIndex)) continue;
+                int min = distanceMatrix[nodeIndex];
+                for (int k = 0; k < neighborLookup5x5[nodeIndex].length; k++)
+                {
+                    int neighborIndex = neighborLookup5x5[nodeIndex][k];
+                    if (adjacencyMatrix[neighborIndex][nodeIndex] == 1)
+                    {
+                        if (distanceMatrix[neighborIndex] + 1 < min)
+                        {
+                            min = distanceMatrix[neighborIndex] + 1;
+                        }
+                    }
+                }
+                distanceMatrix[nodeIndex] = min;
+            }
+        }
+
+        if(rc.getID() == 12723)
+        {
+            System.out.println(printDistanceMatrix(rc.getLocation(),distanceMatrix));
+        }
+
+        int minDistance = Integer.MAX_VALUE;
+        int minIndex = 0;
+        for(int i = 0; i < 8; i++)
+        {
+            int nodeIndex = neighborLookup5x5[12][i];
+            if(adjacencyMatrix[nodeIndex][12] == 1)
+            {
+                if(distanceMatrix[nodeIndex] < minDistance)
+                {
+                    minDistance = distanceMatrix[nodeIndex];
+                    minIndex = i;
+                }
+            }
+        }
+        if(rc.canMove(RobotPlayer.directions[minIndex]))
+        {
+            rc.move(RobotPlayer.directions[minIndex]);
+        }
+
+    }
+
+    public static void bellmanFordFlag(RobotController rc, MapLocation destination, StolenFlag flag) throws GameActionException
+    {
+        HashSet<Integer> unreachableNodes = new HashSet<>();
+        MapLocation center = rc.getLocation();
+        int[][] adjacencyMatrix = adjacencyMatrix5x5.clone();
+        int[] distanceMatrix = new int[25];
+        int count = 0;
+        for (int i = center.y + 2; i >= center.y - 2; i--) {
+            for (int j = center.x - 2; j <= center.x + 2; j++) {
+                MapLocation temp = new MapLocation(j,i);
+                if(InBounds(rc, temp) && rc.sensePassability(temp) && temp.distanceSquaredTo(flag.location) > 9)
+                {
+                    //distanceMatrix[count / 5][count % 5] = destination.distanceSquaredTo(new MapLocation(j, i)) * 100;
+                    distanceMatrix[count] = destination.distanceSquaredTo(new MapLocation(j, i)) * 100;
+                }else
+                {
+                    unreachableNodes.add(count);
+                    adjacencyMatrix[count] = new int[25];
+                }
+                count++;
+            }
+        }
+
+
+        int numIterations = 2;
+        for(int i = 0; i < numIterations ; i++)
+        {
+            for (int nodeIndex : BELLMAN_FORD_NODE_RELAX_ORDER_5X5)
+            {
+                if (unreachableNodes.contains(nodeIndex)) continue;
+                int min = distanceMatrix[nodeIndex];
+                for (int k = 0; k < neighborLookup5x5[nodeIndex].length; k++)
+                {
+                    int neighborIndex = neighborLookup5x5[nodeIndex][k];
+                    if (adjacencyMatrix[neighborIndex][nodeIndex] == 1)
+                    {
+                        if (distanceMatrix[neighborIndex] + 1 < min)
+                        {
+                            min = distanceMatrix[neighborIndex] + 1;
+                        }
+                    }
+                }
+                distanceMatrix[nodeIndex] = min;
+            }
+        }
+
+        int minDistance = Integer.MAX_VALUE;
+        int minIndex = 0;
+        for(int i = 0; i < 8; i++)
+        {
+            int nodeIndex = neighborLookup5x5[12][i];
+            if(adjacencyMatrix[nodeIndex][12] == 1)
+            {
+                if(distanceMatrix[nodeIndex] < minDistance)
+                {
+                    minDistance = distanceMatrix[nodeIndex];
+                    minIndex = i;
+                }
+            }
+        }
+        if(rc.canMove(RobotPlayer.directions[minIndex]))
+        {
+            rc.move(RobotPlayer.directions[minIndex]);
+        }
+
+    }
+
+    public static String printDistanceMatrix(MapLocation center, int[] distanceMatrix) throws GameActionException {
+        String tempStr = "";
+        int count = 0;
+        for (int i = center.y + 2; i >= center.y - 2; i--) {
+            for (int j = center.x - 2; j <= center.x + 2; j++) {
+                tempStr += distanceMatrix[count] + " ";
+                count++;
+            }
+            tempStr += "\n";
+        }
+        return tempStr;
+    }
+
+    public static String printAdjacencyMatrix(int[][] matrix)
+    {
+        String tempStr = "";
+        for(int i = 0; i < matrix.length; i++)
+        {
+            tempStr += "\n";
+            for(int j = 0; j < matrix[i].length; j++)
+            {
+                tempStr += matrix[i][j] + " ";
+            }
+        }
+        return tempStr;
+    }
+
+    public static MapLocation nodeIndexToLocation5x5(int nodeIndex, MapLocation center)
+    {
+        MapLocation corner = new MapLocation(center.x - 2, center.y - 2);
+        return new MapLocation(corner.x + nodeIndex % 5, corner.y + 4 - nodeIndex / 5);
+    }
 
     public static Direction AStar(RobotController rc, MapLocation destination)
     {
@@ -117,7 +374,7 @@ public class Pathfinding
             MapInfo locationInfo = rc.senseMapInfo(tempLocation);
             // does the location have these features?
 
-            if (alreadyBeen.contains(tempLocation)) {
+            if (alreadyBeen.containsKey(tempLocation)) {
                 continue;
             }
             //FIX SECOND CONDITION!!
@@ -186,7 +443,7 @@ public class Pathfinding
             MapInfo locationInfo = rc.senseMapInfo(tempLocation);
             // does the location have these features?
 
-            if (alreadyBeen.contains(tempLocation))
+            if (alreadyBeen.containsKey(tempLocation))
             {
                 continue;
             }
@@ -217,6 +474,28 @@ public class Pathfinding
 
     public static void resetBasicPathfinding() {
         alreadyBeen.clear();
+    }
+
+    public static void bugNav0(RobotController rc, MapLocation destination) throws GameActionException {
+        Direction bugDir = rc.getLocation().directionTo(destination);
+        if(rc.canMove(bugDir))
+        {
+            rc.move(bugDir);
+        }
+        else
+        {
+            for(int i = 0; i < 8; i++)
+            {
+                if(rc.canMove(bugDir))
+                {
+                    rc.move(bugDir);
+                }
+                else
+                {
+                    bugDir = bugDir.rotateLeft();
+                }
+            }
+        }
     }
 
     public static void bugNav2(RobotController rc, MapLocation destination) throws GameActionException {
@@ -348,18 +627,18 @@ public class Pathfinding
         int r = d/2;
         if(dx > dy)
         {
-           for(int i = 0; i < d; i++)
-           {
-               locations.add(new MapLocation(x,y));
-               x += sx;
-               r += dy;
-               if(r >= dx)
-               {
-                   locations.add(new MapLocation(x,y));
-                   y += sy;
-                   r -= dx;
-               }
-           }
+            for(int i = 0; i < d; i++)
+            {
+                locations.add(new MapLocation(x,y));
+                x += sx;
+                r += dy;
+                if(r >= dx)
+                {
+                    locations.add(new MapLocation(x,y));
+                    y += sy;
+                    r -= dx;
+                }
+            }
         }else
         {
             for(int i = 0; i < d; i++)
@@ -379,24 +658,10 @@ public class Pathfinding
         return  locations;
     }
 
-    public static void combinedPathfinding(RobotController rc, MapLocation destination) throws GameActionException
-    {
-        if(destination == null) return;
-        if(rc.canSenseLocation(destination))
-        {
-            tryToMove(rc, destination);
-        }
-        else
-        {
-            bugNav2(rc, destination);
-        }
-    }
-
     public static boolean InBounds(RobotController rc, MapLocation location)
     {
-        MapInfo checkedLocation = RobotPlayer.seenLocations.get(location);
-        return location.x < rc.getMapWidth() && location.y < rc.getMapHeight() && location.x >= 0 && location.y >= 0
-                && (checkedLocation == null || checkedLocation.isPassable());
+        //MapInfo checkedLocation = RobotPlayer.seenLocations.get(location);
+        return location.x < rc.getMapWidth() && location.y < rc.getMapHeight() && location.x >= 0 && location.y >= 0;
     }
 }
 

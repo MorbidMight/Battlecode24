@@ -1,11 +1,11 @@
-package Version11;
+package Version12;
 
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
 
-import static Version11.RobotPlayer.findClosestSpawnLocation;
+import static Version12.RobotPlayer.findClosestSpawnLocation;
 public class Carrier {
     public static void runCarrier(RobotController rc) throws GameActionException {
         int index = Utilities.openFlagIndex(rc);

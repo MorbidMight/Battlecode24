@@ -1,4 +1,4 @@
-package Version11;
+package Version12;
 
 import battlecode.common.*;
 import battlecode.world.Trap;
@@ -6,9 +6,9 @@ import battlecode.world.Trap;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import static Version11.RobotPlayer.findCoordinatedBroadcastFlag;
-import static Version11.Utilities.averageRobotLocation;
-import static Version11.Utilities.bestHeal;
+import static Version12.RobotPlayer.findCoordinatedBroadcastFlag;
+import static Version12.Utilities.averageRobotLocation;
+import static Version12.Utilities.bestHeal;
 
 enum states{
     defense, attack, heist, escort, flagCarrier
@@ -220,7 +220,7 @@ public class Soldier
         else{
             rc.setIndicatorString("i'm not moving");
             if(lastSeenEnemy != null){
-                Pathfinding.bellmanFord5x5(rc, lastSeenEnemy.getLocation());
+                Pathfinding.combinedPathfinding(rc, lastSeenEnemy.getLocation());
             }
             else if(knowFlag(rc)){
                 MapLocation target = findCoordinatedActualFlag(rc);

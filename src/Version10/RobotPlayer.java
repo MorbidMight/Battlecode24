@@ -31,14 +31,10 @@ static MapLocation builderBombCircleCenter = null;
     static final int MoatRadius = 9; //Radius of the moat squared
 
     static HashMap<MapLocation, MapInfo> seenLocations = new HashMap<MapLocation, MapInfo>();
-
-    static HashSet<MapLocation> alreadyBeen = new HashSet<>();
-
-
+    static HashMap<MapLocation, Integer> alreadyBeen = new HashMap<MapLocation, Integer>();
     static final int BombFrequency = 5; //number of turns between defensive builders trying to place a mine
 
     //used for flag placer only
-    static ArrayList<MapLocation> prevDestinations;
 
     //Ratios for spawning
     public static final int NUMSOLDIERS = 38;
@@ -116,6 +112,7 @@ static MapLocation builderBombCircleCenter = null;
                 if (turnCount == 1) {//first turn fill the spawn location into the array ranked
                     SpawnLocations = rc.getAllySpawnLocations();
                 }
+
                 if (!rc.isSpawned()) {
                     //get our robots out onto the map
                     if (turnCount <= 10) {
@@ -142,9 +139,9 @@ static MapLocation builderBombCircleCenter = null;
                             }
                         }
                         if (role == null) {
-                            int numSoldiers = rc.readSharedArray(52);
-                            int numBuilders = rc.readSharedArray(53);
-                            int numHealers = rc.readSharedArray(54);
+                             int numSoldiers = rc.readSharedArray(52);
+                             int numBuilders = rc.readSharedArray(53);
+                             int numHealers = rc.readSharedArray(54);
                             if ((numSoldiers + numBuilders + numHealers) == 0) {
                                 role = roles.builder;
                                 incrementBuilder(rc);
@@ -201,13 +198,13 @@ static MapLocation builderBombCircleCenter = null;
                             }
                         }
                     }
-                } else {
+                } else
+                {
                     RobotInfo[] enemyRobots = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
                     Utilities.recordEnemies(rc, enemyRobots);
                     Utilities.clearObsoleteEnemies(rc);
                     Utilities.verifyFlagLocations(rc);
                     Utilities.writeFlagLocations(rc);
-                    alreadyBeen.add(rc.getLocation());
                     //write our own flag locations to shared array at start
                     if (turnCount == 2 && rc.senseNearbyFlags(-1)[0].getLocation().equals(rc.getLocation())) {
                         int toPush = Version3.Utilities.convertLocationToInt(rc.getLocation());
@@ -227,7 +224,6 @@ static MapLocation builderBombCircleCenter = null;
                         switch (role) {
                             case builder:
                                 Builder.runBuilder(rc);
-                                rc.setIndicatorString("builder");
                                 break;
                             case explorer:
                                 Explorer.runExplorer(rc);
@@ -253,21 +249,7 @@ static MapLocation builderBombCircleCenter = null;
                         Carrier.runCarrier(rc);
                     }
 //                    if(rc.getRoundNum() < 10)
-//                        MoveAwayFromSpawnLocations(rc);
-                    switch (role) {
-                        case builder:
-                            rc.setIndicatorDot(rc.getLocation(), 0, 0, 255);
-                            break;
-                        case explorer:
-                            rc.setIndicatorDot(rc.getLocation(), 255, 0, 0);
-                            break;
-                        case healer:
-                            rc.setIndicatorDot(rc.getLocation(), 0, 255, 0);
-                            break;
-                        case soldier:
-                            rc.setIndicatorDot(rc.getLocation(), 255, 0, 0);
-                            break;
-                    }
+//                        MoveAwayFromSpawnLocations(rc);*/
                 }
 
             } catch (GameActionException e) {
@@ -547,5 +529,13 @@ static MapLocation builderBombCircleCenter = null;
             else
                 return 2;
         }
+    }
+    public static void updateAlreadyBeen(RobotController rc)
+    {
+        MapLocation location = rc.getLocation();
+        if(alreadyBeen.containsKey(rc.getLocation()))
+            alreadyBeen.put(location, alreadyBeen.get(location) + 1);
+        else
+            alreadyBeen.put(location, 1);
     }
 }
