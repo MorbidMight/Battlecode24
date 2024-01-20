@@ -127,7 +127,6 @@ public class Pathfinding
 
         if(rc.getID() == 12723)
         {
-            System.out.println(printDistanceMatrix(rc.getLocation(),distanceMatrix));
         }
         int numIterations = 2;
         for(int i = 0; i < numIterations ; i++)
@@ -153,7 +152,6 @@ public class Pathfinding
 
         if(rc.getID() == 12723)
         {
-            System.out.println(printDistanceMatrix(rc.getLocation(),distanceMatrix));
         }
 
         int minDistance = Integer.MAX_VALUE;
@@ -311,7 +309,6 @@ public class Pathfinding
             numNull += HandleDirection(rc, destination, nodes, unvisitedNodes, visitedNodes, currentNode, new MapLocation(currentNode.location.x + 1, currentNode.location.y - 1));
             numNull += HandleDirection(rc, destination, nodes, unvisitedNodes, visitedNodes, currentNode, new MapLocation(currentNode.location.x - 1, currentNode.location.y - 1));
 
-            System.out.println("num null " + numNull + " " +(Clock.getBytecodeNum() - bytecodesStart));
 
         }while(!unvisitedNodes.isEmpty() && !currentNode.location.equals(destination));
 
@@ -321,7 +318,6 @@ public class Pathfinding
             finalNode = finalNode.previousNode;
         }
 
-        //System.out.println("Num Visited Nodes: " + numVisitedNodes + " Bytecodes Taken: ");
         return rc.getLocation().directionTo(finalNode.location);
     }
 

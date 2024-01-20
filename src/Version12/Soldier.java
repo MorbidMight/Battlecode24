@@ -6,7 +6,7 @@ import battlecode.world.Trap;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import static Version12.RobotPlayer.findCoordinatedBroadcastFlag;
+import static Version12.RobotPlayer.*;
 import static Version12.Utilities.averageRobotLocation;
 import static Version12.Utilities.bestHeal;
 
@@ -20,6 +20,8 @@ public class Soldier
     static RobotInfo[] enemyRobotsAttackRange;
     static RobotInfo[] allyRobots;
     static RobotInfo[] allyRobotsHealRange;
+    //looks at enemies in a radius of sqrt(10), the radius from which any enemy can move and then attack you in the same turn
+    static RobotInfo[] potentialEnemiesAttackRange;
     static FlagInfo[] nearbyFlagsAlly;
     static FlagInfo[] nearbyFlagsEnemy;
     static RobotInfo escortee;
@@ -48,7 +50,7 @@ public class Soldier
             lastSeenEnemy = null;
         }
         state = trySwitchState(rc);
-        //rc.setIndicatorString(state.toString());
+        rc.setIndicatorString(state.toString());
         switch (state)
         {
             case defense:
@@ -148,6 +150,7 @@ public class Soldier
         enemyRobotsAttackRange = rc.senseNearbyRobots(GameConstants.ATTACK_RADIUS_SQUARED, rc.getTeam().opponent());
         allyRobots = rc.senseNearbyRobots(GameConstants.VISION_RADIUS_SQUARED, rc.getTeam());
         allyRobotsHealRange = rc.senseNearbyRobots(GameConstants.HEAL_RADIUS_SQUARED, rc.getTeam());
+        potentialEnemiesAttackRange = rc.senseNearbyRobots(10, rc.getTeam().opponent());
         nearbyFlagsAlly = rc.senseNearbyFlags(-1, rc.getTeam());
         nearbyFlagsEnemy = rc.senseNearbyFlags(-1, rc.getTeam().opponent());
     }
@@ -189,6 +192,8 @@ public class Soldier
         }
     }
     public static void attack(RobotController rc) throws GameActionException{
+        if(rc.isActionReady() && enemyRobotsAttackRange.length == 0 && enemyRobots.length > 0 && rc.canFill(rc.getLocation().add(rc.getLocation().directionTo(enemyRobots[0].getLocation()))))
+            rc.fill(rc.getLocation().add(rc.getLocation().directionTo(enemyRobots[0].getLocation())));
         // a temporary macro band-aid that calls this more often only to reap the part that removes flags we can see aren't there
         findCoordinatedActualFlag(rc);
         if(enemyRobots.length > 6 && enemyRobotsAttackRange.length > 1){
@@ -252,6 +257,8 @@ public class Soldier
         FlagInfo targetFlag = nearbyFlagsEnemy[0];
         if(rc.canPickupFlag(targetFlag.getLocation())) {
             rc.pickupFlag(targetFlag.getLocation());
+            Pathfinding.tryToMove(rc, findClosestSpawnLocation(rc));
+            state = states.flagCarrier;
         }
         else {
             if(rc.getLocation().distanceSquaredTo(targetFlag.getLocation()) < 9) {
@@ -307,7 +314,7 @@ public class Soldier
         //**CHANGE
         StolenFlag temp = new StolenFlag(escortee.getLocation(), false);
         //**CHANGE ^^^
-        Pathfinding.bellmanFordFlag(rc, temp.location, temp);
+        Pathfinding.tryToMoveTowardsFlag(rc, temp.location, temp);
         if(rc.isActionReady()) {
             updateInfo(rc);
             attemptHealCarrier(rc);
@@ -321,15 +328,15 @@ public class Soldier
         engagementMicroSquare[] options = new engagementMicroSquare[8];
         populateMicroArray(rc, options);
         engagementMicroSquare best = null;
-        int highScore = Integer.MIN_VALUE;
+        float highScore = Integer.MIN_VALUE;
         for(engagementMicroSquare square : options){
             if(square.passable){
-                int score;
+                float score;
                 if(square.enemiesAttackRangedX == 1){
-                    score = 1000000 + square.enemiesVisiondX + square.alliesVisiondX + square.alliesHealRangedX;
+                    score = 1000000 + square.enemiesVisiondX + square.alliesVisiondX + square.alliesHealRangedX + square.potentialEnemiesAttackRangedX * -1;
                 }
                 else {
-                    score = square.enemiesAttackRangedX * 5 + square.enemiesVisiondX * 4 + square.alliesVisiondX + square.alliesHealRangedX * 2;
+                    score = square.enemiesAttackRangedX * 4 + square.enemiesVisiondX * 4 + square.alliesVisiondX * 1.5f + square.alliesHealRangedX + square.potentialEnemiesAttackRangedX;
                 }
                 if(score > highScore){
                     highScore = score;
@@ -350,10 +357,10 @@ public class Soldier
         engagementMicroSquare[] options = new engagementMicroSquare[8];
         populateMicroArray(rc, options);
         engagementMicroSquare best = null;
-        int highScore = Integer.MIN_VALUE;
+        float highScore = Integer.MIN_VALUE;
         for(engagementMicroSquare square : options){
             if(square.passable){
-                int score = square.enemiesAttackRangedX * -8 + square.enemiesVisiondX * 2 + square.alliesVisiondX * 2 + square.alliesHealRangedX * 2;
+                float score = square.enemiesAttackRangedX * -6 + square.enemiesVisiondX * 0.5f + square.alliesVisiondX + square.alliesHealRangedX + square.potentialEnemiesAttackRangedX * -3;
                 if(score > highScore){
                     highScore = score;
                     best = square;
@@ -390,10 +397,12 @@ public class Soldier
                     RobotInfo[] allyRobotsNewLoc = rc.senseNearbyRobots(tempSquare, -1, rc.getTeam());
                     RobotInfo[] enemyRobotsAttackRangeNewLoc = rc.senseNearbyRobots(tempSquare, GameConstants.ATTACK_RADIUS_SQUARED, rc.getTeam().opponent());
                     RobotInfo[] allyRobotsHealRangeNewLoc = rc.senseNearbyRobots(tempSquare, GameConstants.HEAL_RADIUS_SQUARED, rc.getTeam());
+                    RobotInfo[] potentialEnemiesAttackRangeNewLoc = rc.senseNearbyRobots(tempSquare, 10, rc.getTeam().opponent());
                     options[index].enemiesVisiondX = enemyRobotsNewLoc.length - enemyRobots.length;
                     options[index].enemiesAttackRangedX = enemyRobotsAttackRangeNewLoc.length - enemyRobotsAttackRange.length;
                     options[index].alliesVisiondX = allyRobotsNewLoc.length - allyRobots.length;
                     options[index].alliesHealRangedX = allyRobotsHealRangeNewLoc.length - allyRobotsHealRange.length;
+                    options[index].potentialEnemiesAttackRangedX = potentialEnemiesAttackRangeNewLoc.length - potentialEnemiesAttackRange.length;
                 }
             } else {
                 options[index] = new engagementMicroSquare(false);
@@ -415,10 +424,12 @@ public class Soldier
                     RobotInfo[] allyRobotsNewLoc = rc.senseNearbyRobots(tempSquare, -1, rc.getTeam());
                     RobotInfo[] enemyRobotsAttackRangeNewLoc = rc.senseNearbyRobots(tempSquare, GameConstants.ATTACK_RADIUS_SQUARED, rc.getTeam().opponent());
                     RobotInfo[] allyRobotsHealRangeNewLoc = rc.senseNearbyRobots(tempSquare, GameConstants.HEAL_RADIUS_SQUARED, rc.getTeam());
+                    RobotInfo[] potentialEnemiesAttackRangeNewLoc = rc.senseNearbyRobots(tempSquare, 10, rc.getTeam().opponent());
                     options[index].enemiesVisiondX = enemyRobotsNewLoc.length - enemyRobots.length;
                     options[index].enemiesAttackRangedX = enemyRobotsAttackRangeNewLoc.length - enemyRobotsAttackRange.length;
                     options[index].alliesVisiondX = allyRobotsNewLoc.length - allyRobots.length;
                     options[index].alliesHealRangedX = allyRobotsHealRangeNewLoc.length - allyRobotsHealRange.length;
+                    options[index].potentialEnemiesAttackRangedX = potentialEnemiesAttackRangeNewLoc.length - potentialEnemiesAttackRange.length;
                 }
             } else {
                 options[index] = new engagementMicroSquare(false);
@@ -440,10 +451,12 @@ public class Soldier
                     RobotInfo[] allyRobotsNewLoc = rc.senseNearbyRobots(tempSquare, -1, rc.getTeam());
                     RobotInfo[] enemyRobotsAttackRangeNewLoc = rc.senseNearbyRobots(tempSquare, GameConstants.ATTACK_RADIUS_SQUARED, rc.getTeam().opponent());
                     RobotInfo[] allyRobotsHealRangeNewLoc = rc.senseNearbyRobots(tempSquare, GameConstants.HEAL_RADIUS_SQUARED, rc.getTeam());
+                    RobotInfo[] potentialEnemiesAttackRangeNewLoc = rc.senseNearbyRobots(tempSquare, 10, rc.getTeam().opponent());
                     options[index].enemiesVisiondX = enemyRobotsNewLoc.length - enemyRobots.length;
                     options[index].enemiesAttackRangedX = enemyRobotsAttackRangeNewLoc.length - enemyRobotsAttackRange.length;
                     options[index].alliesVisiondX = allyRobotsNewLoc.length - allyRobots.length;
                     options[index].alliesHealRangedX = allyRobotsHealRangeNewLoc.length - allyRobotsHealRange.length;
+                    options[index].potentialEnemiesAttackRangedX = potentialEnemiesAttackRangeNewLoc.length - potentialEnemiesAttackRange.length;
                 }
             } else {
                 options[index] = new engagementMicroSquare(false);
@@ -463,6 +476,14 @@ public class Soldier
             }
         }
     }
+
+    //attempts to heal lowest health nearby ally, but only does so if they are below the given health
+    public static void attemptHealConditional(RobotController rc, int maxHealth) throws GameActionException{
+        RobotInfo toHeal = bestHeal(rc, allyRobotsHealRange);
+        if(toHeal != null && rc.canHeal(toHeal.getLocation()) && toHeal.health < maxHealth)
+            rc.heal(toHeal.getLocation());
+    }
+
     public static void attemptHeal(RobotController rc) throws GameActionException{
         RobotInfo toHeal = bestHeal(rc, allyRobotsHealRange);
         if(toHeal != null && rc.canHeal(toHeal.getLocation()))
@@ -597,6 +618,7 @@ class engagementMicroSquare{
     public int enemiesVisiondX;
     public int alliesVisiondX;
     public int alliesHealRangedX;
+    public int potentialEnemiesAttackRangedX;
     public engagementMicroSquare(){
 
     }

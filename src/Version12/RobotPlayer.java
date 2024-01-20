@@ -214,7 +214,7 @@ static MapLocation builderBombCircleCenter = null;
                     Utilities.writeFlagLocations(rc);
                     //write our own flag locations to shared array at start
                     if (turnCount == 2 && rc.senseNearbyFlags(-1)[0].getLocation().equals(rc.getLocation())) {
-                        int toPush = Version3.Utilities.convertLocationToInt(rc.getLocation());
+                        int toPush = Version12.Utilities.convertLocationToInt(rc.getLocation());
                         if (rc.readSharedArray(0) == 0) {
                             rc.writeSharedArray(0, toPush);
                             rc.setIndicatorString("look at me!!");
@@ -227,7 +227,7 @@ static MapLocation builderBombCircleCenter = null;
                         }
                     }
 
-                    if (!rc.hasFlag()) {
+                    if (rc.isSpawned()) {
                         switch (role) {
                             case builder:
                                 Builder.runBuilder(rc);
