@@ -5,11 +5,14 @@ import battlecode.common.*;
 import static Version13.RobotPlayer.*;
 
 public class Explorer {
+    static MapLocation dam;
     public static void runExplorer(RobotController rc) throws GameActionException {
         if (!rc.isSpawned()) {
             return;
         }
-        if (isAdjacentToDam(rc) && turnCount < 150 && rc.senseMapInfo(rc.getLocation()).getTrapType() == TrapType.NONE) {
+        if(dam == null)
+            dam = canSeeDam(rc);
+        if (isAdjacentToDam(rc) && turnCount < 120 && rc.senseMapInfo(rc.getLocation()).getTrapType() == TrapType.NONE) {
             Task bomb = new Task(rc.getLocation(), false);
             int index = Utilities.openTaskIndex(rc);
             bomb.arrayIndex = index;
@@ -19,22 +22,30 @@ public class Explorer {
         }
         //condense on dam for when it breaks
         MapLocation centerOfMap = new MapLocation(rc.getMapWidth() / 2, rc.getMapHeight() / 2);
-        MapLocation nearestEnemyFlag = findClosestBroadcastFlags(rc);
-        if (rc.getRoundNum() >= 198){
-            if(isAdjacentToDam(rc)){
-                if(rc.canMove(rc.getLocation().directionTo(centerOfMap).opposite())){
-                    rc.move(rc.getLocation().directionTo(centerOfMap).opposite());
-                }
-            }
-        }
-        else if (rc.getRoundNum() > 150 && rc.getRoundNum() < 198) {
+        //MapLocation nearestEnemyFlag = findClosestBroadcastFlags(rc);
+//        if (rc.getRoundNum() >= 198){
+//            if(isAdjacentToDam(rc)){
+//                if(rc.canMove(rc.getLocation().directionTo(centerOfMap).opposite())){
+//                    rc.move(rc.getLocation().directionTo(centerOfMap).opposite());
+//                }
+//            }
+//        }
+        if (rc.getRoundNum() > 120) {
             if (rc.canFill(rc.adjacentLocation(rc.getLocation().directionTo(centerOfMap)))) {
                 rc.fill(rc.adjacentLocation(rc.getLocation().directionTo(centerOfMap)));
             }
+            boolean isAdjacent = isAdjacentToDam(rc);
             //if adjacent to dam, maybe try and lay a trap?
-            if (isAdjacentToDam(rc) && rc.canBuild(TrapType.STUN, rc.getLocation()))
+            if (isAdjacent && rc.canBuild(TrapType.STUN, rc.getLocation()))
                 rc.build(TrapType.STUN, rc.getLocation());
-            Pathfinding.combinedPathfinding(rc, centerOfMap);
+            if(!isAdjacent) {
+                if(dam != null){
+                    Pathfinding.bellmanFord5x5(rc, dam);
+                }
+                else {
+                    Pathfinding.bellmanFord5x5(rc, centerOfMap);
+                }
+            }
         } else {
             //tries to get neary crumbs
             MapLocation[] nearbyCrumbs = rc.senseNearbyCrumbs(-1);
@@ -88,5 +99,14 @@ public class Explorer {
                 return true;
         }
         return false;
+    }
+    //returns a spot on the dam if can see dam, otherwise returns null
+    public static MapLocation canSeeDam(RobotController rc) throws GameActionException{
+        MapInfo[] spaces = rc.senseNearbyMapInfos(GameConstants.VISION_RADIUS_SQUARED);
+        for(MapInfo space : spaces){
+            if(space.isDam())
+                return space.getMapLocation();
+        }
+        return null;
     }
 }
