@@ -1,9 +1,5 @@
-package Version12;
+package Version13;
 
-import Version12.Pathfinding;
-import Version12.RobotPlayer;
-import Version12.Soldier;
-import Version12.Utilities;
 import battlecode.common.*;
 
 import java.util.ArrayList;

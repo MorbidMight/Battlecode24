@@ -1,14 +1,12 @@
-package Version12;
+package Version13;
 
 import battlecode.common.*;
-import battlecode.world.Trap;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
-import static Version12.RobotPlayer.*;
-import static Version12.Utilities.averageRobotLocation;
-import static Version12.Utilities.bestHeal;
+import static Version13.RobotPlayer.*;
+import static Version13.Utilities.averageRobotLocation;
+import static Version13.Utilities.bestHeal;
 
 enum states{
     defense, attack, heist, escort, flagCarrier
