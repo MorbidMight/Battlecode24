@@ -520,6 +520,26 @@ static MapLocation builderBombCircleCenter = null;
         }
     }
 
+    public static MapLocation findClosestActualFlag(RobotController rc) throws GameActionException {
+        ArrayList<MapLocation> locations = new ArrayList<>();
+        for(int i = 3; i < 6; i++){
+            if(rc.readSharedArray(i) != 0){
+                locations.add(Utilities.convertIntToLocation(rc.readSharedArray(i)));
+            }
+        }
+        if(locations.isEmpty())
+            return null;
+        int closestDist = rc.getLocation().distanceSquaredTo(locations.get(0));
+        int closestIndex = 0;
+        for (int i = 1; i < locations.size(); i++) {
+            if (rc.getLocation().distanceSquaredTo(locations.get(i)) < closestDist) {
+                closestIndex = i;
+                closestDist = rc.getLocation().distanceSquaredTo(locations.get(i));
+            }
+        }
+        return locations.get(closestIndex);
+    }
+
     public static void incrementSoldier(RobotController rc) throws GameActionException {
         rc.writeSharedArray(52, rc.readSharedArray(52) + 1);
     }

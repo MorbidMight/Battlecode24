@@ -234,8 +234,8 @@ public class Soldier
                 Pathfinding.bellmanFord5x5(rc, lastSeenEnemy.getLocation());
             }
             else if(knowFlag(rc)){
-                MapLocation target = findCoordinatedActualFlag(rc);
-
+                //MapLocation target = findCoordinatedActualFlag(rc);
+                MapLocation target = findClosestActualFlag(rc);
                 if(target != null){
                     if(rc.canFill(rc.getLocation().add(rc.getLocation().directionTo(target)))){
                         rc.fill(rc.getLocation().add(rc.getLocation().directionTo(target)));
@@ -244,7 +244,8 @@ public class Soldier
                 }
             }
             else{
-                MapLocation target = findCoordinatedBroadcastFlag(rc);
+                //MapLocation target = findCoordinatedBroadcastFlag(rc);
+                MapLocation target = findClosestBroadcastFlags(rc);
                 if(target != null) {
                     if (rc.canFill(rc.getLocation().add(rc.getLocation().directionTo(target)))) {
                         rc.fill(rc.getLocation().add(rc.getLocation().directionTo(target)));
@@ -298,14 +299,14 @@ public class Soldier
         }
         if(enemyRobots.length != 0){
             //try to dig behind us to maybe slow them down
-            if(enemyRobotsAttackRange.length == 0 && Utilities.isBetween(rc.getLocation(), escortee.getLocation(), averageRobotLocation(enemyRobots))){
+//            if(enemyRobotsAttackRange.length == 0 && Utilities.isBetween(rc.getLocation(), escortee.getLocation(), averageRobotLocation(enemyRobots))){
 //                if(rc.canDig(rc.getLocation().add(rc.getLocation().directionTo(averageRobotLocation(enemyRobots))))){
 //                    rc.dig(rc.getLocation().add(rc.getLocation().directionTo(averageRobotLocation(enemyRobots))));
 //                }
-                if(rc.canBuild(TrapType.WATER, rc.getLocation().add(rc.getLocation().directionTo(averageRobotLocation(enemyRobots))))){
-                    rc.build(TrapType.WATER, rc.getLocation().add(rc.getLocation().directionTo(averageRobotLocation(enemyRobots))));
-                }
-            }
+//                if(rc.canBuild(TrapType.WATER, rc.getLocation().add(rc.getLocation().directionTo(averageRobotLocation(enemyRobots))))){
+//                    rc.build(TrapType.WATER, rc.getLocation().add(rc.getLocation().directionTo(averageRobotLocation(enemyRobots))));
+//                }
+//            }
             //try and move into attack range of any nearby enemies
             if (rc.isActionReady() || ((allyRobots.length - enemyRobots.length > 6) &&  enemyRobotsAttackRange.length == 0)){
                 runMicroAttack(rc);
