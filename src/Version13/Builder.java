@@ -18,6 +18,10 @@ public class Builder {
     final static int ROUND_TO_BUILD_EXPLOSION_BORDER = 0;
 static int radius = 0;
     public static void runBuilder(RobotController rc) throws GameActionException {
+        if(turnCount > 1000 && !SittingOnFlag) {
+            role = roles.offensiveBuilder;
+            return;
+        }
         radius = 7;
 
         if (builderBombCircleCenter == null && rc.getRoundNum() >= 3) {
@@ -91,8 +95,11 @@ static int radius = 0;
                     rc.setIndicatorString("Dont come help me!");
                     isActive = false;
                     countSinceSeenFlag++;
-                    if(countSinceSeenFlag > 100){
-                        role = roles.soldier;
+                    if(countSinceSeenFlag > 70){
+                        if(rc.getCrumbs() > 500)
+                            role = roles.offensiveBuilder;
+                        else
+                            role = roles.soldier;
                         return;
                     }
                     int locInt = Utilities.convertLocationToInt(rc.getLocation());
