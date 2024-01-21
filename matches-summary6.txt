@@ -1,0 +1,7 @@
+|  | examplefuncsplayer |
+| :---: | :---: |
+| DefaultSmall | Tied (2000, 2000) |
+| DefaultMedium | Tied (2000, 2000) |
+| DefaultLarge | Tied (2000, 2000) |
+| DefaultHuge | Tied (2000, 2000) |
+
