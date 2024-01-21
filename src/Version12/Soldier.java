@@ -210,7 +210,8 @@ public class Soldier
         if(rc.isActionReady() && enemyRobotsAttackRange.length == 0 && enemyRobots.length > 0 && rc.canFill(rc.getLocation().add(rc.getLocation().directionTo(enemyRobots[0].getLocation()))))
             rc.fill(rc.getLocation().add(rc.getLocation().directionTo(enemyRobots[0].getLocation())));
         // a temporary macro band-aid that calls this more often only to reap the part that removes flags we can see aren't there
-        if(enemyRobots.length > 6 && enemyRobotsAttackRange.length > 1){
+        if(enemyRobots.length > 6 && enemyRobotsAttackRange.length == 0){
+            System.out.println("I built a bomb");
             TrapType toBeBuilt = TrapType.STUN;
             if(rc.canBuild(toBeBuilt, rc.getLocation().add(rc.getLocation().directionTo(averageRobotLocation(enemyRobots))))){
                 rc.build(toBeBuilt, rc.getLocation().add(rc.getLocation().directionTo(averageRobotLocation(enemyRobots))));
