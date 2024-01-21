@@ -34,7 +34,7 @@ public class Explorer {
             //if adjacent to dam, maybe try and lay a trap?
             if (isAdjacentToDam(rc) && rc.canBuild(TrapType.STUN, rc.getLocation()))
                 rc.build(TrapType.STUN, rc.getLocation());
-            Pathfinding.bugNav2(rc, centerOfMap);
+            Pathfinding.combinedPathfinding(rc, centerOfMap);
         } else {
             //tries to get neary crumbs
             MapLocation[] nearbyCrumbs = rc.senseNearbyCrumbs(-1);
@@ -50,7 +50,7 @@ public class Explorer {
                 if (!targetLoc.isPassable() && rc.canFill(targetCrumb)) {
                     rc.fill(targetCrumb);
                 }
-                Pathfinding.bugNav2(rc, targetCrumb);
+                Pathfinding.bellmanFord5x5(rc, targetCrumb);
             }
             //explore a new area
             else if (turnsSinceLocGen == 20 || turnsSinceLocGen == 0 || rc.getLocation().equals(targetLoc)) {
@@ -58,7 +58,7 @@ public class Explorer {
                 Pathfinding.bugNav2(rc, targetLoc);
                 turnsSinceLocGen = 1;
             } else {
-                Pathfinding.bugNav2(rc, targetLoc);
+                Pathfinding.combinedPathfinding(rc, targetLoc);
                 turnsSinceLocGen++;
             }
         }
