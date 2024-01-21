@@ -4,6 +4,7 @@ import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
 import battlecode.common.RobotInfo;
+import battlecode.common.Direction;
 
 public class Utilities {
 
@@ -337,5 +338,12 @@ public class Utilities {
     public static MapLocation randomMapLocation(RobotController rc)
     {
         return new MapLocation(RobotPlayer.rng.nextInt(rc.getMapWidth()), RobotPlayer.rng.nextInt(rc.getMapHeight()));
+    }
+
+    //returns if you are between loc1 and loc2
+    public static boolean isBetween(MapLocation self, MapLocation loc1, MapLocation loc2){
+        Direction direction1 = self.directionTo(loc1);
+        Direction direction2 = self.directionTo(loc2);
+        return direction1 == direction2.opposite() || direction1 == direction2.opposite().rotateLeft() || direction1 == direction2.opposite().rotateRight();
     }
 }

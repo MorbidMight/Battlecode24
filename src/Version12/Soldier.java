@@ -26,7 +26,7 @@ public class Soldier
     static FlagInfo[] nearbyFlagsEnemy;
     static RobotInfo escortee;
     static RobotInfo lastSeenEnemy;
-    final static float STOLEN_FLAG_CONSTANT = 2.5f;
+    final static float STOLEN_FLAG_CONSTANT = 2.6f;
     //records the enemies seen last round, to create the stunlist
     static ArrayList<RobotInfo> seenLast = new ArrayList<>();
     //keeps track of enemies we can see this round that we could see last round, which haven't moved
@@ -40,6 +40,8 @@ public class Soldier
             lastSeenEnemy = null;
             return;
         }
+        //used to update which flags we know are real or not
+        findCoordinatedActualFlag(rc);
         tryGetCrumbs(rc);
         updateInfo(rc);
         //createStunList();
@@ -48,6 +50,10 @@ public class Soldier
             lastSeenEnemy = enemyRobots[0];
         else if(lastSeenEnemy != null && rc.canSenseRobotAtLocation(lastSeenEnemy.getLocation())){
             lastSeenEnemy = null;
+        }
+        if(nearbyFlagsEnemy.length != 0 && rc.canPickupFlag(nearbyFlagsEnemy[0].getLocation())){
+            rc.pickupFlag(nearbyFlagsEnemy[0].getLocation());
+            state = states.flagCarrier;
         }
         state = trySwitchState(rc);
         rc.setIndicatorString(state.toString());
@@ -159,20 +165,29 @@ public class Soldier
         attemptAttack(rc);
         if(closestFlag != null){
             if(rc.canSenseLocation(closestFlag.location)){
-                if (rc.isActionReady() || ((allyRobots.length - enemyRobots.length > 6) &&  enemyRobotsAttackRange.length == 0)){
-                    runMicroAttack(rc);
+                Pathfinding.bellmanFord5x5(rc, closestFlag.location);
+                if(rc.isActionReady()) {
                     updateInfo(rc);
-                    if(enemyRobots.length > 6 && enemyRobotsAttackRange.length > 1){
-                        if(rc.canBuild(TrapType.STUN, rc.getLocation().add(rc.getLocation().directionTo(averageRobotLocation(enemyRobots))))){
-                            rc.build(TrapType.STUN, rc.getLocation().add(rc.getLocation().directionTo(averageRobotLocation(enemyRobots))));
-                        }
-                    }
                     attemptAttack(rc);
                     attemptHeal(rc);
                 }
-                else{
-                    Pathfinding.combinedPathfinding(rc, closestFlag.location);
-                }
+//                if (rc.isActionReady()){
+//                    runMicroAttack(rc);
+//                    updateInfo(rc);
+//                    if(enemyRobots.length > 6 && enemyRobotsAttackRange.length > 1){
+//                        if(rc.canBuild(TrapType.STUN, rc.getLocation().add(rc.getLocation().directionTo(averageRobotLocation(enemyRobots))))){
+//                            rc.build(TrapType.STUN, rc.getLocation().add(rc.getLocation().directionTo(averageRobotLocation(enemyRobots))));
+//                        }
+//                    }
+//                    attemptAttack(rc);
+//                    attemptHeal(rc);
+//                }
+//                else{
+//                    if(rc.canFill(rc.getLocation().add(rc.getLocation().directionTo(closestFlag.location)))){
+//                        rc.fill(rc.getLocation().add(rc.getLocation().directionTo(closestFlag.location)));
+//                    }
+//                    Pathfinding.bellmanFord5x5(rc, closestFlag.location);
+//                }
 //                //try and kite backwards, wait for cooldown to refresh
 //                else {
 //                    runMicroKite(rc);
@@ -195,8 +210,8 @@ public class Soldier
         if(rc.isActionReady() && enemyRobotsAttackRange.length == 0 && enemyRobots.length > 0 && rc.canFill(rc.getLocation().add(rc.getLocation().directionTo(enemyRobots[0].getLocation()))))
             rc.fill(rc.getLocation().add(rc.getLocation().directionTo(enemyRobots[0].getLocation())));
         // a temporary macro band-aid that calls this more often only to reap the part that removes flags we can see aren't there
-        findCoordinatedActualFlag(rc);
-        if(enemyRobots.length > 6 && enemyRobotsAttackRange.length > 1){
+        if(enemyRobots.length > 6 && enemyRobotsAttackRange.length == 0){
+            System.out.println("I built a bomb");
             TrapType toBeBuilt = TrapType.STUN;
             if(rc.canBuild(toBeBuilt, rc.getLocation().add(rc.getLocation().directionTo(averageRobotLocation(enemyRobots))))){
                 rc.build(toBeBuilt, rc.getLocation().add(rc.getLocation().directionTo(averageRobotLocation(enemyRobots))));
@@ -231,8 +246,8 @@ public class Soldier
                 Pathfinding.bellmanFord5x5(rc, lastSeenEnemy.getLocation());
             }
             else if(knowFlag(rc)){
-                MapLocation target = findCoordinatedActualFlag(rc);
-
+                //MapLocation target = findCoordinatedActualFlag(rc);
+                MapLocation target = findClosestActualFlag(rc);
                 if(target != null){
                     if(rc.canFill(rc.getLocation().add(rc.getLocation().directionTo(target)))){
                         rc.fill(rc.getLocation().add(rc.getLocation().directionTo(target)));
@@ -241,7 +256,8 @@ public class Soldier
                 }
             }
             else{
-                MapLocation target = findCoordinatedBroadcastFlag(rc);
+                //MapLocation target = findCoordinatedBroadcastFlag(rc);
+                MapLocation target = findClosestBroadcastFlags(rc);
                 if(target != null) {
                     if (rc.canFill(rc.getLocation().add(rc.getLocation().directionTo(target)))) {
                         rc.fill(rc.getLocation().add(rc.getLocation().directionTo(target)));
@@ -257,10 +273,13 @@ public class Soldier
         FlagInfo targetFlag = nearbyFlagsEnemy[0];
         if(rc.canPickupFlag(targetFlag.getLocation())) {
             rc.pickupFlag(targetFlag.getLocation());
-            Pathfinding.tryToMove(rc, findClosestSpawnLocation(rc));
+            Pathfinding.combinedPathfinding(rc, findClosestSpawnLocation(rc));
             state = states.flagCarrier;
         }
         else {
+            if(enemyRobotsAttackRange.length == 0 && rc.canFill(rc.getLocation().add(rc.getLocation().directionTo(targetFlag.getLocation())))){
+                rc.fill(rc.getLocation().add(rc.getLocation().directionTo(targetFlag.getLocation())));
+            }
             if(rc.getLocation().distanceSquaredTo(targetFlag.getLocation()) < 9) {
                 if (rc.canMove(rc.getLocation().directionTo(targetFlag.getLocation()))) {
                     rc.move(rc.getLocation().directionTo(targetFlag.getLocation()));
@@ -291,11 +310,23 @@ public class Soldier
             attemptAttack(rc);
         }
         if(enemyRobots.length != 0){
+            //try to dig behind us to maybe slow them down
+            if(enemyRobotsAttackRange.length == 0 && Utilities.isBetween(rc.getLocation(), escortee.getLocation(), averageRobotLocation(enemyRobots))){
+                if(rc.canBuild(TrapType.STUN, rc.getLocation().add(rc.getLocation().directionTo(averageRobotLocation(enemyRobots))))){
+                    rc.build(TrapType.STUN, rc.getLocation().add(rc.getLocation().directionTo(averageRobotLocation(enemyRobots))));
+                }
+//                if(rc.canDig(rc.getLocation().add(rc.getLocation().directionTo(averageRobotLocation(enemyRobots))))){
+//                    rc.dig(rc.getLocation().add(rc.getLocation().directionTo(averageRobotLocation(enemyRobots))));
+//                }
+//                if(rc.canBuild(TrapType.WATER, rc.getLocation().add(rc.getLocation().directionTo(averageRobotLocation(enemyRobots))))){
+//                    rc.build(TrapType.WATER, rc.getLocation().add(rc.getLocation().directionTo(averageRobotLocation(enemyRobots))));
+//                }
+            }
             //try and move into attack range of any nearby enemies
             if (rc.isActionReady() || ((allyRobots.length - enemyRobots.length > 6) &&  enemyRobotsAttackRange.length == 0)){
                 runMicroAttack(rc);
                 updateInfo(rc);
-                if(enemyRobots.length > 6 && enemyRobotsAttackRange.length > 1){
+                if(enemyRobots.length > 6 && enemyRobotsAttackRange.length == 0){
                     if(rc.canBuild(TrapType.STUN, rc.getLocation().add(rc.getLocation().directionTo(averageRobotLocation(enemyRobots))))){
                         rc.build(TrapType.STUN, rc.getLocation().add(rc.getLocation().directionTo(averageRobotLocation(enemyRobots))));
                     }
@@ -310,6 +341,12 @@ public class Soldier
                 attemptAttack(rc);
                 attemptHeal(rc);
             }
+        }
+        if(rc.isMovementReady()){
+            //**CHANGE
+            StolenFlag temp = new StolenFlag(escortee.getLocation(), false);
+            //**CHANGE ^^^
+            Pathfinding.tryToMoveTowardsFlag(rc, temp.location, temp);
         }
         //**CHANGE
         StolenFlag temp = new StolenFlag(escortee.getLocation(), false);
