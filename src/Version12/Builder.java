@@ -13,6 +13,8 @@ import static Version12.RobotPlayer.*;
 //Otherwise it wanders around and places traps wherever
 //in addition if a teammate current has a flag they don't place any bombs so that the bomb carrier can live.
 public class Builder {
+    //used for flagsitters
+    static boolean isActive = true;
     final static int ROUND_TO_BUILD_EXPLOSION_BORDER = 0;
 static int radius = 0;
     public static void runBuilder(RobotController rc) throws GameActionException {
@@ -70,12 +72,24 @@ static int radius = 0;
                     }
                 }
             }
+            if(isActive)
+                UpdateExplosionBorder2(rc);
+            RobotInfo toHeal = Utilities.bestHeal(rc, rc.senseNearbyRobots(GameConstants.HEAL_RADIUS_SQUARED, rc.getTeam()));
+            if(toHeal != null && rc.canHeal(toHeal.getLocation())){
+                rc.heal(toHeal.getLocation());
+            }
+            if(rc.isActionReady()){
+                MapLocation toAttack = lowestHealth(rc.senseNearbyRobots(GameConstants.ATTACK_RADIUS_SQUARED, rc.getTeam().opponent()));
+                if(toAttack != null && rc.canAttack(toAttack))
+                    rc.attack(toAttack);
+            }
             //sitting where flag should be, but cant see any flags...
             //if we still cant see a flag 50 turns later, then until we do see one we're gonna assume this location should essentially be shut down
             if (rc.senseNearbyFlags(-1, rc.getTeam()).length == 0) {
                 //shut down this spawn location for now
                 if (countSinceSeenFlag > 40) {
                     rc.setIndicatorString("Dont come help me!");
+                    isActive = false;
                     int locInt = Utilities.convertLocationToInt(rc.getLocation());
                     if(rc.readSharedArray(0) == locInt){
                         Utilities.editBitSharedArray(rc, 1018, false);
@@ -91,6 +105,7 @@ static int radius = 0;
                     countSinceSeenFlag++;
                 }
             } else {
+                isActive = true;
                 countSinceSeenFlag = 0;
                 int locInt = Utilities.convertLocationToInt(rc.getLocation());
                 if(rc.readSharedArray(0) == locInt){
@@ -131,7 +146,6 @@ static int radius = 0;
                 }
                 countSinceLocked++;
             }
-                UpdateExplosionBorder2(rc);
 
         } else if (/*t != null*/ false) {//there is a task to do
             Pathfinding.bugNav2(rc, t.location);

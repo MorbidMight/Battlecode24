@@ -171,6 +171,9 @@ public class Soldier
                     attemptHeal(rc);
                 }
                 else{
+                    if(rc.canFill(rc.getLocation().add(rc.getLocation().directionTo(closestFlag.location)))){
+                        rc.fill(rc.getLocation().add(rc.getLocation().directionTo(closestFlag.location)));
+                    }
                     Pathfinding.combinedPathfinding(rc, closestFlag.location);
                 }
 //                //try and kite backwards, wait for cooldown to refresh
@@ -257,10 +260,13 @@ public class Soldier
         FlagInfo targetFlag = nearbyFlagsEnemy[0];
         if(rc.canPickupFlag(targetFlag.getLocation())) {
             rc.pickupFlag(targetFlag.getLocation());
-            Pathfinding.tryToMove(rc, findClosestSpawnLocation(rc));
+            Pathfinding.combinedPathfinding(rc, findClosestSpawnLocation(rc));
             state = states.flagCarrier;
         }
         else {
+            if(enemyRobotsAttackRange.length == 0 && rc.canFill(rc.getLocation().add(rc.getLocation().directionTo(targetFlag.getLocation())))){
+                rc.fill(rc.getLocation().add(rc.getLocation().directionTo(targetFlag.getLocation())));
+            }
             if(rc.getLocation().distanceSquaredTo(targetFlag.getLocation()) < 9) {
                 if (rc.canMove(rc.getLocation().directionTo(targetFlag.getLocation()))) {
                     rc.move(rc.getLocation().directionTo(targetFlag.getLocation()));
