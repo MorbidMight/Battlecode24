@@ -42,6 +42,9 @@ public class Soldier
         findCoordinatedActualFlag(rc);
         tryGetCrumbs(rc);
         updateInfo(rc);
+        for(FlagInfo flag : nearbyFlagsEnemy){
+            checkRecordEnemyFlag(rc, flag);
+        }
         //createStunList();
         //make sure we store the location of at least one enemy, so we know where one was if we need it next turn and can't see any
         if(enemyRobots.length > 0)
@@ -120,7 +123,6 @@ public class Soldier
         }
 
         for (FlagInfo flag : nearbyFlagsEnemy) {
-            checkRecordEnemyFlag(rc, flag);
             if (flag.isPickedUp()) {
                 escortee = rc.senseRobotAtLocation(flag.getLocation());
                 return states.escort;
@@ -222,7 +224,7 @@ public class Soldier
         }
         if(enemyRobots.length != 0) {
             //try and move into attack range of any nearby enemies
-            if ((rc.isActionReady() || ((allyRobots.length - enemyRobots.length > 6) &&  enemyRobotsAttackRange.length == 0) && rc.getHealth() > 100)){
+            if ((rc.isActionReady() || ((allyRobots.length - enemyRobots.length > 6) && enemyRobotsAttackRange.length == 0)) && rc.getHealth() > 150){
                 runMicroAttack(rc);
                 updateInfo(rc);
                 attemptAttack(rc);
@@ -238,13 +240,15 @@ public class Soldier
         }
         //if we cant see any enemies, run macro not micro - move towards known flags, and if not possible, move towards broadcast flags
         else{
+            MapLocation target = null;
             if(lastSeenEnemy != null){
                 //Pathfinding.combinedPathfinding(rc, lastSeenEnemy.getLocation());
                 Pathfinding.bellmanFord5x5(rc, lastSeenEnemy.getLocation());
+                return;
             }
             else if(knowFlag(rc)){
                 //MapLocation target = findCoordinatedActualFlag(rc);
-                MapLocation target = findClosestActualFlag(rc);
+                target = findClosestActualFlag(rc);
                 if(target != null){
                     if(rc.canFill(rc.getLocation().add(rc.getLocation().directionTo(target)))){
                         rc.fill(rc.getLocation().add(rc.getLocation().directionTo(target)));
@@ -254,7 +258,7 @@ public class Soldier
             }
             else{
                 //MapLocation target = findCoordinatedBroadcastFlag(rc);
-                MapLocation target = findClosestBroadcastFlags(rc);
+                target = findClosestBroadcastFlags(rc);
                 if(target != null) {
                     if (rc.canFill(rc.getLocation().add(rc.getLocation().directionTo(target)))) {
                         rc.fill(rc.getLocation().add(rc.getLocation().directionTo(target)));
@@ -262,6 +266,8 @@ public class Soldier
                     Pathfinding.combinedPathfinding(rc, findCoordinatedBroadcastFlag(rc));
                 }
             }
+//            if(target == null) System.out.println(rc.getLocation() + " : lame");
+//            else System.out.println(rc.getLocation() + " reporting to " + target);
         }
     }
 
@@ -375,10 +381,10 @@ public class Soldier
             if(square.passable){
                 float score;
                 if(square.enemiesAttackRangedX == 1){
-                    score = 1000000 + square.enemiesVisiondX + square.alliesVisiondX + square.potentialEnemiesAttackRangedX * -1;
+                    score = 1000000 + square.enemiesVisiondX + square.alliesVisiondX + +square.alliesHealRangedX + square.potentialEnemiesAttackRangedX * -2;
                 }
                 else {
-                    score = square.enemiesAttackRangedX * 4 + square.enemiesVisiondX * 4 + square.alliesVisiondX * 1.5f + square.potentialEnemiesAttackRangedX;
+                    score = square.enemiesAttackRangedX * 4 + square.enemiesVisiondX * 3 + square.alliesVisiondX + square.alliesHealRangedX + square.potentialEnemiesAttackRangedX * -1;
                 }
                 if(score > highScore){
                     highScore = score;
@@ -402,7 +408,7 @@ public class Soldier
         float highScore = Integer.MIN_VALUE;
         for(engagementMicroSquare square : options){
             if(square.passable){
-                float score = square.enemiesAttackRangedX * -6 + square.enemiesVisiondX * 0.5f + square.alliesVisiondX + square.alliesHealRangedX + square.potentialEnemiesAttackRangedX * -3;
+                float score = square.enemiesAttackRangedX * -6 + square.enemiesVisiondX * 0.5f + square.alliesVisiondX + square.alliesHealRangedX + square.potentialEnemiesAttackRangedX * -3 + square.hasTrap.compareTo(false) * 1.5f;
                 if(score > highScore){
                     highScore = score;
                     best = square;
@@ -435,6 +441,8 @@ public class Soldier
                 MapInfo tempInfo = rc.senseMapInfo(tempSquare);
                 options[index].passable = (tempInfo.isPassable() && rc.senseRobotAtLocation(tempSquare) == null);
                 if (options[index].passable) {
+                    if(rc.senseMapInfo(tempSquare).getTrapType() != null)
+                        options[index].hasTrap = true;
                     RobotInfo[] enemyRobotsNewLoc = rc.senseNearbyRobots(tempSquare, -1, rc.getTeam().opponent());
                     RobotInfo[] allyRobotsNewLoc = rc.senseNearbyRobots(tempSquare, -1, rc.getTeam());
                     RobotInfo[] enemyRobotsAttackRangeNewLoc = rc.senseNearbyRobots(tempSquare, GameConstants.ATTACK_RADIUS_SQUARED, rc.getTeam().opponent());
@@ -462,6 +470,8 @@ public class Soldier
                 MapInfo tempInfo = rc.senseMapInfo(tempSquare);
                 options[index].passable = (tempInfo.isPassable() && rc.senseRobotAtLocation(tempSquare) == null);
                 if (options[index].passable) {
+                    if(rc.senseMapInfo(tempSquare).getTrapType() != null)
+                        options[index].hasTrap = true;
                     RobotInfo[] enemyRobotsNewLoc = rc.senseNearbyRobots(tempSquare, -1, rc.getTeam().opponent());
                     RobotInfo[] allyRobotsNewLoc = rc.senseNearbyRobots(tempSquare, -1, rc.getTeam());
                     RobotInfo[] enemyRobotsAttackRangeNewLoc = rc.senseNearbyRobots(tempSquare, GameConstants.ATTACK_RADIUS_SQUARED, rc.getTeam().opponent());
@@ -489,6 +499,8 @@ public class Soldier
                 MapInfo tempInfo = rc.senseMapInfo(tempSquare);
                 options[index].passable = (tempInfo.isPassable() && rc.senseRobotAtLocation(tempSquare) == null);
                 if (options[index].passable) {
+                    if(rc.senseMapInfo(tempSquare).getTrapType() != null)
+                        options[index].hasTrap = true;
                     RobotInfo[] enemyRobotsNewLoc = rc.senseNearbyRobots(tempSquare, -1, rc.getTeam().opponent());
                     RobotInfo[] allyRobotsNewLoc = rc.senseNearbyRobots(tempSquare, -1, rc.getTeam());
                     RobotInfo[] enemyRobotsAttackRangeNewLoc = rc.senseNearbyRobots(tempSquare, GameConstants.ATTACK_RADIUS_SQUARED, rc.getTeam().opponent());
@@ -508,7 +520,7 @@ public class Soldier
     }
 
     public static void attemptAttack(RobotController rc) throws GameActionException {
-        MapLocation toAttack = RobotPlayer.lowestHealth(enemyRobotsAttackRange);
+        MapLocation toAttack = lowestHealth(enemyRobotsAttackRange);
         if (toAttack != null && rc.canAttack(toAttack)) {
             rc.attack(toAttack);
         }
@@ -616,34 +628,46 @@ public class Soldier
         MapLocation enemyFlag2 = Utilities.convertIntToLocation(index4);
         MapLocation enemyFlag3 = Utilities.convertIntToLocation(index5);
         MapLocation nullChecker = new MapLocation(0,0);
+        MapLocation toReturn = null;
         if(index3 != 0){
             //we can see it, but couldnt sense any flags earlier... its been removed
-            if(rc.canSenseLocation(enemyFlag1)) {
+            if(rc.canSenseLocation(enemyFlag1) && !seesFlag(enemyFlag1)) {
                 eraseEnemyFlag(rc, enemyFlag1);
             }
             else{
-                return enemyFlag1;
+                toReturn = enemyFlag1;
             }
         }
-        else if(index4 != 0){
+        if(index4 != 0){
             //we can see it, but couldnt sense any flags earlier... its been removed
-            if(rc.canSenseLocation(enemyFlag2)) {
+            if(rc.canSenseLocation(enemyFlag2) && !seesFlag(enemyFlag2)) {
                 eraseEnemyFlag(rc, enemyFlag2);
             }
             else{
-                return enemyFlag2;
+                if(toReturn == null)
+                    toReturn = enemyFlag2;
             }
         }
-        else if(index5 != 0){
+        if(index5 != 0){
             //we can see it, but couldnt sense any flags earlier... its been removed
-            if(rc.canSenseLocation(enemyFlag3)) {
+            if(rc.canSenseLocation(enemyFlag3) && !seesFlag(enemyFlag3)) {
                 eraseEnemyFlag(rc, enemyFlag3);
             }
             else{
-                return enemyFlag3;
+                if(toReturn == null)
+                    toReturn = enemyFlag3;
             }
         }
-        return null;
+        return toReturn;
+    }
+
+    //used to check if we can see an enemy flag
+    public static boolean seesFlag(MapLocation flag){
+        for(FlagInfo f : nearbyFlagsEnemy){
+            if(f.getLocation().equals(flag))
+                return true;
+        }
+        return false;
     }
 
 
@@ -661,20 +685,24 @@ class engagementMicroSquare{
     public int alliesVisiondX;
     public int alliesHealRangedX;
     public int potentialEnemiesAttackRangedX;
+    public Boolean hasTrap;
     public engagementMicroSquare(){
 
     }
     public engagementMicroSquare(boolean p){
         passable = p;
+        hasTrap = false;
     }
     public engagementMicroSquare(int x, int y){
         location = new MapLocation(x, y);
+        hasTrap = false;
     }
     public engagementMicroSquare(boolean passability, int x, int y){
         passable = passability;
         this.enemiesAttackRangedX = 0;
         this.enemiesVisiondX = 0;
         location = new MapLocation(x, y);
+        hasTrap = false;
 
     }
 //    public engagementMicroSquare(boolean passabillity, int enemiesAttackRangedX, int enemiesVisiondX, int x, int y){
