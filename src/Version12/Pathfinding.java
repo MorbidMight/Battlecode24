@@ -104,6 +104,10 @@ public class Pathfinding
 
     public static void bellmanFord5x5(RobotController rc, MapLocation destination) throws GameActionException
     {
+        if(turnCount % 10 == 0)
+        {
+            alreadyBeen.clear();
+        }
         HashSet<Integer> unreachableNodes = new HashSet<>();
         MapLocation center = rc.getLocation();
         int[][] adjacencyMatrix = adjacencyMatrix5x5.clone();
@@ -151,11 +155,6 @@ public class Pathfinding
             }
         }
 
-        if(rc.getID() == 12723)
-        {
-            //System.out.println(printDistanceMatrix(rc.getLocation(),distanceMatrix));
-        }
-
         int minDistance = Integer.MAX_VALUE;
         int minIndex = 0;
         for(int i = 0; i < 8; i++)
@@ -187,10 +186,10 @@ public class Pathfinding
         for (int i = center.y + 2; i >= center.y - 2; i--) {
             for (int j = center.x - 2; j <= center.x + 2; j++) {
                 MapLocation temp = new MapLocation(j,i);
-                if(InBounds(rc, temp) && rc.sensePassability(temp) && temp.distanceSquaredTo(flag.location) > 9)
+                if(InBounds(rc, temp) && rc.sensePassability(temp) && !rc.canSenseRobotAtLocation(temp) && temp.distanceSquaredTo(flag.location) > 6)
                 {
                     //distanceMatrix[count / 5][count % 5] = destination.distanceSquaredTo(new MapLocation(j, i)) * 100;
-                    distanceMatrix[count] = destination.distanceSquaredTo(new MapLocation(j, i)) * 100;
+                    distanceMatrix[count] = destination.distanceSquaredTo(temp) * 100;
                 }else
                 {
                     unreachableNodes.add(count);
@@ -237,7 +236,7 @@ public class Pathfinding
                 }
             }
         }
-        if(rc.canMove(RobotPlayer.directions[minIndex]))
+        if(rc.canMove(RobotPlayer.directions[minIndex]) )
         {
             rc.move(RobotPlayer.directions[minIndex]);
         }
@@ -514,10 +513,6 @@ public class Pathfinding
             rc.setIndicatorDot(ml, 255,0,0);
         }*/
 
-        if(RobotPlayer.turnCount % 10 == 0)
-        {
-            bugState = 0;
-        }
         if(bugState == 0)
         {
             bugDirection = rc.getLocation().directionTo(destination);
@@ -537,79 +532,19 @@ public class Pathfinding
             if(lineLocations.contains(rc.getLocation()) && rc.getLocation().distanceSquaredTo(destination) < obstacleStartDistance)
             {
                 bugState = 0;
-                turnDirection = -1;
             }
-
-            if(turnDirection == -1)
+            for (int i = 0; i < 9; i++)
             {
-                Direction tempBugDirectionRight = bugDirection;
-                for(int i = 0; i < 8; i++)
+                if (rc.canMove(bugDirection))
                 {
-                    if(rc.canMove(tempBugDirectionRight))
-                    {
-                        //rc.move(bugDirection);
-                        tempBugDirectionRight = tempBugDirectionRight.rotateRight();
-                        break;
-                    }
-                    else
-                    {
-                        tempBugDirectionRight = bugDirection.rotateLeft();
-                    }
+                    rc.move(bugDirection);
+                    bugDirection = bugDirection.rotateRight();
+                    bugDirection = bugDirection.rotateRight();
+                    break;
                 }
-                Direction tempBugDirectionLeft = bugDirection;
-                for(int i = 0; i < 8; i++)
+                else
                 {
-                    if(rc.canMove(tempBugDirectionLeft))
-                    {
-                        //rc.move(bugDirection);
-                        tempBugDirectionLeft = tempBugDirectionLeft.rotateLeft();
-                        break;
-                    }
-                    else
-                    {
-                        tempBugDirectionLeft = tempBugDirectionLeft.rotateLeft();
-                    }
-                }
-                if(rc.getLocation().add(tempBugDirectionRight).distanceSquaredTo(destination)
-                        < rc.getLocation().add(tempBugDirectionLeft).distanceSquaredTo(destination))
-                {
-                    turnDirection = 0;
-                }else
-                {
-                    turnDirection = 1;
-                }
-            }
-
-            if(turnDirection == 0)
-            {
-                for (int i = 0; i < 8; i++)
-                {
-                    if (rc.canMove(bugDirection))
-                    {
-                        rc.move(bugDirection);
-                        bugDirection = bugDirection.rotateRight();
-                        break;
-                    }
-                    else
-                    {
-                        bugDirection = bugDirection.rotateLeft();
-                    }
-                }
-            }
-            else
-            {
-                for (int i = 0; i < 8; i++)
-                {
-                    if (rc.canMove(bugDirection))
-                    {
-                        rc.move(bugDirection);
-                        bugDirection = bugDirection.rotateLeft();
-                        break;
-                    }
-                    else
-                    {
-                        bugDirection = bugDirection.rotateRight();
-                    }
+                    bugDirection = bugDirection.rotateLeft();
                 }
             }
         }

@@ -314,7 +314,7 @@ public class Soldier
         //**CHANGE
         StolenFlag temp = new StolenFlag(escortee.getLocation(), false);
         //**CHANGE ^^^
-        Pathfinding.tryToMoveTowardsFlag(rc, temp.location, temp);
+        Pathfinding.bellmanFordFlag(rc, temp.location, temp);
         if(rc.isActionReady()) {
             updateInfo(rc);
             attemptHealCarrier(rc);
