@@ -99,7 +99,7 @@ public class Pathfinding
                 }
                 break;
         }
-        rc.setIndicatorString(pathfindingState.toString());
+        //rc.setIndicatorString(pathfindingState.toString());
     }
 
     public static void bellmanFord5x5(RobotController rc, MapLocation destination) throws GameActionException

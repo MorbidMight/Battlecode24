@@ -90,6 +90,11 @@ static int radius = 0;
                 if (countSinceSeenFlag > 40) {
                     rc.setIndicatorString("Dont come help me!");
                     isActive = false;
+                    countSinceSeenFlag++;
+                    if(countSinceSeenFlag > 100){
+                        role = roles.offensiveBuilder;
+                        return;
+                    }
                     int locInt = Utilities.convertLocationToInt(rc.getLocation());
                     if(rc.readSharedArray(0) == locInt){
                         Utilities.editBitSharedArray(rc, 1018, false);
