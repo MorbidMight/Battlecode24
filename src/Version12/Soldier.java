@@ -26,7 +26,7 @@ public class Soldier
     static FlagInfo[] nearbyFlagsEnemy;
     static RobotInfo escortee;
     static RobotInfo lastSeenEnemy;
-    final static float STOLEN_FLAG_CONSTANT = 2.5f;
+    final static float STOLEN_FLAG_CONSTANT = 2.6f;
     //records the enemies seen last round, to create the stunlist
     static ArrayList<RobotInfo> seenLast = new ArrayList<>();
     //keeps track of enemies we can see this round that we could see last round, which haven't moved
@@ -49,8 +49,11 @@ public class Soldier
         else if(lastSeenEnemy != null && rc.canSenseRobotAtLocation(lastSeenEnemy.getLocation())){
             lastSeenEnemy = null;
         }
+        if(nearbyFlagsEnemy.length != 0 && rc.canPickupFlag(nearbyFlagsEnemy[0].getLocation())){
+            rc.pickupFlag(nearbyFlagsEnemy[0].getLocation());
+            state = states.flagCarrier;
+        }
         state = trySwitchState(rc);
-        rc.setIndicatorString(state.toString());
         switch (state)
         {
             case defense:
