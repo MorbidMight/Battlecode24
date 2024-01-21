@@ -92,7 +92,7 @@ static int radius = 0;
                     isActive = false;
                     countSinceSeenFlag++;
                     if(countSinceSeenFlag > 100){
-                        role = roles.offensiveBuilder;
+                        role = roles.soldier;
                         return;
                     }
                     int locInt = Utilities.convertLocationToInt(rc.getLocation());
