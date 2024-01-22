@@ -57,6 +57,8 @@ static MapLocation builderBombCircleCenter = null;
     static int turnsSinceLocGen = 0;
     static MapLocation targetLoc;
 
+    static int turnOrder = 0;
+
     /**
      * A random number generator.
      * We will use this RNG to make some random moves. The Random class is provided by the java.util.Random
@@ -93,6 +95,9 @@ static MapLocation builderBombCircleCenter = null;
     @SuppressWarnings("unused")
     public static void run(RobotController rc) throws GameActionException {
         rng = new Random(rc.getID());
+        turnOrder = rc.readSharedArray(62);
+        rc.writeSharedArray(62,turnOrder + 1);
+        rc.setIndicatorString(turnOrder + "");
         while (true) {
             //changes explorers to soldiers at round 200
             if (rc.getRoundNum() == GameConstants.SETUP_ROUNDS && role == roles.explorer) {
@@ -115,6 +120,10 @@ static MapLocation builderBombCircleCenter = null;
 
             // Try/catch blocks stop unhandled exceptions, which cause your robot to explode.
             try {
+                if(turnOrder == 0)
+                {
+                    HeadquarterDuck.runHeadquarterDuck(rc);
+                }
                 // Make sure you spawn your robot in before you attempt to take any actions!
                 // Robots not spawned in do not have vision of any tiles and cannot perform any actions.
                 if (turnCount == 1) {//first turn fill the spawn location into the array ranked

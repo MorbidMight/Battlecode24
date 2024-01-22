@@ -19,7 +19,6 @@ public class Pathfinding
     private static int turnDirection = -1;
     private static Direction bugDirection;
 
-
     public static Direction AStar(RobotController rc, MapLocation destination)
     {
         HashMap<MapLocation, AStarNode> nodes = new HashMap<>();

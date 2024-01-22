@@ -4,6 +4,7 @@ import battlecode.common.*;
 
 public class Utilities {
 
+
     /*Edits the Nth bit from the shared array and sets it to value.
     bitIndex must be between 0 and 1023.
     */
@@ -348,4 +349,5 @@ public class Utilities {
         Direction direction2 = self.directionTo(loc2);
         return direction1 == direction2.opposite() || direction1 == direction2.opposite().rotateLeft() || direction1 == direction2.opposite().rotateRight();
     }
+
 }

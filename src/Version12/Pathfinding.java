@@ -240,8 +240,9 @@ public class Pathfinding
         {
             rc.move(RobotPlayer.directions[minIndex]);
         }
-
     }
+
+
 
     public static String printDistanceMatrix(MapLocation center, int[] distanceMatrix) throws GameActionException {
         String tempStr = "";
@@ -497,7 +498,9 @@ public class Pathfinding
         }
     }
 
-    public static void bugNav2(RobotController rc, MapLocation destination) throws GameActionException {
+    public static void bugNav2(RobotController rc, MapLocation destination) throws GameActionException
+    {
+        StolenFlag flag = Utilities.getClosestFlag(rc);
         if(destination == null)
         {
             return;

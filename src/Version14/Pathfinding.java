@@ -131,10 +131,6 @@ public class Pathfinding
             }
         }
 
-        if(rc.getID() == 12723)
-        {
-            //System.out.println(printDistanceMatrix(rc.getLocation(),distanceMatrix));
-        }
         int numIterations = 2;
         for(int i = 0; i < numIterations ; i++)
         {
@@ -190,7 +186,7 @@ public class Pathfinding
         for (int i = center.y + 2; i >= center.y - 2; i--) {
             for (int j = center.x - 2; j <= center.x + 2; j++) {
                 MapLocation temp = new MapLocation(j,i);
-                if(InBounds(rc, temp) && rc.sensePassability(temp) && !rc.canSenseRobotAtLocation(temp) && temp.distanceSquaredTo(flag.location) > 6)
+                if(InBounds(rc, temp) && rc.sensePassability(temp) && !rc.canSenseRobotAtLocation(temp) && temp.distanceSquaredTo(flag.location) > 5)
                 {
                     //distanceMatrix[count / 5][count % 5] = destination.distanceSquaredTo(new MapLocation(j, i)) * 100;
                     distanceMatrix[count] = destination.distanceSquaredTo(temp) * 100;
@@ -244,7 +240,73 @@ public class Pathfinding
         {
             rc.move(RobotPlayer.directions[minIndex]);
         }
+    }
 
+    public static void bellmanFordFlagCarrier(RobotController rc, MapLocation destination) throws GameActionException
+    {
+        HashSet<Integer> unreachableNodes = new HashSet<>();
+        MapLocation center = rc.getLocation();
+        int[][] adjacencyMatrix = adjacencyMatrix5x5.clone();
+        int[] distanceMatrix = new int[25];
+        int count = 0;
+        for (int i = center.y + 2; i >= center.y - 2; i--) {
+            for (int j = center.x - 2; j <= center.x + 2; j++) {
+                MapLocation temp = new MapLocation(j,i);
+                if(InBounds(rc, temp) && rc.sensePassability(temp) && !rc.canSenseRobotAtLocation(temp))
+                {
+                    distanceMatrix[count] = destination.distanceSquaredTo(temp) * 100;
+                }
+                else
+                {
+                    unreachableNodes.add(count);
+                    adjacencyMatrix[count] = new int[25];
+                }
+                count++;
+            }
+        }
+
+
+        int numIterations = 2;
+        for(int i = 0; i < numIterations ; i++)
+        {
+            for (int nodeIndex : BELLMAN_FORD_NODE_RELAX_ORDER_5X5)
+            {
+                if (unreachableNodes.contains(nodeIndex)) continue;
+                int min = distanceMatrix[nodeIndex];
+                for (int k = 0; k < neighborLookup5x5[nodeIndex].length; k++)
+                {
+                    int neighborIndex = neighborLookup5x5[nodeIndex][k];
+                    if (adjacencyMatrix[neighborIndex][nodeIndex] == 1)
+                    {
+                        if (distanceMatrix[neighborIndex] + 1 < min)
+                        {
+                            min = distanceMatrix[neighborIndex] + 1;
+                        }
+                    }
+                }
+                distanceMatrix[nodeIndex] = min;
+            }
+        }
+
+        int minDistance = Integer.MAX_VALUE;
+        int minIndex = 0;
+        for(int i = 0; i < 8; i++)
+        {
+            int nodeIndex = neighborLookup5x5[12][i];
+            if(adjacencyMatrix[nodeIndex][12] == 1)
+            {
+                if(distanceMatrix[nodeIndex] < minDistance)
+                {
+                    minDistance = distanceMatrix[nodeIndex];
+                    minIndex = nodeIndex;
+                }
+            }
+        }
+        MapLocation tempLocation = nodeIndexToLocation5x5(minIndex, center);
+        if(rc.canDropFlag(nodeIndexToLocation5x5(minIndex, center)))
+        {
+            rc.dropFlag(tempLocation);
+        }
     }
 
     public static String printDistanceMatrix(MapLocation center, int[] distanceMatrix) throws GameActionException {
