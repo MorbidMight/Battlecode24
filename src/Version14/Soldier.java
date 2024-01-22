@@ -256,7 +256,7 @@ public class Soldier
                 attemptAttack(rc);
                 attemptHeal(rc);
             }
-            else if(totalHealth(enemyRobots) / (totalHealth(allyRobots) + rc.getHealth()) > 2/* || rc.getHealth() < 150*/){
+            else if(totalHealth(enemyRobots) / (totalHealth(allyRobots) + rc.getHealth()) > 2 && enemyRobots.length > allyRobots.length + 1/* || rc.getHealth() < 150*/){
                 retreat(rc);
                 attemptAttack(rc);
                 attemptHeal(rc);
@@ -302,8 +302,8 @@ public class Soldier
                 }
             }
             else{
-                //MapLocation target = findCoordinatedBroadcastFlag(rc);
-                target = findClosestBroadcastFlags(rc);
+                target = findCoordinatedBroadcastFlag(rc);
+                //target = findClosestBroadcastFlags(rc);
                 if(target != null && rc.getLocation().distanceSquaredTo(target) < 6){
                     invalidBroadcasts.add(target);
                 }
@@ -437,7 +437,7 @@ public class Soldier
                     score = 1000000 + square.enemiesVisiondX + square.alliesVisiondX * -1 + +square.alliesHealRangedX * -1 + square.potentialEnemiesAttackRangedX * -3 + square.hasTrap.compareTo(false) * 1.0f;
                 }
                 else {
-                    score = square.enemiesAttackRangedX * 4 + square.enemiesVisiondX * 3 + square.alliesVisiondX * -1 + square.alliesHealRangedX + square.potentialEnemiesAttackRangedX * -1+ square.hasTrap.compareTo(false) * 1.0f;
+                    score = square.enemiesAttackRangedX * 4 + square.enemiesVisiondX * 3 + square.alliesVisiondX * -1 + square.alliesHealRangedX + square.potentialEnemiesAttackRangedX * -1.0f+ square.hasTrap.compareTo(false) * 1.0f;
                 }
                 if(score > highScore){
                     highScore = score;
