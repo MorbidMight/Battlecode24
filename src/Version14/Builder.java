@@ -133,7 +133,7 @@ static int radius = 0;
             if (countSinceLocked != 0) {
                 countSinceLocked++;
             }
-            if (countSinceLocked >= 20) {
+            if (countSinceLocked >= 30) {
                 countSinceLocked = 0;
                 Utilities.editBitSharedArray(rc, 1021, false);
             }
