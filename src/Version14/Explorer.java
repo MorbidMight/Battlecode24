@@ -30,7 +30,7 @@ public class Explorer {
 //                }
 //            }
 //        }
-        if (rc.getRoundNum() > 120) {
+        if (rc.getRoundNum() < 150) {
             MapLocation[] nearbyCrumbs = rc.senseNearbyCrumbs(-1);
             MapLocation targetCrumb = null;
             if (nearbyCrumbs.length > 0)
