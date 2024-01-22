@@ -8,8 +8,8 @@ import battlecode.common.RobotController;
 import static Version13.RobotPlayer.findClosestSpawnLocation;
 public class Carrier {
     public static void runCarrier(RobotController rc) throws GameActionException {
-        int index = Utilities.openFlagIndex(rc);
-        if(index != -1) Utilities.writeFlagToSharedArray(rc, new StolenFlag(rc.getLocation(), false), index);
+//        int index = Utilities.openFlagIndex(rc);
+//        if(index != -1) Utilities.writeFlagToSharedArray(rc, new StolenFlag(rc.getLocation(), false), index);
         MapLocation closestSpawnLoc = findClosestSpawnLocation(rc);
         Direction d = rc.getLocation().directionTo(closestSpawnLoc);
         if(rc.canMove(d) /*&& rc.senseMapInfo(rc.getLocation().add(d)).getSpawnZoneTeamObject().equals(rc.getTeam())*/){

@@ -3,13 +3,14 @@ package Version14;
 import battlecode.common.*;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 
 import static Version14.RobotPlayer.*;
 import static Version14.Utilities.averageRobotLocation;
 import static Version14.Utilities.bestHeal;
 
 enum states{
-    defense, attack, heist, escort, flagCarrier
+    defense, attack, heist, escort, flagCarrier, explore
 }
 public class Soldier
 {
@@ -27,10 +28,10 @@ public class Soldier
     static RobotInfo escortee;
     static RobotInfo lastSeenEnemy;
     final static float STOLEN_FLAG_CONSTANT = 2.7f;
-    //records the enemies seen last round, to create the stunlist
-    static ArrayList<RobotInfo> seenLast = new ArrayList<>();
     //keeps track of enemies we can see this round that we could see last round, which haven't moved
-    static ArrayList<RobotInfo> stunList = new ArrayList<>();
+    static MapLocation exploreTarget;
+    static int turnsSinceGen;
+    static HashSet<MapLocation> invalidBroadcasts = new HashSet<>();
 
 
 
@@ -39,6 +40,9 @@ public class Soldier
         if (!rc.isSpawned()) {
             lastSeenEnemy = null;
             return;
+        }
+        if(rc.getRoundNum() % 100 == 0){
+            invalidBroadcasts.clear();
         }
         updateInfo(rc);
         //used to update which flags we know are real or not
@@ -77,20 +81,36 @@ public class Soldier
             case flagCarrier:
                 Carrier.runCarrier(rc);
                 break;
+            case explore:
+                explore(rc);
+                break;
         }
 //        updateInfo(rc);
 //        seenLast.clear();
 //        seenLast.addAll(Arrays.asList(enemyRobots));
     }
-    public static void createStunList(){
-        stunList.clear();
-        for(RobotInfo robot : seenLast){
-            for(RobotInfo rob : enemyRobots){
-                if(robot.getID() == rob.getID() && robot.getLocation().equals(rob.getLocation())){
-                    stunList.add(robot);
-                }
+    //just try to find an enemy
+    public static void explore(RobotController rc) throws GameActionException {
+        attemptHeal(rc);
+        if(exploreTarget == null) {
+            if (Utilities.newGetClosestEnemy(rc) != null) {
+                exploreTarget = Utilities.newGetClosestEnemy(rc);
+                turnsSinceGen = 0;
+            }
+            else {
+                exploreTarget = generateTargetLoc(rc);
+                turnsSinceGen = 1;
             }
         }
+        if(turnsSinceGen != 0)
+            turnsSinceGen++;
+        if(turnsSinceGen == 20)
+            exploreTarget = generateTargetLoc(rc);
+        Pathfinding.combinedPathfinding(rc, exploreTarget);
+        updateInfo(rc);
+        attemptHeal(rc);
+        if(enemyRobots.length != 0)
+            state = states.attack;
     }
     public static void tryGetCrumbs(RobotController rc) throws GameActionException {
         //tries to get neary crumbs
@@ -113,6 +133,9 @@ public class Soldier
     //considers the situation, and decides what state the robot should be - with a bias towards current state,
     // b/c if conditions aren't strong enough to switch just default to current state
     public static states trySwitchState(RobotController rc) throws GameActionException {
+        if(state == states.explore && enemyRobots.length != 0){
+            state = states.attack;
+        }
         if(state == states.flagCarrier && !rc.hasFlag()){
             state = states.attack;
         }
@@ -120,7 +143,7 @@ public class Soldier
             return states.flagCarrier;
         }
         for (FlagInfo flag : nearbyFlagsAlly) {
-            if (flag.isPickedUp() || rc.senseMapInfo(flag.getLocation()).getSpawnZoneTeamObject() != rc.getTeam())
+            if (flag.isPickedUp() || (rc.canSenseLocation(flag.getLocation()) && rc.senseMapInfo(flag.getLocation()).getSpawnZoneTeamObject() != rc.getTeam()))
                 return states.defense;
         }
 
@@ -233,6 +256,11 @@ public class Soldier
                 attemptAttack(rc);
                 attemptHeal(rc);
             }
+            else if(totalHealth(enemyRobots) / (totalHealth(allyRobots) + rc.getHealth()) > 2/* || rc.getHealth() < 150*/){
+                retreat(rc);
+                attemptAttack(rc);
+                attemptHeal(rc);
+            }
             //try and move into attack range of any nearby enemies
             else if ((rc.isActionReady() || ((allyRobots.length - enemyRobots.length > 6) && enemyRobotsAttackRange.length == 0)) && rc.getHealth() > 150){
                 runMicroAttack(rc);
@@ -276,15 +304,26 @@ public class Soldier
             else{
                 //MapLocation target = findCoordinatedBroadcastFlag(rc);
                 target = findClosestBroadcastFlags(rc);
-                if(target != null) {
+                if(target != null && rc.getLocation().distanceSquaredTo(target) < 6){
+                    invalidBroadcasts.add(target);
+                }
+                if(target != null && !rc.getLocation().equals(target) && !invalidBroadcasts.contains(target)) {
                     if (rc.canFill(rc.getLocation().add(rc.getLocation().directionTo(target)))) {
                         rc.fill(rc.getLocation().add(rc.getLocation().directionTo(target)));
                     }
-                    Pathfinding.combinedPathfinding(rc, findCoordinatedBroadcastFlag(rc));
+                    Pathfinding.combinedPathfinding(rc, target);
                 }
+                else if (Utilities.getClosestFlag(rc) != null){
+                    state = states.defense;
+                }
+                else if(Utilities.newGetClosestEnemy(rc) != null){
+                    Pathfinding.combinedPathfinding(rc, Utilities.newGetClosestEnemy(rc));
+                }
+
+//                else{
+//                    state = states.explore;
+//                }
             }
-  //          if(target == null) System.out.println(rc.getLocation() + " : lame");
-//            else System.out.println(rc.getLocation() + " reporting to " + target);
         }
     }
 
@@ -395,10 +434,10 @@ public class Soldier
             if(square.passable){
                 float score;
                 if(square.enemiesAttackRangedX == 1){
-                    score = 1000000 + square.enemiesVisiondX + square.alliesVisiondX * -1 + +square.alliesHealRangedX + square.potentialEnemiesAttackRangedX * -3;
+                    score = 1000000 + square.enemiesVisiondX + square.alliesVisiondX * -1 + +square.alliesHealRangedX * -1 + square.potentialEnemiesAttackRangedX * -3 + square.hasTrap.compareTo(false) * 1.0f;
                 }
                 else {
-                    score = square.enemiesAttackRangedX * 4 + square.enemiesVisiondX * 3 + square.alliesVisiondX * -1 + square.alliesHealRangedX + square.potentialEnemiesAttackRangedX * -1;
+                    score = square.enemiesAttackRangedX * 4 + square.enemiesVisiondX * 3 + square.alliesVisiondX * -1 + square.alliesHealRangedX + square.potentialEnemiesAttackRangedX * -1+ square.hasTrap.compareTo(false) * 1.0f;
                 }
                 if(score > highScore){
                     highScore = score;
@@ -422,7 +461,28 @@ public class Soldier
         float highScore = Integer.MIN_VALUE;
         for(engagementMicroSquare square : options){
             if(square.passable){
-                float score = square.enemiesAttackRangedX * -6 + square.enemiesVisiondX * 2.0f + square.alliesVisiondX + square.alliesHealRangedX + square.potentialEnemiesAttackRangedX * -3 + square.hasTrap.compareTo(false) * 3.5f + square.potentialEnemiesPrepareAttackdX * -0.25f;
+                float score = square.enemiesAttackRangedX * -6 + square.enemiesVisiondX * 1.5f + square.alliesVisiondX + square.alliesHealRangedX + square.potentialEnemiesAttackRangedX * -3 + square.hasTrap.compareTo(false) * 3.5f + square.potentialEnemiesPrepareAttackdX * -0.25f;
+                if(score > highScore){
+                    highScore = score;
+                    best = square;
+                }
+            }
+        }
+        if(best != null) {
+            if (best.enemiesAttackRangedX <= 0 && rc.canMove(rc.getLocation().directionTo(best.location))) {
+                rc.move(rc.getLocation().directionTo(best.location));
+            }
+        }
+    }
+    //try and get out of lost fights
+    public static void retreat(RobotController rc) throws GameActionException {
+        engagementMicroSquare[] options = new engagementMicroSquare[8];
+        populateMicroArray(rc, options);
+        engagementMicroSquare best = null;
+        float highScore = Integer.MIN_VALUE;
+        for(engagementMicroSquare square : options){
+            if(square.passable){
+                float score = square.enemiesAttackRangedX * -3 + square.enemiesVisiondX * -3.0f + square.alliesVisiondX + square.alliesHealRangedX + square.potentialEnemiesAttackRangedX * -3.0f + square.hasTrap.compareTo(false) * 5.5f + square.potentialEnemiesPrepareAttackdX * -2.0f;
                 if(score > highScore){
                     highScore = score;
                     best = square;
@@ -710,7 +770,19 @@ public class Soldier
         }
         return false;
     }
-
+    //returns the total health of an array of robots
+    public static int totalHealth(RobotInfo[] robots) {
+        int ret = 0;
+        for (RobotInfo robot : robots) {
+            ret += robot.health;
+        }
+        return ret;
+    }
+    public static MapLocation generateTargetLoc(RobotController rc) {
+        int x = rng.nextInt(rc.getMapWidth());
+        int y = rng.nextInt(rc.getMapHeight());
+        return new MapLocation(x, y);
+    }
 
 }
 

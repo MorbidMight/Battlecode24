@@ -121,7 +121,7 @@ public class Soldier
             return states.flagCarrier;
         }
         for (FlagInfo flag : nearbyFlagsAlly) {
-            if (flag.isPickedUp() || rc.senseMapInfo(flag.getLocation()).getSpawnZoneTeamObject() != rc.getTeam())
+            if (flag.isPickedUp() || (rc.canSenseLocation(flag.getLocation()) && rc.senseMapInfo(flag.getLocation()).getSpawnZoneTeamObject() != rc.getTeam()))
                 return states.defense;
         }
 

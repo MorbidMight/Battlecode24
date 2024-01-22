@@ -188,7 +188,7 @@ public class Utilities {
                 int readLocation = rc.readSharedArray(i);
                 if (readLocation != 0) {
                     MapLocation location = Utilities.convertIntToLocation(readLocation);
-                    if (!rc.canSenseRobotAtLocation(location)) {
+                    if (rc.canSenseLocation(location) && !rc.canSenseRobotAtLocation(location)) {
                         rc.writeSharedArray(i, 0);
                     }
                 }

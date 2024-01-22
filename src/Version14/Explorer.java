@@ -36,8 +36,11 @@ public class Explorer {
             }
             boolean isAdjacent = isAdjacentToDam(rc);
             //if adjacent to dam, maybe try and lay a trap?
-            if (isAdjacent && rc.canBuild(TrapType.STUN, rc.getLocation()))
-                rc.build(TrapType.STUN, rc.getLocation());
+            if (isAdjacent) {
+                if(rc.canBuild(TrapType.STUN, rc.getLocation()))
+                    rc.build(TrapType.STUN, rc.getLocation());
+                //Builder.UpdateExplosionBorder2(rc);
+            }
             if(!isAdjacent) {
                 if(dam != null){
                     Pathfinding.bellmanFord5x5(rc, dam);

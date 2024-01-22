@@ -138,7 +138,7 @@ static MapLocation builderBombCircleCenter = null;
                                 int spawnNum = rc.readSharedArray(52);
                                 rc.writeSharedArray(52, spawnNum + 1);
                                 if(spawnNum < NUMSOLDIERS){
-                                    role = roles.soldier;
+                                    role = roles.explorer;
                                 }
                                 else{
                                     role = roles.offensiveBuilder;
