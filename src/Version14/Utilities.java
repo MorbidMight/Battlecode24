@@ -282,6 +282,12 @@ public class Utilities {
 
     public static void verifyFlagLocations(RobotController rc) throws GameActionException
     {
+        if(rc.getRoundNum()%100 == 0){
+            rc.writeSharedArray(58, 0);
+            rc.writeSharedArray(59, 0);
+            rc.writeSharedArray(60,0);
+            return;
+        }
         StolenFlag index1 = Utilities.readFlag(rc, 58);
         rc.setIndicatorDot(index1.location, 50, 50, 50);
         if(!index1.location.equals(new MapLocation(0,0)) && rc.canSenseLocation(index1.location))

@@ -2,6 +2,7 @@ package Version14;
 
 import battlecode.common.*;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.HashSet;
 
@@ -27,6 +28,13 @@ public class Soldier
     static FlagInfo[] nearbyFlagsEnemy;
     static RobotInfo escortee;
     static RobotInfo lastSeenEnemy;
+    //higher number -> less likely to retreat
+    final static float RETREAT_CONSTANT = 2.7f;
+    //higher number -> number of robots mean less, and health means more
+    final static float POWER_CONSTANT = 2.1f;
+    //higher number ->  proximity means less
+    final static float POWER_PROXIMITY_CONSTANT = 3.5f;
+    final static float maxPower = ((69 * GameConstants.DEFAULT_HEALTH) + ((13 * GameConstants.DEFAULT_HEALTH) / POWER_PROXIMITY_CONSTANT)) * (69 / POWER_CONSTANT);
     final static float STOLEN_FLAG_CONSTANT = 2.7f;
     //keeps track of enemies we can see this round that we could see last round, which haven't moved
     static MapLocation exploreTarget;
@@ -158,9 +166,13 @@ public class Soldier
         {
             return states.defense;
         }
-        if(state == states.heist && (enemyRobots.length + 1 > allyRobots.length || enemyRobots.length <= 1))
+//        if(state == states.heist && (enemyRobots.length + 1 > allyRobots.length || enemyRobots.length <= 1))
+//            return states.attack;
+//        if ((allyRobots.length >= (enemyRobots.length + 1) || enemyRobots.length <= 1) && nearbyFlagsEnemy.length != 0)
+//            return states.heist;
+        if(state == states.heist && calculatePowerIndexQuotient(rc) > 1.3f)
             return states.attack;
-        if ((allyRobots.length >= (enemyRobots.length + 1) || enemyRobots.length <= 1) && nearbyFlagsEnemy.length != 0)
+        if(calculatePowerIndexQuotient(rc) < 1.2f && nearbyFlagsEnemy.length != 0)
             return states.heist;
         //if it seems like the escort or heist is over, return to attack
         if((state == states.escort || state == states.heist) && nearbyFlagsEnemy.length == 0)
@@ -256,13 +268,19 @@ public class Soldier
                 attemptAttack(rc);
                 attemptHeal(rc);
             }
-            else if(totalHealth(enemyRobots) / (totalHealth(allyRobots) + rc.getHealth()) > 2/* || rc.getHealth() < 150*/){
+//            else if(totalHealth(enemyRobots) / (totalHealth(allyRobots) + rc.getHealth()) > 2/* || rc.getHealth() < 150*/){
+//                retreat(rc);
+//                attemptAttack(rc);
+//                attemptHeal(rc);
+//            }
+            else if(calculatePowerIndexEnemies(rc) / calculatePowerIndexAllies(rc) > RETREAT_CONSTANT){
+                System.out.println(rc.getLocation() + " : " + calculatePowerIndexEnemies(rc) / calculatePowerIndexAllies(rc));
                 retreat(rc);
                 attemptAttack(rc);
                 attemptHeal(rc);
             }
             //try and move into attack range of any nearby enemies
-            else if ((rc.isActionReady() || ((allyRobots.length - enemyRobots.length > 6) && enemyRobotsAttackRange.length == 0)) && rc.getHealth() > 150){
+            else if ((rc.isActionReady() || (calculatePowerIndexQuotient(rc) < 0.25f && enemyRobotsAttackRange.length == 0)) && rc.getHealth() > 150){
                 runMicroAttack(rc);
                 updateInfo(rc);
                 attemptAttack(rc);
@@ -285,11 +303,11 @@ public class Soldier
         }
         //if we cant see any enemies, run macro not micro - move towards known flags, and if not possible, move towards broadcast flags
         else{
+            if(rc.isActionReady()) attemptHeal(rc);
             MapLocation target = null;
             if(lastSeenEnemy != null){
                 //Pathfinding.combinedPathfinding(rc, lastSeenEnemy.getLocation());
                 Pathfinding.bellmanFord5x5(rc, lastSeenEnemy.getLocation());
-                return;
             }
             else if(knowFlag(rc)){
                 //MapLocation target = findCoordinatedActualFlag(rc);
@@ -323,6 +341,10 @@ public class Soldier
 //                else{
 //                    state = states.explore;
 //                }
+            }
+            if(rc.isActionReady()) {
+                updateInfo(rc);
+                attemptHeal(rc);
             }
         }
     }
@@ -432,12 +454,14 @@ public class Soldier
         float highScore = Integer.MIN_VALUE;
         for(engagementMicroSquare square : options){
             if(square.passable){
+                if(square.enemiesAttackRangedX < 0 || square.enemiesAttackRangedX > 1)
+                    continue;
                 float score;
                 if(square.enemiesAttackRangedX == 1){
                     score = 1000000 + square.enemiesVisiondX + square.alliesVisiondX * -1 + +square.alliesHealRangedX * -1 + square.potentialEnemiesAttackRangedX * -3 + square.hasTrap.compareTo(false) * 1.0f;
                 }
                 else {
-                    score = square.enemiesAttackRangedX * 4 + square.enemiesVisiondX * 3 + square.alliesVisiondX * -1 + square.alliesHealRangedX + square.potentialEnemiesAttackRangedX * -1+ square.hasTrap.compareTo(false) * 1.0f;
+                    score = /*square.enemiesAttackRangedX * 4 + */square.enemiesVisiondX * 3 + square.alliesVisiondX * -1 + square.alliesHealRangedX + square.potentialEnemiesAttackRangedX * -1 + square.hasTrap.compareTo(false) * 1.0f /*+ square.potentialEnemiesPrepareAttackdX * 1.0f*/;
                 }
                 if(score > highScore){
                     highScore = score;
@@ -447,7 +471,7 @@ public class Soldier
         }
         if(best != null) {
             //make sure the move isnt outright harmful, or too stupid
-            if (best.enemiesAttackRangedX >= 0 && best.enemiesAttackRangedX <= 2 && rc.canMove(rc.getLocation().directionTo(best.location))) {
+            if (rc.canMove(rc.getLocation().directionTo(best.location))) {
                 rc.move(rc.getLocation().directionTo(best.location));
             }
         }
@@ -461,6 +485,8 @@ public class Soldier
         float highScore = Integer.MIN_VALUE;
         for(engagementMicroSquare square : options){
             if(square.passable){
+                if(square.enemiesAttackRangedX > 0)
+                    continue;
                 float score = square.enemiesAttackRangedX * -6 + square.enemiesVisiondX * 1.5f + square.alliesVisiondX + square.alliesHealRangedX + square.potentialEnemiesAttackRangedX * -3 + square.hasTrap.compareTo(false) * 3.5f + square.potentialEnemiesPrepareAttackdX * -0.25f;
                 if(score > highScore){
                     highScore = score;
@@ -469,7 +495,7 @@ public class Soldier
             }
         }
         if(best != null) {
-            if (best.enemiesAttackRangedX <= 0 && rc.canMove(rc.getLocation().directionTo(best.location))) {
+            if (rc.canMove(rc.getLocation().directionTo(best.location))) {
                 rc.move(rc.getLocation().directionTo(best.location));
             }
         }
@@ -482,7 +508,9 @@ public class Soldier
         float highScore = Integer.MIN_VALUE;
         for(engagementMicroSquare square : options){
             if(square.passable){
-                float score = square.enemiesAttackRangedX * -3 + square.enemiesVisiondX * -3.0f + square.alliesVisiondX + square.alliesHealRangedX + square.potentialEnemiesAttackRangedX * -3.0f + square.hasTrap.compareTo(false) * 5.5f + square.potentialEnemiesPrepareAttackdX * -2.0f;
+                if(square.enemiesAttackRangedX > 0)
+                    continue;
+                float score = square.enemiesAttackRangedX * -3 + square.enemiesVisiondX * -4.0f + square.alliesVisiondX + square.alliesHealRangedX + square.potentialEnemiesAttackRangedX * -3.0f + square.hasTrap.compareTo(false) * 5.5f + square.potentialEnemiesPrepareAttackdX * -3.0f;
                 if(score > highScore){
                     highScore = score;
                     best = square;
@@ -490,7 +518,7 @@ public class Soldier
             }
         }
         if(best != null) {
-            if (best.enemiesAttackRangedX <= 0 && rc.canMove(rc.getLocation().directionTo(best.location))) {
+            if (rc.canMove(rc.getLocation().directionTo(best.location))) {
                 rc.move(rc.getLocation().directionTo(best.location));
             }
         }
@@ -630,6 +658,38 @@ public class Soldier
                 rc.attack(toAttack);
             }
         }
+    }
+    public static float calculatePowerIndexEnemies(RobotController rc){
+        float ret = 0;
+        for(RobotInfo robot : enemyRobots){
+            ret += robot.getHealth();
+        }
+        for(RobotInfo robot : enemyRobotsAttackRange){
+            ret += robot.getHealth() / POWER_PROXIMITY_CONSTANT;
+        }
+        ret *= (enemyRobots.length / POWER_CONSTANT);
+        //return ret/maxPower;
+        return ret;
+    }
+
+    public static float calculatePowerIndexAllies(RobotController rc){
+        float ret = 0;
+        for(RobotInfo robot : allyRobots){
+            ret += robot.getHealth();
+        }
+        ret += rc.getHealth();
+        for(RobotInfo robot : allyRobotsHealRange){
+            ret += robot.getHealth() / POWER_PROXIMITY_CONSTANT;
+        }
+        ret += rc.getHealth() / POWER_PROXIMITY_CONSTANT;
+        ret *= ((allyRobots.length + 1) / POWER_CONSTANT);
+        //return ret/maxPower;
+        return ret;
+    }
+
+    //returns power of enemies divided by power of allies
+    public static float calculatePowerIndexQuotient(RobotController rc){
+        return calculatePowerIndexEnemies(rc) / calculatePowerIndexAllies(rc);
     }
 
     //attempts to heal lowest health nearby ally, but only does so if they are below the given health

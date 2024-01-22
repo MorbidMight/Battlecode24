@@ -31,6 +31,21 @@ public class Explorer {
 //            }
 //        }
         if (rc.getRoundNum() > 120) {
+            MapLocation[] nearbyCrumbs = rc.senseNearbyCrumbs(-1);
+            MapLocation targetCrumb = null;
+            if (nearbyCrumbs.length > 0)
+                targetCrumb = chooseTargetCrumb(rc, nearbyCrumbs);
+            if (targetCrumb != null) {
+                MapInfo targetLoc = rc.senseMapInfo(targetCrumb);
+                if (rc.canFill(rc.adjacentLocation(rc.getLocation().directionTo(targetCrumb))) && targetLoc.getCrumbs() > 30) {
+                    rc.fill(rc.adjacentLocation(rc.getLocation().directionTo(targetCrumb)));
+                }
+                //check if crumb is on water
+                if (!targetLoc.isPassable() && rc.canFill(targetCrumb)) {
+                    rc.fill(targetCrumb);
+                }
+                Pathfinding.bellmanFord5x5(rc, targetCrumb);
+            }
             if (rc.canFill(rc.adjacentLocation(rc.getLocation().directionTo(centerOfMap)))) {
                 rc.fill(rc.adjacentLocation(rc.getLocation().directionTo(centerOfMap)));
             }
