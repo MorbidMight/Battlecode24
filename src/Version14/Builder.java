@@ -2,6 +2,8 @@ package Version14;
 
 import battlecode.common.*;
 
+import java.awt.*;
+import java.util.Map;
 import java.util.PriorityQueue;
 
 import static Version14.RobotPlayer.*;
@@ -241,14 +243,32 @@ static int radius = 0;
 
 
     public static void UpdateExplosionBorder2(RobotController rc) throws GameActionException {//For flag sitters
-        for (MapInfo t : rc.senseNearbyMapInfos(GameConstants.INTERACT_RADIUS_SQUARED)) {
+        MapInfo[] mapInfos = rc.senseNearbyMapInfos(GameConstants.INTERACT_RADIUS_SQUARED);
+        for (MapInfo t : mapInfos) {
             TrapType toBeBuilt = TrapType.STUN;
             if (rc.getCrumbs() > 3500)
                 toBeBuilt = TrapType.EXPLOSIVE;
-            if (rc.canBuild(toBeBuilt, t.getMapLocation())) {
+            if (!adjacentSpawnTrap(rc, t.getMapLocation()) && rc.canBuild(toBeBuilt, t.getMapLocation())) {
                 rc.build(toBeBuilt, t.getMapLocation());
             }
         }
+    }
+    public static boolean adjacentSpawnTrap(RobotController rc, MapLocation location) throws GameActionException {
+        int x = location.x;
+        int y = location.y;
+        int width = rc.getMapWidth();
+        int height = rc.getMapHeight();
+        for(int dx = -1; dx <= 1; dx++){
+            for(int dy = -1; dy <= 1; dy++){
+                if(dx == 0 && dy == 0 || x + dx >= width || x + dx < 0 || y + dy >= height || y + dy < 0)
+                    continue;
+                MapLocation temp = new MapLocation(x + dx, y + dy);
+                MapInfo tempInfo = rc.senseMapInfo(temp);
+                if(tempInfo.isSpawnZone() && tempInfo.getTrapType() != TrapType.NONE)
+                    return true;
+            }
+        }
+        return false;
     }
     public static void UpdateExplosionBorder(RobotController rc) throws GameActionException {//For normal
 
