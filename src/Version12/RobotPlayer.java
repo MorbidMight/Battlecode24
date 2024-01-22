@@ -412,7 +412,8 @@ static MapLocation builderBombCircleCenter = null;
     }
 
 
-    static boolean LocIsSpawnLocation(MapLocation l) {
+    static boolean LocIsSpawnLocation(MapLocation l)
+    {
         for (MapLocation d : SpawnLocations) {
             if (l.equals(d))
                 return true;
