@@ -166,14 +166,14 @@ public class Soldier
         {
             return states.defense;
         }
-//        if(state == states.heist && (enemyRobots.length + 1 > allyRobots.length || enemyRobots.length <= 1))
-//            return states.attack;
-//        if ((allyRobots.length >= (enemyRobots.length + 1) || enemyRobots.length <= 1) && nearbyFlagsEnemy.length != 0)
-//            return states.heist;
-        if(state == states.heist && calculatePowerIndexQuotient(rc) > 1.3f)
+        if(state == states.heist && (enemyRobots.length + 1 > allyRobots.length || enemyRobots.length <= 1))
             return states.attack;
-        if(calculatePowerIndexQuotient(rc) < 1.2f && nearbyFlagsEnemy.length != 0)
+        if ((allyRobots.length >= (enemyRobots.length + 1) || enemyRobots.length <= 1) && nearbyFlagsEnemy.length != 0)
             return states.heist;
+//        if(state == states.heist && calculatePowerIndexQuotient(rc) > 1.3f)
+//            return states.attack;
+//        if(calculatePowerIndexQuotient(rc) < 1.2f && nearbyFlagsEnemy.length != 0)
+//            return states.heist;
         //if it seems like the escort or heist is over, return to attack
         if((state == states.escort || state == states.heist) && nearbyFlagsEnemy.length == 0)
             return states.attack;
@@ -268,19 +268,19 @@ public class Soldier
                 attemptAttack(rc);
                 attemptHeal(rc);
             }
-//            else if(totalHealth(enemyRobots) / (totalHealth(allyRobots) + rc.getHealth()) > 2/* || rc.getHealth() < 150*/){
-//                retreat(rc);
-//                attemptAttack(rc);
-//                attemptHeal(rc);
-//            }
-            else if(calculatePowerIndexEnemies(rc) / calculatePowerIndexAllies(rc) > RETREAT_CONSTANT){
-                System.out.println(rc.getLocation() + " : " + calculatePowerIndexEnemies(rc) / calculatePowerIndexAllies(rc));
+            else if(totalHealth(enemyRobots) / (totalHealth(allyRobots) + rc.getHealth()) > 2/* || rc.getHealth() < 150*/){
                 retreat(rc);
                 attemptAttack(rc);
                 attemptHeal(rc);
             }
+//            else if(calculatePowerIndexEnemies(rc) / calculatePowerIndexAllies(rc) > RETREAT_CONSTANT){
+//                System.out.println(rc.getLocation() + " : " + calculatePowerIndexEnemies(rc) / calculatePowerIndexAllies(rc));
+//                retreat(rc);
+//                attemptAttack(rc);
+//                attemptHeal(rc);
+//            }
             //try and move into attack range of any nearby enemies
-            else if ((rc.isActionReady() || (calculatePowerIndexQuotient(rc) < 0.25f && enemyRobotsAttackRange.length == 0)) && rc.getHealth() > 150){
+            else if ((rc.isActionReady() || (allyRobots.length + 1 - enemyRobots.length > 6 && enemyRobotsAttackRange.length == 0)) && rc.getHealth() > 150){
                 runMicroAttack(rc);
                 updateInfo(rc);
                 attemptAttack(rc);
