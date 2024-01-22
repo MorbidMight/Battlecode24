@@ -89,12 +89,12 @@ static int radius = 0;
             //if we still cant see a flag 50 turns later, then until we do see one we're gonna assume this location should essentially be shut down
             if (rc.senseNearbyFlags(-1, rc.getTeam()).length == 0) {
                 //shut down this spawn location for now
-                if (countSinceSeenFlag > 40) {
+                if (countSinceSeenFlag > 30) {
                     rc.setIndicatorString("Dont come help me!");
                     isActive = false;
                     countSinceSeenFlag++;
-                    if(countSinceSeenFlag > 70){
-                        if(rc.getCrumbs() > 500)
+                    if(countSinceSeenFlag > 40){
+                        if(rc.getCrumbs() > 1000 || rc.getLevel(SkillType.BUILD) >= 4)
                             role = roles.offensiveBuilder;
                         else
                             role = roles.soldier;
