@@ -28,6 +28,8 @@ public class OffensiveBuilder {
             MapLocation targetLoc;
             targetLoc = RobotPlayer.findClosestActualFlag(rc);
             if(targetLoc == null)
+                targetLoc = Utilities.getClosestCluster(rc);
+            if(targetLoc == null)
                 targetLoc = RobotPlayer.findClosestBroadcastFlags(rc);
             if(targetLoc == null && allyRobots.length > 0)
                 targetLoc = Utilities.averageRobotLocation(allyRobots);

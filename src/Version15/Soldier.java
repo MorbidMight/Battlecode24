@@ -257,16 +257,8 @@ public class Soldier
         }
         //if we cant see any enemies, run macro not micro - move towards known flags, and if not possible, move towards broadcast flags
         else{
-            MapLocation target = getClosestCluster(rc);
-            if(target != null){
-                //Pathfinding.combinedPathfinding(rc, lastSeenEnemy.getLocation());
-                if(rc.canFill(rc.getLocation().add(rc.getLocation().directionTo(target))))
-                    rc.fill(rc.getLocation().add(rc.getLocation().directionTo(target)));
-                Pathfinding.bellmanFord5x5(rc, target);
-                return;
-            }
-            else if(knowFlag(rc)){
-                //MapLocation target = findCoordinatedActualFlag(rc);
+            MapLocation target;
+            if(knowFlag(rc)){
                 target = findClosestActualFlag(rc);
                 if(target != null){
                     if(rc.canFill(rc.getLocation().add(rc.getLocation().directionTo(target)))){
@@ -274,6 +266,14 @@ public class Soldier
                     }
                     Pathfinding.combinedPathfinding(rc, target);
                 }
+            }
+            else if(getClosestCluster(rc) != null){
+                target = getClosestCluster(rc);
+                //Pathfinding.combinedPathfinding(rc, lastSeenEnemy.getLocation());
+                if(rc.canFill(rc.getLocation().add(rc.getLocation().directionTo(target))))
+                    rc.fill(rc.getLocation().add(rc.getLocation().directionTo(target)));
+                Pathfinding.bellmanFord5x5(rc, target);
+                return;
             }
             else{
                 //MapLocation target = findCoordinatedBroadcastFlag(rc);

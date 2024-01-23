@@ -98,7 +98,7 @@ static MapLocation builderBombCircleCenter = null;
         initialize(rc);
         while (true) {
             //changes explorers to soldiers at round 200
-            if (rc.getRoundNum() == GameConstants.SETUP_ROUNDS && role == roles.explorer) {
+            if (rc.getRoundNum() >= GameConstants.SETUP_ROUNDS && role == roles.explorer) {
                 role = roles.soldier;
             }
             //if can buy upgrade, buy an upgrade
