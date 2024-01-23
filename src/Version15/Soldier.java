@@ -260,6 +260,8 @@ public class Soldier
             MapLocation target = getClosestCluster(rc);
             if(target != null){
                 //Pathfinding.combinedPathfinding(rc, lastSeenEnemy.getLocation());
+                if(rc.canFill(rc.getLocation().add(rc.getLocation().directionTo(target))))
+                    rc.fill(rc.getLocation().add(rc.getLocation().directionTo(target)));
                 Pathfinding.bellmanFord5x5(rc, target);
                 return;
             }
@@ -395,7 +397,7 @@ public class Soldier
             if(square.passable){
                 float score;
                 if(square.enemiesAttackRangedX == 1){
-                    score = 1000000 + square.enemiesVisiondX + square.alliesVisiondX * -1 + +square.alliesHealRangedX + square.potentialEnemiesAttackRangedX * -3;
+                    score = 1000000 + square.enemiesVisiondX + square.alliesVisiondX * -1 + +square.alliesHealRangedX + square.potentialEnemiesAttackRangedX * -3 + square.potentialKill.compareTo(false) * 100.0f;
                 }
                 else {
                     score = square.enemiesAttackRangedX * 4 + square.enemiesVisiondX * 3 + square.alliesVisiondX * -1 + square.alliesHealRangedX + square.potentialEnemiesAttackRangedX * -1;
@@ -484,6 +486,7 @@ public class Soldier
                     RobotInfo[] allyRobotsHealRangeNewLoc = rc.senseNearbyRobots(tempSquare, GameConstants.HEAL_RADIUS_SQUARED, rc.getTeam());
                     RobotInfo[] potentialEnemiesAttackRangeNewLoc = rc.senseNearbyRobots(tempSquare, 10, rc.getTeam().opponent());
                     RobotInfo[] potentialEnemiesPrepareAttackNewLoc = rc.senseNearbyRobots(tempSquare, 16, rc.getTeam().opponent());
+                    options[index].potentialKill = isKillable(rc, enemyRobotsAttackRangeNewLoc);
                     options[index].enemiesVisiondX = enemyRobotsNewLoc.length - enemyRobots.length;
                     options[index].enemiesAttackRangedX = enemyRobotsAttackRangeNewLoc.length - enemyRobotsAttackRange.length;
                     options[index].alliesVisiondX = allyRobotsNewLoc.length - allyRobots.length;
@@ -515,6 +518,7 @@ public class Soldier
                     RobotInfo[] allyRobotsHealRangeNewLoc = rc.senseNearbyRobots(tempSquare, GameConstants.HEAL_RADIUS_SQUARED, rc.getTeam());
                     RobotInfo[] potentialEnemiesAttackRangeNewLoc = rc.senseNearbyRobots(tempSquare, 10, rc.getTeam().opponent());
                     RobotInfo[] potentialEnemiesPrepareAttackNewLoc = rc.senseNearbyRobots(tempSquare, 16, rc.getTeam().opponent());
+                    options[index].potentialKill = isKillable(rc, enemyRobotsAttackRangeNewLoc);
                     options[index].enemiesVisiondX = enemyRobotsNewLoc.length - enemyRobots.length;
                     options[index].enemiesAttackRangedX = enemyRobotsAttackRangeNewLoc.length - enemyRobotsAttackRange.length;
                     options[index].alliesVisiondX = allyRobotsNewLoc.length - allyRobots.length;
@@ -546,6 +550,7 @@ public class Soldier
                     RobotInfo[] allyRobotsHealRangeNewLoc = rc.senseNearbyRobots(tempSquare, GameConstants.HEAL_RADIUS_SQUARED, rc.getTeam());
                     RobotInfo[] potentialEnemiesAttackRangeNewLoc = rc.senseNearbyRobots(tempSquare, 10, rc.getTeam().opponent());
                     RobotInfo[] potentialEnemiesPrepareAttackNewLoc = rc.senseNearbyRobots(tempSquare, 16, rc.getTeam().opponent());
+                    options[index].potentialKill = isKillable(rc, enemyRobotsAttackRangeNewLoc);
                     options[index].enemiesVisiondX = enemyRobotsNewLoc.length - enemyRobots.length;
                     options[index].enemiesAttackRangedX = enemyRobotsAttackRangeNewLoc.length - enemyRobotsAttackRange.length;
                     options[index].alliesVisiondX = allyRobotsNewLoc.length - allyRobots.length;
@@ -558,6 +563,14 @@ public class Soldier
             }
             index++;
         }
+    }
+    public static boolean isKillable(RobotController rc, RobotInfo[] enemies){
+        int i = rc.getAttackDamage();
+        for(RobotInfo enemy : enemies){
+            if(i >= enemy.getHealth())
+                return true;
+        }
+        return false;
     }
 
     public static void attemptAttack(RobotController rc) throws GameActionException {
@@ -728,6 +741,8 @@ class engagementMicroSquare{
     public int potentialEnemiesAttackRangedX;
     public int potentialEnemiesPrepareAttackdX;
     public Boolean hasTrap;
+    public Boolean potentialKill;
+
     public engagementMicroSquare(){
 
     }
