@@ -1,8 +1,8 @@
-package Version14;
+package Version15;
 
 import battlecode.common.*;
 
-import static Version14.RobotPlayer.*;
+import static Version15.RobotPlayer.*;
 
 public class Explorer {
     static MapLocation dam;
