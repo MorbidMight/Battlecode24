@@ -97,7 +97,7 @@ public class OffensiveBuilder {
         float highScore = Integer.MIN_VALUE;
         for(engagementMicroSquare square : options){
             if(square.passable){
-                float score = square.enemiesAttackRangedX * -5 + square.enemiesVisiondX * 2 + square.alliesVisiondX * 2.0f + square.alliesHealRangedX + square.potentialEnemiesAttackRangedX * -4;
+                float score = square.enemiesAttackRangedX * -5 + square.enemiesVisiondX * 2 + square.alliesVisiondX * 2.0f + square.alliesHealRangedX + square.potentialEnemiesAttackRangedX * -4 + square.hasTrap.compareTo(false) * -1.0f;
                 if(score > highScore){
                     highScore = score;
                     best = square;
