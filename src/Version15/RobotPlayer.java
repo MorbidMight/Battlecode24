@@ -44,7 +44,7 @@ static MapLocation builderBombCircleCenter = null;
     //Ratios for spawning
     public static final int NUMSOLDIERS = 46;
     public static final int NUMBUILDERS = 0;
-    public static final int OFFENSIVEBUILDERS = 2;
+    public static final int OFFENSIVEBUILDERS = 1;
 
     public static final int NUMHEALERS = 0;
     //offensive builders is 50 - numsoldiers - numbuilders - 3
@@ -82,7 +82,7 @@ static MapLocation builderBombCircleCenter = null;
     };
 
     enum roles {
-        explorer, soldier, builder, healer, offensiveBuilder
+        explorer, soldier, builder, healer, offensiveBuilder, defensiveBuilder
     }
 
 
@@ -144,7 +144,10 @@ static MapLocation builderBombCircleCenter = null;
                             else{
                                 int spawnNum = rc.readSharedArray(52);
                                 rc.writeSharedArray(52, spawnNum + 1);
-                                if(spawnNum < NUMSOLDIERS){
+                                if(spawnNum == NUMSOLDIERS / 2) {
+                                    role = roles.offensiveBuilder;
+                                }
+                                else if(spawnNum < NUMSOLDIERS + 1){
                                     role = roles.explorer;
                                 }
                                 else{
@@ -229,6 +232,9 @@ static MapLocation builderBombCircleCenter = null;
                                 break;
                             case offensiveBuilder:
                                 OffensiveBuilder.runOffensiveBuilder(rc);
+                                break;
+                            case defensiveBuilder:
+                                DefensiveBuilder.runDefensiveBuilder(rc);
                                 break;
                         }
                     }

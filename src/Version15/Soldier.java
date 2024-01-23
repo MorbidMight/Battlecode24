@@ -113,6 +113,8 @@ public class Soldier
     //considers the situation, and decides what state the robot should be - with a bias towards current state,
     // b/c if conditions aren't strong enough to switch just default to current state
     public static states trySwitchState(RobotController rc) throws GameActionException {
+        if(state == states.escort && enemyRobots.length == 0 && rc.getLocation().distanceSquaredTo(findClosestSpawnLocation(rc)) < 25)
+            return states.attack;
         if(state == states.flagCarrier && !rc.hasFlag()){
             state = states.attack;
         }
@@ -125,7 +127,7 @@ public class Soldier
         }
 
         for (FlagInfo flag : nearbyFlagsEnemy) {
-            if (flag.isPickedUp()) {
+            if (flag.isPickedUp() && (enemyRobots.length > 0 ||rc.getLocation().distanceSquaredTo(findClosestSpawnLocation(rc)) >= 25)) {
                 escortee = rc.senseRobotAtLocation(flag.getLocation());
                 return states.escort;
             }
@@ -228,13 +230,13 @@ public class Soldier
         }
         if(enemyRobots.length != 0) {
             //only kite for the first five rounds following the dam break
-            if(rc.getRoundNum() >= 200 && rc.getRoundNum() <= 205 && enemyRobots.length > 2){
-                runMicroKite(rc);
-                attemptAttack(rc);
-                attemptHeal(rc);
-            }
+//            if(rc.getRoundNum() >= 200 && rc.getRoundNum() <= 205 && enemyRobots.length > 2){
+//                runMicroKite(rc);
+//                attemptAttack(rc);
+//                attemptHeal(rc);
+//            }
             //try and move into attack range of any nearby enemies
-            else if ((rc.isActionReady() || ((allyRobots.length - enemyRobots.length > 6) && enemyRobotsAttackRange.length == 0)) && rc.getHealth() > 150){
+            /*else */if ((rc.isActionReady() || ((allyRobots.length - enemyRobots.length > 6) && enemyRobotsAttackRange.length == 0)) && rc.getHealth() > 150){
                 runMicroAttack(rc);
                 updateInfo(rc);
                 attemptAttack(rc);
