@@ -128,6 +128,7 @@ static MapLocation builderBombCircleCenter = null;
                     SpawnLocations = rc.getAllySpawnLocations();
                 }
                 if (!rc.isSpawned()) {
+                    rc.writeSharedArray(7, rc.readSharedArray(7) + 1);
                     //get our robots out onto the map
                     if (turnCount <= 10) {
                         MapLocation[] spawnLocs = rc.getAllySpawnLocations();

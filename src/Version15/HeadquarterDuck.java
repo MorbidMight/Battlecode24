@@ -8,5 +8,8 @@ public class HeadquarterDuck
     public static void runHeadquarterDuck(RobotController rc) throws GameActionException
     {
         Utilities.resetAvgEnemyLoc(rc);
+        rc.writeSharedArray(6, rc.readSharedArray(7));
+        rc.writeSharedArray(7, 0);
+        System.out.println(rc.readSharedArray(6));
     }
 }

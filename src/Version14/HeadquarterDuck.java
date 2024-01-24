@@ -8,5 +8,6 @@ public class HeadquarterDuck
     public static void runHeadquarterDuck(RobotController rc) throws GameActionException
     {
         Utilities.resetAvgEnemyLoc(rc);
+
     }
 }
