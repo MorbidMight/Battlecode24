@@ -81,7 +81,7 @@ public class OffensiveBuilder {
     }
 
     public static void attemptBuild(RobotController rc) throws GameActionException {
-        if ((enemyRobots.length >= 1 || enemyFlagsPickedUp.length > 0)) {
+        /*if ((enemyRobots.length >= 1 || enemyFlagsPickedUp.length > 0)) {
             if ((enemyRobots.length >= 1)) {
                 MapLocation target = rc.getLocation().add(rc.getLocation().directionTo(averageRobotLocation(enemyRobots)));
                 if (!Soldier.isTrapAdjacent(rc, target) && rc.canBuild(TrapType.STUN, target)) {
@@ -100,7 +100,22 @@ public class OffensiveBuilder {
                     rc.build(TrapType.STUN, t.getMapLocation());
                 }
             }
+        }*/
+        if(enemyRobots.length>=1 || enemyFlagsPickedUp.length > 0){
+            MapLocation target = rc.getLocation().add(rc.getLocation().directionTo(averageRobotLocation(enemyRobots)));
+            if (!Soldier.isTrapAdjacent(rc, target) && rc.canBuild(TrapType.STUN, target)) {
+                rc.build(TrapType.STUN, target);
+            }
+            for(MapInfo t : rc.senseNearbyMapInfos(GameConstants.INTERACT_RADIUS_SQUARED)){
+                TrapType toBeBuilt = TrapType.STUN;
+                if(rc.getCrumbs()>3000 || enemyRobots.length>=1){
+                    if(!Soldier.isTrapAdjacent(rc,t.getMapLocation()) && rc.canBuild(toBeBuilt,t.getMapLocation())){
+                        rc.build(toBeBuilt,t.getMapLocation());
+                    }
+                }
+            }
         }
+
     }
     public static void runMicroOffensiveBuilder(RobotController rc) throws GameActionException {
         engagementMicroSquare[] options = new engagementMicroSquare[8];
