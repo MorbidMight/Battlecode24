@@ -3,6 +3,7 @@ package Version15;
 import battlecode.common.*;
 
 import static Version15.RobotPlayer.*;
+import static Version15.Utilities.averageRobotLocation;
 
 public class Explorer {
     static MapLocation dam;
@@ -52,8 +53,7 @@ public class Explorer {
             boolean isAdjacent = isAdjacentToDam(rc);
             //if adjacent to dam, maybe try and lay a trap?
             if (isAdjacent) {
-                if(rc.canBuild(TrapType.STUN, rc.getLocation()))
-                    rc.build(TrapType.STUN, rc.getLocation());
+                attemptBuild(rc);
                 //Builder.UpdateExplosionBorder2(rc);
             }
             if(!isAdjacent) {
@@ -126,5 +126,15 @@ public class Explorer {
                 return space.getMapLocation();
         }
         return null;
+    }
+    public static void attemptBuild(RobotController rc) throws GameActionException {
+        RobotInfo[] enemyRobots = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
+        if (enemyRobots.length >= 1){
+            for (MapInfo t : rc.senseNearbyMapInfos(GameConstants.INTERACT_RADIUS_SQUARED)) {
+                if (!Soldier.isTrapAdjacent(rc, t.getMapLocation()) && rc.canBuild(TrapType.STUN, t.getMapLocation())) {
+                    rc.build(TrapType.STUN, t.getMapLocation());
+                }
+            }
+        }
     }
 }

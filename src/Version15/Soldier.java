@@ -218,10 +218,11 @@ public class Soldier
             rc.fill(rc.getLocation().add(rc.getLocation().directionTo(enemyRobots[0].getLocation())));
         if(enemyRobots.length > 6 && enemyRobotsAttackRange.length == 0){
             TrapType toBeBuilt = TrapType.STUN;
-            if(rc.canBuild(toBeBuilt, rc.getLocation().add(rc.getLocation().directionTo(averageRobotLocation(enemyRobots))))){
+            MapLocation target = rc.getLocation().add(rc.getLocation().directionTo(averageRobotLocation(enemyRobots)));
+            if(!isTrapAdjacent(rc, target) && rc.canBuild(toBeBuilt, target)){
                 rc.build(toBeBuilt, rc.getLocation().add(rc.getLocation().directionTo(averageRobotLocation(enemyRobots))));
             }
-            else if(rc.canBuild(toBeBuilt, rc.getLocation())){
+            else if(!isTrapAdjacent(rc, rc.getLocation()) && rc.canBuild(toBeBuilt, rc.getLocation())){
                 rc.build(toBeBuilt, rc.getLocation());
             }
         }
@@ -769,6 +770,15 @@ public class Soldier
             ret += robot.health;
         }
         return ret;
+    }
+    //returns if any of the spaces next to this one are a trap, or if the space itself is a trap
+    public static boolean isTrapAdjacent(RobotController rc, MapLocation location) throws GameActionException {
+        MapInfo[] adjacents = rc.senseNearbyMapInfos(location, 2);
+        for(MapInfo square : adjacents){
+            if(square.getTrapType() != TrapType.NONE)
+                return true;
+        }
+        return false;
     }
 
 

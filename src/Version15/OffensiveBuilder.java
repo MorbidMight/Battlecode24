@@ -5,6 +5,8 @@ import battlecode.common.*;
 import java.util.ArrayList;
 
 import static Version15.RobotPlayer.lowestHealth;
+import static Version15.RobotPlayer.targetLoc;
+import static Version15.Utilities.averageRobotLocation;
 import static Version15.Utilities.bestHeal;
 
 public class OffensiveBuilder {
@@ -81,12 +83,20 @@ public class OffensiveBuilder {
     public static void attemptBuild(RobotController rc) throws GameActionException {
         if ((enemyRobots.length >= 1 || enemyFlagsPickedUp.length > 0)) {
             if ((enemyRobots.length >= 1)) {
-                if (rc.canBuild(TrapType.STUN, rc.getLocation().add(rc.getLocation().directionTo(Utilities.averageRobotLocation(enemyRobots))))) {
-                    rc.build(TrapType.STUN, rc.getLocation().add(rc.getLocation().directionTo(Utilities.averageRobotLocation(enemyRobots))));
+                MapLocation target = rc.getLocation().add(rc.getLocation().directionTo(averageRobotLocation(enemyRobots)));
+                if (!Soldier.isTrapAdjacent(rc, target) && rc.canBuild(TrapType.STUN, target)) {
+                    rc.build(TrapType.STUN, target);
                 }
             }
             for (MapInfo t : rc.senseNearbyMapInfos(GameConstants.INTERACT_RADIUS_SQUARED)) {
-                if (rc.canBuild(TrapType.STUN, t.getMapLocation())) {
+                if (!Soldier.isTrapAdjacent(rc, t.getMapLocation()) && rc.canBuild(TrapType.STUN, t.getMapLocation())) {
+                    rc.build(TrapType.STUN, t.getMapLocation());
+                }
+            }
+        }
+        else if(rc.getCrumbs() > 3000){
+            for (MapInfo t : rc.senseNearbyMapInfos(GameConstants.INTERACT_RADIUS_SQUARED)) {
+                if (!Soldier.isTrapAdjacent(rc, t.getMapLocation()) && rc.canBuild(TrapType.STUN, t.getMapLocation())) {
                     rc.build(TrapType.STUN, t.getMapLocation());
                 }
             }
