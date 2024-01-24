@@ -104,11 +104,11 @@ static MapLocation builderBombCircleCenter = null;
             //if can buy upgrade, buy an upgrade
             if (rc.canBuyGlobal(GlobalUpgrade.ACTION)) {
                 rc.buyGlobal(GlobalUpgrade.ACTION);
-            } else if (rc.canBuyGlobal(GlobalUpgrade.CAPTURING)) {
-                rc.buyGlobal(GlobalUpgrade.CAPTURING);
-            }
-            else if(rc.canBuyGlobal(GlobalUpgrade.HEALING)){
+            } else if (rc.canBuyGlobal(GlobalUpgrade.HEALING)) {
                 rc.buyGlobal(GlobalUpgrade.HEALING);
+            }
+            else if(rc.canBuyGlobal(GlobalUpgrade.CAPTURING)){
+                rc.buyGlobal(GlobalUpgrade.CAPTURING);
             }
             // This code runs during the entire lifespan of the robot, which is why it is in an infinite
             // loop. If we ever leave this loop and return from run(), the robot dies! At the end of the
