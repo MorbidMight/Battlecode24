@@ -81,6 +81,7 @@ public class OffensiveBuilder {
     }
 
     public static void attemptBuild(RobotController rc) throws GameActionException {
+        MapLocation center = new MapLocation(rc.getMapWidth() /2, rc.getMapHeight() / 2);
         if ((enemyRobots.length >= 1 || enemyFlagsPickedUp.length > 0)) {
             if ((enemyRobots.length >= 1)) {
                 MapLocation target = rc.getLocation().add(rc.getLocation().directionTo(averageRobotLocation(enemyRobots)));
@@ -94,7 +95,7 @@ public class OffensiveBuilder {
                 }
             }
         }
-        else if(rc.getCrumbs() > 3000){
+        else if(rc.getCrumbs() > 3000 && (rc.getRoundNum() > GameConstants.SETUP_ROUNDS || rc.getLocation().distanceSquaredTo(center) < 40)){
             for (MapInfo t : rc.senseNearbyMapInfos(GameConstants.INTERACT_RADIUS_SQUARED)) {
                 if (!Soldier.isTrapAdjacent(rc, t.getMapLocation()) && rc.canBuild(TrapType.STUN, t.getMapLocation())) {
                     rc.build(TrapType.STUN, t.getMapLocation());
