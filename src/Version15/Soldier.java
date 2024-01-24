@@ -235,8 +235,14 @@ public class Soldier
 //                attemptAttack(rc);
 //                attemptHeal(rc);
 //            }
+            if(((float) totalHealth(enemyRobots) / ((totalHealth(allyRobots) + rc.getHealth())) > 2.0f && enemyRobots.length > allyRobots.length + 3)){
+                retreat(rc);
+                updateInfo(rc);
+                attemptAttack(rc);
+                attemptHeal(rc);
+            }
             //try and move into attack range of any nearby enemies
-            /*else */if ((rc.isActionReady() || ((allyRobots.length - enemyRobots.length > 6) && enemyRobotsAttackRange.length == 0)) && rc.getHealth() > 150){
+            else if ((rc.isActionReady() || ((allyRobots.length - enemyRobots.length > 6) && enemyRobotsAttackRange.length == 0)) && rc.getHealth() > 150){
                 runMicroAttack(rc);
                 updateInfo(rc);
                 attemptAttack(rc);
@@ -394,15 +400,16 @@ public class Soldier
         engagementMicroSquare[] options = new engagementMicroSquare[8];
         populateMicroArray(rc, options);
         engagementMicroSquare best = null;
+        float aggressionIndex = rc.getHealth() / 750f;
         float highScore = Integer.MIN_VALUE;
         for(engagementMicroSquare square : options){
             if(square.passable){
                 float score;
                 if(square.enemiesAttackRangedX == 1){
-                    score = 1000000 + square.enemiesVisiondX + square.alliesVisiondX * -1 + +square.alliesHealRangedX + square.potentialEnemiesAttackRangedX * -3 + square.potentialKill.compareTo(false) * 100.0f;
+                    score = 1000000 + square.enemiesVisiondX + square.alliesVisiondX * -1 + +square.alliesHealRangedX + square.potentialEnemiesAttackRangedX * -3;
                 }
                 else {
-                    score = square.enemiesAttackRangedX * 4 + square.enemiesVisiondX * 3 + square.alliesVisiondX * -1 + square.alliesHealRangedX + square.potentialEnemiesAttackRangedX * -1;
+                    score = square.enemiesAttackRangedX * 4 * aggressionIndex + square.enemiesVisiondX * 3 + square.alliesVisiondX * -1 + square.alliesHealRangedX + square.potentialEnemiesAttackRangedX * -1;
                 }
                 if(score > highScore){
                     highScore = score;
@@ -426,7 +433,31 @@ public class Soldier
         float highScore = Integer.MIN_VALUE;
         for(engagementMicroSquare square : options){
             if(square.passable){
-                float score = square.enemiesAttackRangedX * -6 + square.enemiesVisiondX * 2.0f + square.alliesVisiondX + square.alliesHealRangedX + square.potentialEnemiesAttackRangedX * -3 + square.hasTrap.compareTo(false) * 3.5f + square.potentialEnemiesPrepareAttackdX * -0.25f;
+                float score = square.enemiesAttackRangedX * -6 + square.enemiesVisiondX * 1.25f + square.alliesVisiondX + square.alliesHealRangedX + square.potentialEnemiesAttackRangedX * -3 + square.hasTrap.compareTo(false) * 3.5f + square.potentialEnemiesPrepareAttackdX * -0.25f;
+                if(score > highScore){
+                    highScore = score;
+                    best = square;
+                }
+            }
+        }
+        if(best != null) {
+            if (best.enemiesAttackRangedX <= 0 && rc.canMove(rc.getLocation().directionTo(best.location))) {
+                rc.move(rc.getLocation().directionTo(best.location));
+            }
+        }
+    }
+    public static void retreat(RobotController rc) throws GameActionException {
+        engagementMicroSquare[] options = new engagementMicroSquare[8];
+        populateMicroArray(rc, options);
+        engagementMicroSquare best = null;
+        float highScore = Integer.MIN_VALUE;
+        for(engagementMicroSquare square : options){
+            if(square.passable){
+                Direction desiredDirection = rc.getLocation().directionTo(findClosestSpawnLocation(rc));
+                Direction actualDirection = rc.getLocation().directionTo(square.location);
+                float score = square.enemiesAttackRangedX * -5.0f + square.enemiesVisiondX * -3.0f + square.alliesVisiondX + square.alliesHealRangedX + square.potentialEnemiesAttackRangedX * -3 + square.hasTrap.compareTo(false) * 6.0f + square.potentialEnemiesPrepareAttackdX * -1.5f;
+//                if(actualDirection == desiredDirection || actualDirection == desiredDirection.rotateLeft() || actualDirection == desiredDirection.rotateRight())
+//                    score += 2.5f;
                 if(score > highScore){
                     highScore = score;
                     best = square;
@@ -495,6 +526,8 @@ public class Soldier
                     options[index].alliesHealRangedX = allyRobotsHealRangeNewLoc.length - allyRobotsHealRange.length;
                     options[index].potentialEnemiesAttackRangedX = potentialEnemiesAttackRangeNewLoc.length - potentialEnemiesAttackRange.length;
                     options[index].potentialEnemiesPrepareAttackdX = potentialEnemiesPrepareAttackNewLoc.length - potentialEnemiesPrepareAttack.length;
+                    //options[index].totalHealthAlliesdX = totalHealth(allyRobotsNewLoc) - totalHealth(allyRobots);
+                    //options[index].totalHealthEnemiesdX = totalHealth(enemyRobotsNewLoc) - totalHealth(enemyRobots);
                 }
             } else {
                 options[index] = new engagementMicroSquare(false);
@@ -527,6 +560,8 @@ public class Soldier
                     options[index].alliesHealRangedX = allyRobotsHealRangeNewLoc.length - allyRobotsHealRange.length;
                     options[index].potentialEnemiesAttackRangedX = potentialEnemiesAttackRangeNewLoc.length - potentialEnemiesAttackRange.length;
                     options[index].potentialEnemiesPrepareAttackdX = potentialEnemiesPrepareAttackNewLoc.length - potentialEnemiesPrepareAttack.length;
+                    //options[index].totalHealthAlliesdX = totalHealth(allyRobotsNewLoc) - totalHealth(allyRobots);
+                    //options[index].totalHealthEnemiesdX = totalHealth(enemyRobotsNewLoc) - totalHealth(enemyRobots);
                 }
             } else {
                 options[index] = new engagementMicroSquare(false);
@@ -544,7 +579,7 @@ public class Soldier
                 MapInfo tempInfo = rc.senseMapInfo(tempSquare);
                 options[index].passable = (tempInfo.isPassable() && rc.senseRobotAtLocation(tempSquare) == null);
                 if (options[index].passable) {
-                    if(rc.senseMapInfo(tempSquare).getTrapType() != null)
+                    if (rc.senseMapInfo(tempSquare).getTrapType() != null)
                         options[index].hasTrap = true;
                     RobotInfo[] enemyRobotsNewLoc = rc.senseNearbyRobots(tempSquare, -1, rc.getTeam().opponent());
                     RobotInfo[] allyRobotsNewLoc = rc.senseNearbyRobots(tempSquare, -1, rc.getTeam());
@@ -559,6 +594,8 @@ public class Soldier
                     options[index].alliesHealRangedX = allyRobotsHealRangeNewLoc.length - allyRobotsHealRange.length;
                     options[index].potentialEnemiesAttackRangedX = potentialEnemiesAttackRangeNewLoc.length - potentialEnemiesAttackRange.length;
                     options[index].potentialEnemiesPrepareAttackdX = potentialEnemiesPrepareAttackNewLoc.length - potentialEnemiesPrepareAttack.length;
+                    //options[index].totalHealthAlliesdX = totalHealth(allyRobotsNewLoc) - totalHealth(allyRobots);
+                    //options[index].totalHealthEnemiesdX = totalHealth(enemyRobotsNewLoc) - totalHealth(enemyRobots);
                 }
             } else {
                 options[index] = new engagementMicroSquare(false);
@@ -726,6 +763,14 @@ public class Soldier
         return false;
     }
 
+    public static int totalHealth(RobotInfo[] robots) {
+        int ret = 0;
+        for (RobotInfo robot : robots) {
+            ret += robot.health;
+        }
+        return ret;
+    }
+
 
 }
 
@@ -744,6 +789,8 @@ class engagementMicroSquare{
     public int potentialEnemiesPrepareAttackdX;
     public Boolean hasTrap;
     public Boolean potentialKill;
+    public int totalHealthEnemiesdX;
+    public int totalHealthAlliesdX;
 
     public engagementMicroSquare(){
 
