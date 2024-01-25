@@ -40,16 +40,11 @@ static int radius = 0;
             }
             builderBombCircleCenter = Utilities.convertIntToLocation(rc.readSharedArray(lowestIndex));
         }
-        if (turnCount == 150) {
-            for (int i = 6; i < 28; i++) {
-                Utilities.clearTask(rc, i);
-            }
-        }
+
         if (!rc.isSpawned()) {
             builderBombCircleCenter = null;
             return;
         }
-        Task t = Utilities.readTask(rc);
         if (SittingOnFlag) {
             //update where we want soldiers to spawn
             if(!Utilities.readBitSharedArray(rc, 1021)){
@@ -82,10 +77,13 @@ static int radius = 0;
             if(toHeal != null && rc.canHeal(toHeal.getLocation())){
                 rc.heal(toHeal.getLocation());
             }
-            if(rc.isActionReady()){
+            if (rc.isActionReady()) {
                 MapLocation toAttack = lowestHealth(rc.senseNearbyRobots(GameConstants.ATTACK_RADIUS_SQUARED, rc.getTeam().opponent()));
-                if(toAttack != null && rc.canAttack(toAttack))
+                if (toAttack != null && rc.canAttack(toAttack)) {
+                    if (rc.senseRobotAtLocation(toAttack).health <= rc.getAttackDamage()&&!rc.senseRobotAtLocation(toAttack).team.isPlayer())
+                        Utilities.addKillToKillsArray(rc, turnsWithKills);
                     rc.attack(toAttack);
+                }
             }
             //sitting where flag should be, but cant see any flags...
             //if we still cant see a flag 50 turns later, then until we do see one we're gonna assume this location should essentially be shut down
@@ -159,16 +157,7 @@ static int radius = 0;
                 countSinceLocked++;
             }
 
-        } else if (/*t != null*/ false) {//there is a task to do
-            Pathfinding.bugNav2(rc, t.location);
-            if (locationIsActionable(rc, t.location)) {
-                TrapType toBeBuilt = TrapType.STUN;
-                if (rc.getCrumbs() > 3500)
-                    toBeBuilt = TrapType.EXPLOSIVE;
-                if (rc.canBuild(toBeBuilt, t.location))
-                    rc.build(toBeBuilt, t.location);
-                Utilities.clearTask(rc, t.arrayIndex);
-            }
+
         } else//When there is no active task
         {
             MapLocation center = builderBombCircleCenter;//Will orbit around the flag

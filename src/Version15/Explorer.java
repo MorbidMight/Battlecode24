@@ -7,20 +7,15 @@ import static Version15.Utilities.averageRobotLocation;
 
 public class Explorer {
     static MapLocation dam;
+
     public static void runExplorer(RobotController rc) throws GameActionException {
         if (!rc.isSpawned()) {
             return;
         }
-        if(dam == null)
+        if (dam == null)
             dam = canSeeDam(rc);
-        if (isAdjacentToDam(rc) && turnCount < 120 && rc.senseMapInfo(rc.getLocation()).getTrapType() == TrapType.NONE) {
-            Task bomb = new Task(rc.getLocation(), false);
-            int index = Utilities.openTaskIndex(rc);
-            bomb.arrayIndex = index;
-            if (index != -1) {
-                Utilities.setTaskSharedArray(rc, bomb, index);
-            }
-        }
+
+
         //condense on dam for when it breaks
         MapLocation centerOfMap = new MapLocation(rc.getMapWidth() / 2, rc.getMapHeight() / 2);
         //MapLocation nearestEnemyFlag = findClosestBroadcastFlags(rc);
@@ -56,11 +51,10 @@ public class Explorer {
                 attemptBuild(rc);
                 //Builder.UpdateExplosionBorder2(rc);
             }
-            if(!isAdjacent) {
-                if(dam != null){
+            if (!isAdjacent) {
+                if (dam != null) {
                     Pathfinding.bellmanFord5x5(rc, dam);
-                }
-                else {
+                } else {
                     Pathfinding.bellmanFord5x5(rc, centerOfMap);
                 }
             }
@@ -118,18 +112,20 @@ public class Explorer {
         }
         return false;
     }
+
     //returns a spot on the dam if can see dam, otherwise returns null
-    public static MapLocation canSeeDam(RobotController rc) throws GameActionException{
+    public static MapLocation canSeeDam(RobotController rc) throws GameActionException {
         MapInfo[] spaces = rc.senseNearbyMapInfos(GameConstants.VISION_RADIUS_SQUARED);
-        for(MapInfo space : spaces){
-            if(space.isDam())
+        for (MapInfo space : spaces) {
+            if (space.isDam())
                 return space.getMapLocation();
         }
         return null;
     }
+
     public static void attemptBuild(RobotController rc) throws GameActionException {
         RobotInfo[] enemyRobots = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
-        if (enemyRobots.length >= 1){
+        if (enemyRobots.length >= 1) {
             for (MapInfo t : rc.senseNearbyMapInfos(GameConstants.INTERACT_RADIUS_SQUARED)) {
                 if (!Soldier.isTrapAdjacent(rc, t.getMapLocation()) && rc.canBuild(TrapType.STUN, t.getMapLocation())) {
                     rc.build(TrapType.STUN, t.getMapLocation());

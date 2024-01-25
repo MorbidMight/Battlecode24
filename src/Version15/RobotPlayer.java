@@ -20,6 +20,9 @@ public strictfp class RobotPlayer {
      * You can use static variables like this to save any information you want. Keep in mind that even though
      * these variables are static, in Battlecode they aren't actually shared between your robots.
      */
+
+    static int[] turnsWithKills = new int[25]; //The turns when the robot preformed a kill, compares it to the the current turn count to figure out when a
+
     //used to unlock spawn locs 20 turns after locking it, if no longer under attack - otherwise, reset count
     static int countSinceLocked = 0;
     //counts number of turns since a flag sitter has seen a friendly flag
@@ -97,6 +100,8 @@ static MapLocation builderBombCircleCenter = null;
     public static void run(RobotController rc) throws GameActionException {
         initialize(rc);
         while (true) {
+            Utilities.checkForRevivedRobots(rc,turnsWithKills);
+
             //changes explorers to soldiers at round 200
             if (rc.getRoundNum() >= GameConstants.SETUP_ROUNDS && role == roles.explorer) {
                 role = roles.soldier;
