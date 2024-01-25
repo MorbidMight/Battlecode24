@@ -105,7 +105,12 @@ public class OffensiveBuilder {
             }
         }*/
         if(enemyRobots.length>=1 || enemyFlagsPickedUp.length > 0){
-            MapLocation target = rc.getLocation().add(rc.getLocation().directionTo(averageRobotLocation(enemyRobots)));
+            MapLocation target;
+            if(enemyRobots.length >= 1)
+                target = rc.getLocation().add(rc.getLocation().directionTo(averageRobotLocation(enemyRobots)));
+            else{
+                target = rc.getLocation();
+            }
             if (!Soldier.isTrapAdjacent(rc, target) && rc.canBuild(TrapType.STUN, target)) {
                 rc.build(TrapType.STUN, target);
             }
