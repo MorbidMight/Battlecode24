@@ -471,4 +471,17 @@ public class Utilities
         }
 
     }
+
+    public static boolean locationIsBehindWall(RobotController rc, MapLocation L){
+        double m  = (rc.getLocation().y-L.y+0.0)/(rc.getLocation().x-L.x);
+        double c = (m*L.x-L.y);
+        for(MapInfo T: rc.senseNearbyMapInfos()){
+            MapLocation t = T.getMapLocation();
+            double d = (m*t.x*-1+t.y+c)/(Math.sqrt(1+m*m));
+            if(d<=1&&T.isWall()){
+                return true;
+            }
+        }
+        return false;
+    }
 }
