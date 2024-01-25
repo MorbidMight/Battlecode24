@@ -860,10 +860,14 @@ public class Soldier
     public static void attemptAttack(RobotController rc) throws GameActionException {
         MapLocation toAttack = lowestHealth(enemyRobotsAttackRange);
         if (toAttack != null && rc.canAttack(toAttack)) {
+            if (rc.senseRobotAtLocation(toAttack).health <= rc.getAttackDamage()&&!rc.senseRobotAtLocation(toAttack).team.isPlayer())
+                Utilities.addKillToKillsArray(rc, turnsWithKills);
             rc.attack(toAttack);
         }
         if(rc.isActionReady()){
             if (toAttack != null && rc.canAttack(toAttack)) {
+                if (rc.senseRobotAtLocation(toAttack).health <= rc.getAttackDamage()&&!rc.senseRobotAtLocation(toAttack).team.isPlayer())
+                    Utilities.addKillToKillsArray(rc, turnsWithKills);
                 rc.attack(toAttack);
             }
         }
