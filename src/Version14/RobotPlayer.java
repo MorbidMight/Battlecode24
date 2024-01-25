@@ -263,9 +263,9 @@ static MapLocation builderBombCircleCenter = null;
                 MapLocation[] clusters = Utilities.getLastRoundClusters(rc);
                 if(turnOrder == 0)
                 {
-                    rc.setIndicatorDot(clusters[0], 255, 0, 0);
-                    rc.setIndicatorDot(clusters[1], 0, 255, 0);
-                    rc.setIndicatorDot(clusters[2], 0, 0, 255);
+//                    rc.setIndicatorDot(clusters[0], 255, 0, 0);
+//                    rc.setIndicatorDot(clusters[1], 0, 255, 0);
+//                    rc.setIndicatorDot(clusters[2], 0, 0, 255);
                 }
 
 
@@ -307,8 +307,8 @@ static MapLocation builderBombCircleCenter = null;
     public static void doRoutineTurnTasks(RobotController rc) throws GameActionException
     {
         MapLocation closestCluster = Utilities.getClosestCluster(rc);
-        if(closestCluster != null)
-            rc.setIndicatorLine(rc.getLocation(), closestCluster, 0, 255, 0);
+//        if(closestCluster != null)
+//            rc.setIndicatorLine(rc.getLocation(), closestCluster, 0, 255, 0);
         RobotInfo[] enemyRobots = rc.senseNearbyRobots(GameConstants.VISION_RADIUS_SQUARED, rc.getTeam().opponent());
         for (RobotInfo robot : enemyRobots)
         {
