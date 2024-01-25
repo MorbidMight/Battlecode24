@@ -42,9 +42,9 @@ static MapLocation builderBombCircleCenter = null;
     static ArrayList<MapLocation> prevDestinations;
 
     //Ratios for spawning
-    public static final int NUMSOLDIERS = 47;
+    public static final int NUMSOLDIERS = 46;
     public static final int NUMBUILDERS = 0;
-    public static final int OFFENSIVEBUILDERS = 0;
+    public static final int OFFENSIVEBUILDERS = 1;
 
     public static final int NUMHEALERS = 0;
     //offensive builders is 50 - numsoldiers - numbuilders - 3
