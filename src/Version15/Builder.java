@@ -21,7 +21,7 @@ public class Builder {
 static int radius = 0;
     public static void runBuilder(RobotController rc) throws GameActionException {
         if(turnCount > 1000 && !SittingOnFlag) {
-            role = roles.offensiveBuilder;
+            role = roles.soldier;
             return;
         }
         radius = 7;
@@ -32,7 +32,9 @@ static int radius = 0;
                 int x;
                 if(Soldier.knowFlag(rc))
                     x = RobotPlayer.findClosestSpawnLocationToCoordinatedTarget(rc);
-                else {
+                else if (Utilities.getClosestCluster(rc) != null) {
+                    x = RobotPlayer.findClosestSpawnLocationToCluster(rc);
+                } else {
                     x = RobotPlayer.findClosestSpawnLocationToCoordinatedBroadcast(rc);
                 }
                 if (x != -1){

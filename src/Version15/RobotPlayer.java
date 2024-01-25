@@ -275,9 +275,9 @@ static MapLocation builderBombCircleCenter = null;
                 MapLocation[] clusters = Utilities.getLastRoundClusters(rc);
                 if(turnOrder == 0)
                 {
-//                    rc.setIndicatorDot(clusters[0], 255, 0, 0);
-//                    rc.setIndicatorDot(clusters[1], 0, 255, 0);
-//                    rc.setIndicatorDot(clusters[2], 0, 0, 255);
+                    rc.setIndicatorDot(clusters[0], 255, 0, 0);
+                    rc.setIndicatorDot(clusters[1], 0, 255, 0);
+                    rc.setIndicatorDot(clusters[2], 0, 0, 255);
                 }
 
 
@@ -609,6 +609,26 @@ static MapLocation builderBombCircleCenter = null;
         int distance_1 = coordinatedTarget.distanceSquaredTo(Utilities.convertIntToLocation(rc.readSharedArray(0)));
         int distance_2 = coordinatedTarget.distanceSquaredTo(Utilities.convertIntToLocation(rc.readSharedArray(1)));
         int distance_3 = coordinatedTarget.distanceSquaredTo(Utilities.convertIntToLocation(rc.readSharedArray(2)));
+        if (distance_1 < distance_2) {
+            if (distance_1 < distance_3) {
+                return 0;
+            } else {
+                return 2;
+            }
+        } else {
+            if (distance_2 < distance_3)
+                return 1;
+            else
+                return 2;
+        }
+    }
+    public static int findClosestSpawnLocationToCluster(RobotController rc) throws GameActionException {
+        MapLocation spawn1 = Utilities.convertIntToLocation(rc.readSharedArray(0));
+        MapLocation spawn2 = Utilities.convertIntToLocation(rc.readSharedArray(1));
+        MapLocation spawn3 = Utilities.convertIntToLocation(rc.readSharedArray(2));
+        int distance_1 = spawn1.distanceSquaredTo(Utilities.getClosestCluster(rc, spawn1));
+        int distance_2 = spawn1.distanceSquaredTo(Utilities.getClosestCluster(rc, spawn2));
+        int distance_3 = spawn1.distanceSquaredTo(Utilities.getClosestCluster(rc, spawn3));
         if (distance_1 < distance_2) {
             if (distance_1 < distance_3) {
                 return 0;

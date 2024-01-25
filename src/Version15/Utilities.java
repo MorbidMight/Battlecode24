@@ -450,6 +450,22 @@ public class Utilities
         }
         return closestCluster;
     }
+    public static MapLocation getClosestCluster(RobotController rc, MapLocation origin) throws GameActionException
+    {
+        MapLocation closestCluster = null;
+        int lowestDistance = Integer.MAX_VALUE;
+        for(int i = 0; i < 3; i++)
+        {
+            MapLocation tempLocation = Utilities.convertIntToLocation(rc.readSharedArray(LAST_ROUND_LOCATION_1_INDEX + 4 * i));
+            int tempDistance = origin.distanceSquaredTo(tempLocation);
+            if(!tempLocation.equals(new MapLocation(0,0)) &&  tempDistance < lowestDistance)
+            {
+                closestCluster = tempLocation;
+                lowestDistance = tempDistance;
+            }
+        }
+        return closestCluster;
+    }
 
     public static void addKillToKillsArray(RobotController rc,int[] killsArray) throws GameActionException {
         for(int i = 0;i<killsArray.length;i++){

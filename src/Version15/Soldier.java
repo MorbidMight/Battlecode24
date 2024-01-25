@@ -27,10 +27,8 @@ public class Soldier
     static RobotInfo escortee;
     static RobotInfo lastSeenEnemy;
     final static float STOLEN_FLAG_CONSTANT = 2.7f;
-    //records the enemies seen last round, to create the stunlist
-    static ArrayList<RobotInfo> seenLast = new ArrayList<>();
-    //keeps track of enemies we can see this round that we could see last round, which haven't moved
-    static ArrayList<RobotInfo> stunList = new ArrayList<>();
+    //records the enemies seen la st round, to create the stunlist
+    static float aggresionIndex;
 
 
 
@@ -40,6 +38,11 @@ public class Soldier
             lastSeenEnemy = null;
             return;
         }
+        int numJailed = rc.readSharedArray(6);
+        int numEnemyJailed = rc.readSharedArray(8);
+        //numenemyjailed has 0.01 added to avoid divion by 0
+        aggresionIndex = rc.getHealth() / 750f * ((float) numEnemyJailed / (numJailed + 1));
+        //System.out.println(aggresionIndex);
         if(rc.readSharedArray(53) != 0 && rc.canSenseLocation(Utilities.convertIntToLocation(53)) && rc.senseRobotAtLocation(Utilities.convertIntToLocation(53)) == null){
             rc.writeSharedArray(53, 0);
         }
@@ -87,16 +90,6 @@ public class Soldier
 //        updateInfo(rc);
 //        seenLast.clear();
 //        seenLast.addAll(Arrays.asList(enemyRobots));
-    }
-    public static void createStunList(){
-        stunList.clear();
-        for(RobotInfo robot : seenLast){
-            for(RobotInfo rob : enemyRobots){
-                if(robot.getID() == rob.getID() && robot.getLocation().equals(rob.getLocation())){
-                    stunList.add(robot);
-                }
-            }
-        }
     }
     public static void tryGetCrumbs(RobotController rc) throws GameActionException {
         //tries to get neary crumbs
@@ -231,11 +224,12 @@ public class Soldier
             else if(!isTrapAdjacent(rc, rc.getLocation(), toBeBuilt) && rc.canBuild(toBeBuilt, rc.getLocation())){
                 rc.build(toBeBuilt, rc.getLocation());
             }
-            if(rc.isActionReady() && rc.getCrumbs() > 2500){
-                toBeBuilt = TrapType.EXPLOSIVE;if(!isTrapAdjacent(rc, target, toBeBuilt) && rc.canBuild(toBeBuilt, target)){
+            if(rc.isActionReady() && rc.getCrumbs() > 1500){
+                toBeBuilt = TrapType.EXPLOSIVE;
+                if(rc.canBuild(toBeBuilt, target)){
                     rc.build(toBeBuilt, target);
                 }
-                else if(!isTrapAdjacent(rc, rc.getLocation(), toBeBuilt) && rc.canBuild(toBeBuilt, rc.getLocation())){
+                else if(rc.canBuild(toBeBuilt, rc.getLocation())){
                     rc.build(toBeBuilt, rc.getLocation());
                 }
 
@@ -245,20 +239,21 @@ public class Soldier
             attemptAttack(rc);
         }
         if(enemyRobots.length != 0) {
-            //only kite for the first five rounds following the dam break
-//            if(rc.getRoundNum() >= 200 && rc.getRoundNum() <= 205 && enemyRobots.length > 2){
-//                runMicroKite(rc);
-//                attemptAttack(rc);
-//                attemptHeal(rc);
-//            }
-            if(((float) totalHealth(enemyRobots) / ((totalHealth(allyRobots) + rc.getHealth())) > 2.0f && enemyRobots.length > allyRobots.length + 3)){
+            float healthRatio = (float) totalHealth(enemyRobots) / (totalHealth(allyRobots) + rc.getHealth());
+            if((healthRatio > 2.0f && enemyRobots.length > allyRobots.length + 3)){
                 retreat(rc);
                 updateInfo(rc);
                 attemptAttack(rc);
                 attemptHeal(rc);
             }
+            else if(healthRatio < 0.25f && allyRobots.length > enemyRobots.length + 1){
+                Pathfinding.bellmanFord5x5(rc, lowestHealth(enemyRobots));
+                updateInfo(rc);
+                attemptAttack(rc);
+                attemptHeal(rc);
+            }
             //try and move into attack range of any nearby enemies
-            else if ((rc.isActionReady() /*|| ((allyRobots.length - enemyRobots.length > 6) && enemyRobotsAttackRange.length == 0)) */&& rc.getHealth() > 150)){
+            else if (((rc.isActionReady() || aggresionIndex > 10) /*|| ((allyRobots.length - enemyRobots.length > 6) && enemyRobotsAttackRange.length == 0)) */&& rc.getHealth() > 150)){
                 runMicroAttack(rc);
                 updateInfo(rc);
                 attemptAttack(rc);
@@ -416,7 +411,6 @@ public class Soldier
         engagementMicroSquare[] options = new engagementMicroSquare[8];
         populateMicroArray(rc, options);
         engagementMicroSquare best = null;
-        float aggressionIndex = rc.getHealth() / 9000f;
         float highScore = Integer.MIN_VALUE;
         for(engagementMicroSquare square : options){
             if(square.passable){
@@ -429,7 +423,7 @@ public class Soldier
                         score = 5000 + square.enemiesVisiondX + square.alliesVisiondX * -1 + square.alliesHealRangedX * 0.25f + square.potentialEnemiesAttackRangedX * -5.5f;
                     }
                     else{
-                        score = square.enemiesAttackRangedX * 4 * aggressionIndex + square.enemiesVisiondX + square.alliesVisiondX * -1 + square.alliesHealRangedX * 1.25f + square.potentialEnemiesAttackRangedX * -3.65f;
+                        score = square.enemiesAttackRangedX * 2 * aggresionIndex + square.enemiesVisiondX + square.alliesVisiondX * -1 + square.alliesHealRangedX * 1.25f + square.potentialEnemiesAttackRangedX * -3.65f;
                     }
                 }
                 else if(square.enemiesAttackRangedX == 0) {
@@ -446,7 +440,7 @@ public class Soldier
         }
         if(best != null) {
             //make sure the move isnt outright harmful, or too stupid
-            if (best.enemiesAttackRangedX >= 0 && best.enemiesAttackRangedX <= 2 && rc.canMove(rc.getLocation().directionTo(best.location))) {
+            if (rc.canMove(rc.getLocation().directionTo(best.location))) {
                 rc.move(rc.getLocation().directionTo(best.location));
             }
         }
@@ -591,11 +585,7 @@ public class Soldier
         float highScore = Integer.MIN_VALUE;
         for(engagementMicroSquare square : options){
             if(square.passable){
-                Direction desiredDirection = rc.getLocation().directionTo(findClosestSpawnLocation(rc));
-                Direction actualDirection = rc.getLocation().directionTo(square.location);
                 float score = square.enemiesAttackRangedX * -5.0f + square.enemiesVisiondX * -3.0f + square.alliesVisiondX + square.alliesHealRangedX + square.potentialEnemiesAttackRangedX * -3 + square.hasTrap.compareTo(false) * 6.0f + square.potentialEnemiesPrepareAttackdX * -1.5f;
-//                if(actualDirection == desiredDirection || actualDirection == desiredDirection.rotateLeft() || actualDirection == desiredDirection.rotateRight())
-//                    score += 2.5f;
                 if(score > highScore){
                     highScore = score;
                     best = square;
@@ -870,7 +860,6 @@ public class Soldier
         if(rc.readSharedArray(53) != 0 && rc.canAttack(Utilities.convertIntToLocation(rc.readSharedArray(53)))){
             rc.attack(Utilities.convertIntToLocation(rc.readSharedArray(53)));
             rc.setIndicatorLine(rc.getLocation(), Utilities.convertIntToLocation(rc.readSharedArray(53)), 100, 200, 100);
-            System.out.println("Attacked: " + Utilities.convertIntToLocation(rc.readSharedArray(53)));
             if(rc.senseRobotAtLocation(Utilities.convertIntToLocation(rc.readSharedArray(53))) == null){
                 rc.writeSharedArray(53, 0);
             }
@@ -878,8 +867,8 @@ public class Soldier
         }
         else if(rc.readSharedArray(54) != 0 && rc.canAttack(Utilities.convertIntToLocation(rc.readSharedArray(54)))){
             rc.attack(Utilities.convertIntToLocation(rc.readSharedArray(54)));
-            rc.setIndicatorLine(rc.getLocation(), Utilities.convertIntToLocation(rc.readSharedArray(54)), 100, 200, 100);
-            System.out.println("Attacked: " + Utilities.convertIntToLocation(rc.readSharedArray(54)));
+            //rc.setIndicatorLine(rc.getLocation(), Utilities.convertIntToLocation(rc.readSharedArray(54)), 100, 200, 100);
+            //System.out.println("Attacked: " + Utilities.convertIntToLocation(rc.readSharedArray(54)));
             if(rc.senseRobotAtLocation(Utilities.convertIntToLocation(rc.readSharedArray(54))) == null){
                 rc.writeSharedArray(54, 0);
             }
@@ -890,13 +879,13 @@ public class Soldier
             if(enemyRobots.length + allyRobots.length >= 15 && enemyRobots.length > 5) {
                 if(rc.readSharedArray(53) == 0) {
                     rc.writeSharedArray(53, Utilities.convertLocationToInt(toAttack));
-                    rc.setIndicatorDot(toAttack, 255, 100, 50);
-                    System.out.println("Everyone get: " + toAttack);
+                    //rc.setIndicatorDot(toAttack, 255, 100, 50);
+                    //System.out.println("Everyone get: " + toAttack);
                 }
                 else if(rc.readSharedArray(54) == 0 && rc.getLocation().distanceSquaredTo(Utilities.convertIntToLocation(rc.readSharedArray(53))) > 15){
                     rc.writeSharedArray(54, Utilities.convertLocationToInt(toAttack));
-                    rc.setIndicatorDot(toAttack, 100, 255, 50);
-                    System.out.println("Everyone get: " + toAttack);
+                    //rc.setIndicatorDot(toAttack, 100, 255, 50);
+                    //System.out.println("Everyone get: " + toAttack);
                 }
             }
             if (rc.senseRobotAtLocation(toAttack).health <= rc.getAttackDamage())
