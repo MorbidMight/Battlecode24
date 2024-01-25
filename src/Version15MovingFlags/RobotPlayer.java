@@ -170,6 +170,7 @@ static MapLocation builderBombCircleCenter = null;
 
                                 //decide which place to spawn at based on last two bits of shared array
                                 //loop through spawn locations, try adjacent ones, then try non adjacent ones
+                                MapLocation[] spawnLocs = rc.getAllySpawnLocations();
                                 MapLocation targetSpawn = null;
                                 if (Utilities.readBitSharedArray(rc, 1022)) {
                                     targetSpawn = Utilities.convertIntToLocation(rc.readSharedArray(2));
@@ -178,6 +179,8 @@ static MapLocation builderBombCircleCenter = null;
                                 } else {
                                     targetSpawn = Utilities.convertIntToLocation(rc.readSharedArray(0));
                                 }
+                                //MapLocation targetSpawn = spawnLocs[(turnCount % 3) * 9];
+                                System.out.println(targetSpawn.toString());
                                 //try to spawn at adjacent locations
                                 for (int i = 0; i <= 26; i++) {
                                     if ((targetSpawn.isAdjacentTo(SpawnLocations[i]) || targetSpawn.equals(SpawnLocations[i])) && rc.canSpawn(SpawnLocations[i])) {

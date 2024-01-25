@@ -10,6 +10,7 @@ public class HeadquarterDuck
         Utilities.resetAvgEnemyLoc(rc);
         rc.writeSharedArray(6, rc.readSharedArray(7));
         rc.writeSharedArray(7, 0);
-        //System.out.println(rc.readSharedArray(6));
+        rc.writeSharedArray(53, 0);
+        rc.writeSharedArray(54, 0);
     }
 }
