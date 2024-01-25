@@ -20,6 +20,9 @@ public strictfp class RobotPlayer {
      * You can use static variables like this to save any information you want. Keep in mind that even though
      * these variables are static, in Battlecode they aren't actually shared between your robots.
      */
+
+    static int[] turnsWithKills = new int[25]; //The turns when the robot preformed a kill, compares it to the the current turn count to figure out when a
+
     //used to unlock spawn locs 20 turns after locking it, if no longer under attack - otherwise, reset count
     static int countSinceLocked = 0;
     //counts number of turns since a flag sitter has seen a friendly flag
@@ -97,6 +100,8 @@ static MapLocation builderBombCircleCenter = null;
     public static void run(RobotController rc) throws GameActionException {
         initialize(rc);
         while (true) {
+            Utilities.checkForRevivedRobots(rc,turnsWithKills);
+
             //changes explorers to soldiers at round 200
             if (rc.getRoundNum() >= GameConstants.SETUP_ROUNDS && role == roles.explorer) {
                 role = roles.soldier;
@@ -270,9 +275,9 @@ static MapLocation builderBombCircleCenter = null;
                 MapLocation[] clusters = Utilities.getLastRoundClusters(rc);
                 if(turnOrder == 0)
                 {
-                    rc.setIndicatorDot(clusters[0], 255, 0, 0);
-                    rc.setIndicatorDot(clusters[1], 0, 255, 0);
-                    rc.setIndicatorDot(clusters[2], 0, 0, 255);
+//                    rc.setIndicatorDot(clusters[0], 255, 0, 0);
+//                    rc.setIndicatorDot(clusters[1], 0, 255, 0);
+//                    rc.setIndicatorDot(clusters[2], 0, 0, 255);
                 }
 
 
@@ -314,8 +319,8 @@ static MapLocation builderBombCircleCenter = null;
     public static void doRoutineTurnTasks(RobotController rc) throws GameActionException
     {
         MapLocation closestCluster = Utilities.getClosestCluster(rc);
-        if(closestCluster != null)
-            rc.setIndicatorLine(rc.getLocation(), closestCluster, 0, 255, 0);
+        //if(closestCluster != null)
+          //  rc.setIndicatorLine(rc.getLocation(), closestCluster, 0, 255, 0);
         RobotInfo[] enemyRobots = rc.senseNearbyRobots(GameConstants.VISION_RADIUS_SQUARED, rc.getTeam().opponent());
         for (RobotInfo robot : enemyRobots)
         {

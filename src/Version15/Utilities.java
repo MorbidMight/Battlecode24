@@ -69,39 +69,11 @@ public class Utilities
         return ((1 << bitInArrayIndex) & readArrayValue) != 0;
     }
 
-    public static void setTaskSharedArray(RobotController rc, Task task, int arrayIndex) throws GameActionException
-    {
-        int value = convertLocationToInt(task.location);
-        value = (value | ((task.builderDispatched) ? 1: 0) << 13);
-        for(int i = 6; i < 28; i++){
-            if(value == rc.readSharedArray(i)){
-                return;
-            }
-        }
-        rc.writeSharedArray(arrayIndex, value);
-    }
 
 
-    public static Task readTask(RobotController rc) throws GameActionException
-    {
-        int index = activeTaskIndex(rc);
-        if(index == -1)
-        {
-            return null;
-        }
 
-        return readTaskSharedArray(rc, index);
-    }
 
-    public static void clearTask(RobotController rc, int taskIndex) throws GameActionException {
-        rc.writeSharedArray(taskIndex, 0);
-    }
 
-    public static Task readTaskSharedArray(RobotController rc, int arrayIndex) throws GameActionException
-    {
-        int value = rc.readSharedArray(arrayIndex);
-        return new Task(convertIntToLocation(value & 4095), (value & 8192) != 0, arrayIndex);
-    }
 
     public static int openFlagIndex(RobotController rc) throws GameActionException
     {
@@ -477,5 +449,26 @@ public class Utilities
             }
         }
         return closestCluster;
+    }
+
+    public static void addKillToKillsArray(RobotController rc,int[] killsArray) throws GameActionException {
+        for(int i = 0;i<killsArray.length;i++){
+            if(killsArray[i]==0){
+                killsArray[i] = rc.getRoundNum();
+                rc.writeSharedArray(8,rc.readSharedArray(8)+1);
+
+                return;
+            }
+        }
+    }
+
+    public static void checkForRevivedRobots(RobotController rc, int[] killsArray) throws GameActionException {
+        for(int i = 0;i<killsArray.length;i++){
+            if(killsArray[i] != 0 && rc.getRoundNum()-killsArray[i]>=25){
+                killsArray[i]=0;
+                rc.writeSharedArray(8,rc.readSharedArray(8)-1);
+            }
+        }
+
     }
 }

@@ -40,6 +40,9 @@ public class Soldier
             lastSeenEnemy = null;
             return;
         }
+        if(rc.readSharedArray(53) != 0 && rc.canSenseLocation(Utilities.convertIntToLocation(53)) && rc.senseRobotAtLocation(Utilities.convertIntToLocation(53)) == null){
+            rc.writeSharedArray(53, 0);
+        }
         updateInfo(rc);
         //used to update which flags we know are real or not
         findCoordinatedActualFlag(rc);
@@ -858,12 +861,30 @@ public class Soldier
     }
 
     public static void attemptAttack(RobotController rc) throws GameActionException {
+        if(rc.readSharedArray(53) != 0 && rc.canAttack(Utilities.convertIntToLocation(rc.readSharedArray(53)))){
+            rc.attack(Utilities.convertIntToLocation(rc.readSharedArray(53)));
+            rc.setIndicatorLine(rc.getLocation(), Utilities.convertIntToLocation(rc.readSharedArray(53)), 100, 200, 100);
+            System.out.println("Attacked: " + Utilities.convertIntToLocation(rc.readSharedArray(53)));
+            if(rc.senseRobotAtLocation(Utilities.convertIntToLocation(rc.readSharedArray(53))) == null){
+                rc.writeSharedArray(53, 0);
+            }
+            return;
+        }
         MapLocation toAttack = lowestHealth(enemyRobotsAttackRange);
         if (toAttack != null && rc.canAttack(toAttack)) {
+            if(enemyRobots.length + allyRobots.length >= 15 && enemyRobots.length > 5 && rc.readSharedArray(53) == 0){
+                rc.writeSharedArray(53, Utilities.convertLocationToInt(toAttack));
+                rc.setIndicatorDot(toAttack, 255, 100, 50);
+                System.out.println("Everyone get: " + toAttack);
+            }
+            if (rc.senseRobotAtLocation(toAttack).health <= rc.getAttackDamage())
+                Utilities.addKillToKillsArray(rc, turnsWithKills);
             rc.attack(toAttack);
         }
         if(rc.isActionReady()){
             if (toAttack != null && rc.canAttack(toAttack)) {
+                if (rc.senseRobotAtLocation(toAttack).health <= rc.getAttackDamage())
+                    Utilities.addKillToKillsArray(rc, turnsWithKills);
                 rc.attack(toAttack);
             }
         }

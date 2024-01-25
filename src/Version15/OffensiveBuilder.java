@@ -4,8 +4,7 @@ import battlecode.common.*;
 
 import java.util.ArrayList;
 
-import static Version15.RobotPlayer.lowestHealth;
-import static Version15.RobotPlayer.targetLoc;
+import static Version15.RobotPlayer.*;
 import static Version15.Utilities.averageRobotLocation;
 import static Version15.Utilities.bestHeal;
 
@@ -44,10 +43,14 @@ public class OffensiveBuilder {
         if(rc.isActionReady()){
             MapLocation toAttack = lowestHealth(enemyRobotsAttackRange);
             if (toAttack != null && rc.canAttack(toAttack)) {
+                if(rc.senseRobotAtLocation(toAttack).health <= rc.getAttackDamage()&&!rc.senseRobotAtLocation(toAttack).team.equals(rc.getTeam()))
+                    Utilities.addKillToKillsArray(rc,turnsWithKills);
                 rc.attack(toAttack);
             }
             if(rc.isActionReady()){
                 if (toAttack != null && rc.canAttack(toAttack)) {
+                    if(rc.senseRobotAtLocation(toAttack).health <= rc.getAttackDamage()&&!rc.senseRobotAtLocation(toAttack).team.equals(rc.getTeam()))
+                        Utilities.addKillToKillsArray(rc,turnsWithKills);
                     rc.attack(toAttack);
                 }
             }
