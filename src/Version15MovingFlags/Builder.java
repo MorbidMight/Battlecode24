@@ -1,6 +1,7 @@
 package Version15MovingFlags;
 
 import battlecode.common.*;
+import battlecode.world.Flag;
 import battlecode.world.Trap;
 
 import java.awt.*;
@@ -23,7 +24,7 @@ static int radius = 0;
     public static void runBuilder(RobotController rc) throws GameActionException {
         if(turnCount > 180)
         {
-            role = roles.explorer;
+            //role = roles.explorer;
         }
         MapLocation centerOfMap = new MapLocation(rc.getMapWidth() / 2, rc.getMapHeight() / 2);
         if(turnCount > 1000 && !SittingOnFlag) {
@@ -46,21 +47,16 @@ static int radius = 0;
             }
             builderBombCircleCenter = Utilities.convertIntToLocation(rc.readSharedArray(lowestIndex));
         }
-        if (turnCount == 150) {
-            for (int i = 6; i < 28; i++) {
-                Utilities.clearTask(rc, i);
-            }
-        }
-        if (!rc.isSpawned()) {
-            builderBombCircleCenter = null;
-            return;
-        }
-        Task t = Utilities.readTask(rc);
         if (SittingOnFlag) {
-            if(turnCount > 20)
+            if(turnCount > 30)
             {
-                role = roles.explorer;
-                rc.dropFlag(rc.getLocation());
+                //role = roles.explorer;
+                if(rc.hasFlag())
+                {
+                    rc.dropFlag(rc.getLocation());
+                    role = roles.explorer;
+                }
+                //buildMoat(rc);
             }
             //pick up flag if it is early game
             if(rc.canPickupFlag(rc.getLocation()) && turnCount < 10)
@@ -72,98 +68,11 @@ static int radius = 0;
             {
                 rc.move(rc.getLocation().directionTo(centerOfMap).opposite());
             }
-            RobotInfo toHeal = Utilities.bestHeal(rc, rc.senseNearbyRobots(GameConstants.HEAL_RADIUS_SQUARED, rc.getTeam()));
-            if(toHeal != null && rc.canHeal(toHeal.getLocation())){
-                rc.heal(toHeal.getLocation());
+            else if(rc.canMove(rc.getLocation().directionTo(centerOfMap).opposite().rotateLeft())){
+               rc.move(rc.getLocation().directionTo(centerOfMap).opposite().rotateLeft());
             }
-            if(rc.isActionReady()){
-                MapLocation toAttack = lowestHealth(rc.senseNearbyRobots(GameConstants.ATTACK_RADIUS_SQUARED, rc.getTeam().opponent()));
-                if(toAttack != null && rc.canAttack(toAttack))
-                    rc.attack(toAttack);
-            }
-            //sitting where flag should be, but cant see any flags...
-            //if we still cant see a flag 50 turns later, then until we do see one we're gonna assume this location should essentially be shut down
-            /*if (rc.senseNearbyFlags(-1, rc.getTeam()).length == 0) {
-                //shut down this spawn location for now
-                if (countSinceSeenFlag > 30) {
-                    rc.setIndicatorString("Dont come help me!");
-                    isActive = false;
-                    countSinceSeenFlag++;
-                    if(countSinceSeenFlag > 40){
-                        if(rc.getCrumbs() > 1000 || rc.getLevel(SkillType.BUILD) >= 4)
-                            role = roles.offensiveBuilder;
-                        else
-                            role = roles.soldier;
-                        return;
-                    }
-                    int locInt = Utilities.convertLocationToInt(rc.getLocation());
-                    if(rc.readSharedArray(0) == locInt){
-                        Utilities.editBitSharedArray(rc, 1018, false);
-                    }
-                    else if(rc.readSharedArray(1) == locInt){
-                        Utilities.editBitSharedArray(rc, 1019, false);
-                    }
-                    else if(rc.readSharedArray(2) == locInt){
-                        Utilities.editBitSharedArray(rc, 1020, false);
-                    }
-                    return;
-                } else {
-                    countSinceSeenFlag++;
-                }
-            } else {
-                isActive = true;
-                countSinceSeenFlag = 0;
-                int locInt = Utilities.convertLocationToInt(rc.getLocation());
-                if(rc.readSharedArray(0) == locInt){
-                    Utilities.editBitSharedArray(rc, 1018, true);
-                }
-                else if(rc.readSharedArray(1) == locInt){
-                    Utilities.editBitSharedArray(rc, 1019, true);
-                }
-                else if(rc.readSharedArray(2) == locInt){
-                    Utilities.editBitSharedArray(rc, 1020, true);
-                }
-            }
-            if (countSinceLocked != 0) {
-                countSinceLocked++;
-            }
-            if (countSinceLocked >= 30) {
-                countSinceLocked = 0;
-                Utilities.editBitSharedArray(rc, 1021, false);
-            }*/
-            //check if nearby enemies are coming to attack, call for robots to prioritize spawning at ur flag
-            if (rc.senseNearbyRobots(GameConstants.VISION_RADIUS_SQUARED, rc.getTeam().opponent()).length > rc.senseNearbyRobots(GameConstants.VISION_RADIUS_SQUARED, rc.getTeam()).length) {
-                //spawn everyone in 0-8 if possible, also lock so it wont cycle
-                if (rc.getLocation().equals(Utilities.convertIntToLocation(rc.readSharedArray(0)))) {
-                    Utilities.editBitSharedArray(rc, 1022, false);
-                    Utilities.editBitSharedArray(rc, 1023, false);
-                    //lock
-                    Utilities.editBitSharedArray(rc, 1021, true);
-                } else if (rc.getLocation().equals(Utilities.convertIntToLocation(rc.readSharedArray(1)))) {
-                    Utilities.editBitSharedArray(rc, 1022, false);
-                    Utilities.editBitSharedArray(rc, 1023, true);
-                    //lock
-                    Utilities.editBitSharedArray(rc, 1021, true);
-                } else {
-                    Utilities.editBitSharedArray(rc, 1022, true);
-                    Utilities.editBitSharedArray(rc, 1023, false);
-                    //lock
-                    Utilities.editBitSharedArray(rc, 1021, true);
-                }
-                countSinceLocked++;
-            }
-
-        } else if (/*t != null*/ false) {//there is a task to do
-            Pathfinding.bugNav2(rc, t.location);
-            if (locationIsActionable(rc, t.location)) {
-                TrapType toBeBuilt = TrapType.STUN;
-                if (rc.getCrumbs() > 3500)
-                    toBeBuilt = TrapType.EXPLOSIVE;
-                if (rc.canBuild(toBeBuilt, t.location))
-                    rc.build(toBeBuilt, t.location);
-                Utilities.clearTask(rc, t.arrayIndex);
-            }
-        } else//When there is no active task
+        }
+        else//When there is no active task
         {
             MapLocation center = builderBombCircleCenter;//Will orbit around the flag
             if (center == null) {
@@ -202,27 +111,44 @@ static int radius = 0;
             }
         }
     }
-
-
-
-    private static int numBombsNearby(RobotController rc) throws GameActionException {
-        int out = 0;
-        for(MapInfo i: rc.senseNearbyMapInfos(36)){
-            if(!i.getTrapType().equals(TrapType.NONE)){
-                out++;
+    public static void buildMoat (RobotController rc) throws GameActionException {
+        rc.setIndicatorDot(rc.getLocation(), 100,0,0);
+        FlagInfo[] flags = rc.senseNearbyFlags(-1);
+        /*if(rc.getLocation().distanceSquaredTo(flags[0].getLocation()) < 2)
+        {
+            if(rc.canMove(rc.getLocation().directionTo(flags[0].getLocation()).opposite()))
+                rc.move(rc.getLocation().directionTo(flags[0].getLocation()).opposite());
+        }
+        else
+        {
+            if(rc.canDig(rc.getLocation().add(rc.getLocation().directionTo(flags[0].getLocation())))) {
+                rc.dig(rc.getLocation().add(rc.getLocation().directionTo(flags[0].getLocation())));
+            }
+            if(rc.canDig(rc.getLocation().add(rc.getLocation().directionTo(flags[0].getLocation())).add(rc.getLocation().directionTo(flags[0].getLocation()).rotateRight()))) {
+                rc.dig(rc.getLocation().add(rc.getLocation().directionTo(flags[0].getLocation())));
+            }
+            if(rc.canDig(rc.getLocation().add(rc.getLocation().directionTo(flags[0].getLocation())).add(rc.getLocation().directionTo(flags[0].getLocation()).rotateLeft()))) {
+                rc.dig(rc.getLocation().add(rc.getLocation().directionTo(flags[0].getLocation())));
+            }
+            if(rc.canMove(rc.getLocation().directionTo(flags[0].getLocation()).rotateRight()))
+                rc.move(rc.getLocation().directionTo(flags[0].getLocation()).rotateRight());
+            else if(rc.canMove(rc.getLocation().directionTo(flags[0].getLocation()).rotateLeft()))
+                rc.move(rc.getLocation().directionTo(flags[0].getLocation()).rotateLeft());
+            else
+                role = roles.explorer;
+        }*/
+        for(Direction dir: Direction.allDirections())
+        {
+            MapLocation centerOfMap = new MapLocation(rc.getMapWidth() / 2, rc.getMapHeight() / 2);
+            //if(!dir.equals(rc.getLocation().directionTo(centerOfMap)))
+            //{
+            //}
+            if(rc.canDig(rc.getLocation().add(dir)))
+            {
+                rc.dig(rc.getLocation().add(dir));
             }
         }
-        return out;
     }
-
-    private static Direction directionToMove(RobotController rc) {
-        return directions[rng.nextInt(8)];
-    }
-
-    private static int distanceFromNearestSpawnLocation(RobotController rc){
-        return 0;
-    }
-
     public static boolean locationIsActionable(RobotController rc, MapLocation m) throws GameActionException {
         MapInfo[] ActionableTiles = rc.senseNearbyMapInfos(GameConstants.INTERACT_RADIUS_SQUARED);
         for (MapInfo curr : ActionableTiles)
@@ -234,7 +160,6 @@ static int radius = 0;
         }
         return false;
     }
-
 
     public static void UpdateExplosionBorder2(RobotController rc) throws GameActionException {//For flag sitters
         MapInfo[] mapInfos = rc.senseNearbyMapInfos(GameConstants.INTERACT_RADIUS_SQUARED);

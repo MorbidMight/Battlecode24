@@ -18,7 +18,7 @@ public class Explorer {
             int index = Utilities.openTaskIndex(rc);
             bomb.arrayIndex = index;
             if (index != -1) {
-                Utilities.setTaskSharedArray(rc, bomb, index);
+                //Utilities.setTaskSharedArray(rc, bomb, index);
             }
         }
         //condense on dam for when it breaks

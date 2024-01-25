@@ -20,6 +20,9 @@ public strictfp class RobotPlayer {
      * You can use static variables like this to save any information you want. Keep in mind that even though
      * these variables are static, in Battlecode they aren't actually shared between your robots.
      */
+
+    static int[] turnsWithKills = new int[25]; //The turns when the robot preformed a kill, compares it to the the current turn count to figure out when a
+
     //used to unlock spawn locs 20 turns after locking it, if no longer under attack - otherwise, reset count
     static int countSinceLocked = 0;
     //counts number of turns since a flag sitter has seen a friendly flag
@@ -97,6 +100,8 @@ static MapLocation builderBombCircleCenter = null;
     public static void run(RobotController rc) throws GameActionException {
         initialize(rc);
         while (true) {
+            Utilities.checkForRevivedRobots(rc,turnsWithKills);
+
             //changes explorers to soldiers at round 200
             if (rc.getRoundNum() >= GameConstants.SETUP_ROUNDS && role == roles.explorer) {
                 role = roles.soldier;
@@ -132,7 +137,7 @@ static MapLocation builderBombCircleCenter = null;
                     //get our robots out onto the map
                     if (turnCount <= 10) {
                         MapLocation[] spawnLocs = rc.getAllySpawnLocations();
-                        int spawnIndex = turnCount % 3;
+                        int spawnIndex = 0;
                         while (spawnIndex < 26 && !rc.canSpawn(spawnLocs[spawnIndex])) {
                             spawnIndex++;
                         }
@@ -143,18 +148,9 @@ static MapLocation builderBombCircleCenter = null;
                                 SittingOnFlag = true;
                             }
                             else{
-                                int spawnNum = rc.readSharedArray(52);
-                                rc.writeSharedArray(52, spawnNum + 1);
-                                if(spawnNum == NUMSOLDIERS / 2) {
-                                    role = roles.offensiveBuilder;
-                                }
-                                else if(spawnNum < NUMSOLDIERS + 1){
-                                    role = roles.explorer;
-                                }
-                                else{
-                                    role = roles.offensiveBuilder;
-                                }
+                                role = roles.explorer;
                             }
+                            //role = roles.explorer;
                         }
                     } else {
                         if (SittingOnFlag) {
@@ -170,7 +166,6 @@ static MapLocation builderBombCircleCenter = null;
 
                                 //decide which place to spawn at based on last two bits of shared array
                                 //loop through spawn locations, try adjacent ones, then try non adjacent ones
-                                MapLocation[] spawnLocs = rc.getAllySpawnLocations();
                                 MapLocation targetSpawn = null;
                                 if (Utilities.readBitSharedArray(rc, 1022)) {
                                     targetSpawn = Utilities.convertIntToLocation(rc.readSharedArray(2));
@@ -179,8 +174,6 @@ static MapLocation builderBombCircleCenter = null;
                                 } else {
                                     targetSpawn = Utilities.convertIntToLocation(rc.readSharedArray(0));
                                 }
-                                //MapLocation targetSpawn = spawnLocs[(turnCount % 3) * 9];
-                                System.out.println(targetSpawn.toString());
                                 //try to spawn at adjacent locations
                                 for (int i = 0; i <= 26; i++) {
                                     if ((targetSpawn.isAdjacentTo(SpawnLocations[i]) || targetSpawn.equals(SpawnLocations[i])) && rc.canSpawn(SpawnLocations[i])) {
@@ -273,9 +266,9 @@ static MapLocation builderBombCircleCenter = null;
                 MapLocation[] clusters = Utilities.getLastRoundClusters(rc);
                 if(turnOrder == 0)
                 {
-                    rc.setIndicatorDot(clusters[0], 255, 0, 0);
-                    rc.setIndicatorDot(clusters[1], 0, 255, 0);
-                    rc.setIndicatorDot(clusters[2], 0, 0, 255);
+//                    rc.setIndicatorDot(clusters[0], 255, 0, 0);
+//                    rc.setIndicatorDot(clusters[1], 0, 255, 0);
+//                    rc.setIndicatorDot(clusters[2], 0, 0, 255);
                 }
 
 
@@ -317,8 +310,8 @@ static MapLocation builderBombCircleCenter = null;
     public static void doRoutineTurnTasks(RobotController rc) throws GameActionException
     {
         MapLocation closestCluster = Utilities.getClosestCluster(rc);
-        if(closestCluster != null)
-            rc.setIndicatorLine(rc.getLocation(), closestCluster, 0, 255, 0);
+        //if(closestCluster != null)
+          //  rc.setIndicatorLine(rc.getLocation(), closestCluster, 0, 255, 0);
         RobotInfo[] enemyRobots = rc.senseNearbyRobots(GameConstants.VISION_RADIUS_SQUARED, rc.getTeam().opponent());
         for (RobotInfo robot : enemyRobots)
         {
