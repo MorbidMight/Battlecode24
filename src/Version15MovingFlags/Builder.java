@@ -21,6 +21,10 @@ public class Builder {
     final static int ROUND_TO_BUILD_EXPLOSION_BORDER = 0;
 static int radius = 0;
     public static void runBuilder(RobotController rc) throws GameActionException {
+        if(turnCount > 180)
+        {
+            role = roles.explorer;
+        }
         MapLocation centerOfMap = new MapLocation(rc.getMapWidth() / 2, rc.getMapHeight() / 2);
         if(turnCount > 1000 && !SittingOnFlag) {
             role = roles.offensiveBuilder;
@@ -53,6 +57,11 @@ static int radius = 0;
         }
         Task t = Utilities.readTask(rc);
         if (SittingOnFlag) {
+            if(turnCount > 20)
+            {
+                role = roles.explorer;
+                rc.dropFlag(rc.getLocation());
+            }
             //pick up flag if it is early game
             if(rc.canPickupFlag(rc.getLocation()) && turnCount < 10)
             {
@@ -62,24 +71,6 @@ static int radius = 0;
             if(rc.canMove(rc.getLocation().directionTo(centerOfMap).opposite()))
             {
                 rc.move(rc.getLocation().directionTo(centerOfMap).opposite());
-            }
-            else{
-                //drop flag after reaching edge
-                if(rc.canDropFlag(rc.getLocation()))
-                {
-                    rc.dropFlag(rc.getLocation());
-                }
-                //change type if traps are all built
-                UpdateExplosionBorder(rc);
-                boolean trapsFilled = true;
-                for (MapInfo x : rc.senseNearbyMapInfos(GameConstants.INTERACT_RADIUS_SQUARED)) {
-                    if(x.getTrapType() != TrapType.EXPLOSIVE)
-                        trapsFilled = false;
-                }
-                if(trapsFilled)
-                {
-                    role = roles.soldier;
-                }
             }
             RobotInfo toHeal = Utilities.bestHeal(rc, rc.senseNearbyRobots(GameConstants.HEAL_RADIUS_SQUARED, rc.getTeam()));
             if(toHeal != null && rc.canHeal(toHeal.getLocation())){
@@ -196,7 +187,7 @@ static int radius = 0;
             } else if (rc.getLocation().distanceSquaredTo(center) > Math.pow(radius + 1, 2)) {
                 Pathfinding.tryToMove(rc, rc.adjacentLocation(center.directionTo(rc.getLocation()).opposite()));
 
-            } else if (true) {
+            } else{
 
                 if ((rc.getRoundNum() / 40) % 2 == 0) {
                     if (rc.canFill(rc.adjacentLocation(center.directionTo(rc.getLocation()).rotateLeft().rotateLeft())))
