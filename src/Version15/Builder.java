@@ -26,25 +26,6 @@ static int radius = 0;
         }
         radius = 7;
 
-        if (builderBombCircleCenter == null && rc.getRoundNum() >= 3) {
-            int[] distances = new int[3];
-            distances[0] = rc.getLocation().distanceSquaredTo(Utilities.convertIntToLocation(rc.readSharedArray(0)));
-            distances[1] = rc.getLocation().distanceSquaredTo(Utilities.convertIntToLocation(rc.readSharedArray(1)));
-            distances[2] = rc.getLocation().distanceSquaredTo(Utilities.convertIntToLocation(rc.readSharedArray(2)));
-            int lowestIndex = 0;
-            if (distances[0] > distances[1]) {
-                lowestIndex = 1;
-            }
-            if (distances[lowestIndex] > distances[2]) {
-                lowestIndex = 2;
-            }
-            builderBombCircleCenter = Utilities.convertIntToLocation(rc.readSharedArray(lowestIndex));
-        }
-
-        if (!rc.isSpawned()) {
-            builderBombCircleCenter = null;
-            return;
-        }
         if (SittingOnFlag) {
             //update where we want soldiers to spawn
             if(!Utilities.readBitSharedArray(rc, 1021)){
