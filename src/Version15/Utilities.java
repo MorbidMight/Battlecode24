@@ -494,10 +494,19 @@ public class Utilities
         for(MapInfo T: rc.senseNearbyMapInfos()){
             MapLocation t = T.getMapLocation();
             double d = (m*t.x*-1+t.y+c)/(Math.sqrt(1+m*m));
-            if(d<=1&&T.isWall()){
+            if(d<=1&&T.isWall()&&!isLocationBehind(t,rc.getLocation(),rc.getLocation().directionTo(L))){
                 return true;
             }
         }
         return false;
+    }
+
+    private static boolean isLocationBehind(MapLocation toTest, MapLocation center,Direction dir){
+        Direction test = center.directionTo(toTest);
+        while(dir != Direction.SOUTH){
+            test = test.rotateLeft();
+            dir = dir.rotateLeft();
+        }
+        return(test ==Direction.NORTH || test == Direction.NORTHWEST||test == Direction.NORTHEAST);
     }
 }
