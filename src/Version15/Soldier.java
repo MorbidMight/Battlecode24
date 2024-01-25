@@ -43,6 +43,9 @@ public class Soldier
         if(rc.readSharedArray(53) != 0 && rc.canSenseLocation(Utilities.convertIntToLocation(53)) && rc.senseRobotAtLocation(Utilities.convertIntToLocation(53)) == null){
             rc.writeSharedArray(53, 0);
         }
+        else if(rc.readSharedArray(54) != 0 && rc.canSenseLocation(Utilities.convertIntToLocation(54)) && rc.senseRobotAtLocation(Utilities.convertIntToLocation(54)) == null){
+            rc.writeSharedArray(54, 0);
+        }
         updateInfo(rc);
         //used to update which flags we know are real or not
         findCoordinatedActualFlag(rc);
@@ -512,7 +515,10 @@ public class Soldier
         float score;
         for(engagementMicroSquare square : options){
             if(square.passable){
-                if(square.enemiesAttackRangedX * -1 == enemyRobotsAttackRange.length){
+                if((square.enemiesAttackRangedX + square.potentialEnemiesAttackRangedX) * -1 == potentialEnemiesAttackRange.length){
+                    score = 15000 + square.alliesHealRangedX * 1.5f + square.alliesVisiondX + square.enemiesVisiondX * 1.25f + square.hasTrap.compareTo(false) + square.potentialEnemiesPrepareAttackdX * 3.25f;
+                }
+                else if(square.enemiesAttackRangedX * -1 == enemyRobotsAttackRange.length){
                     score = 10000 + square.potentialEnemiesAttackRangedX * -7.0f + square.alliesHealRangedX * 1.5f + square.alliesVisiondX + square.enemiesVisiondX * 1.25f + square.hasTrap.compareTo(false) * 3.5f + square.potentialEnemiesPrepareAttackdX * 3.25f;
                 }
                 else if(square.enemiesAttackRangedX < 0){
@@ -870,12 +876,28 @@ public class Soldier
             }
             return;
         }
+        else if(rc.readSharedArray(54) != 0 && rc.canAttack(Utilities.convertIntToLocation(rc.readSharedArray(54)))){
+            rc.attack(Utilities.convertIntToLocation(rc.readSharedArray(54)));
+            rc.setIndicatorLine(rc.getLocation(), Utilities.convertIntToLocation(rc.readSharedArray(54)), 100, 200, 100);
+            System.out.println("Attacked: " + Utilities.convertIntToLocation(rc.readSharedArray(54)));
+            if(rc.senseRobotAtLocation(Utilities.convertIntToLocation(rc.readSharedArray(54))) == null){
+                rc.writeSharedArray(54, 0);
+            }
+            return;
+        }
         MapLocation toAttack = lowestHealth(enemyRobotsAttackRange);
         if (toAttack != null && rc.canAttack(toAttack)) {
-            if(enemyRobots.length + allyRobots.length >= 15 && enemyRobots.length > 5 && rc.readSharedArray(53) == 0){
-                rc.writeSharedArray(53, Utilities.convertLocationToInt(toAttack));
-                rc.setIndicatorDot(toAttack, 255, 100, 50);
-                System.out.println("Everyone get: " + toAttack);
+            if(enemyRobots.length + allyRobots.length >= 15 && enemyRobots.length > 5) {
+                if(rc.readSharedArray(53) == 0) {
+                    rc.writeSharedArray(53, Utilities.convertLocationToInt(toAttack));
+                    rc.setIndicatorDot(toAttack, 255, 100, 50);
+                    System.out.println("Everyone get: " + toAttack);
+                }
+                else if(rc.readSharedArray(54) == 0 && rc.getLocation().distanceSquaredTo(Utilities.convertIntToLocation(rc.readSharedArray(53))) > 15){
+                    rc.writeSharedArray(54, Utilities.convertLocationToInt(toAttack));
+                    rc.setIndicatorDot(toAttack, 100, 255, 50);
+                    System.out.println("Everyone get: " + toAttack);
+                }
             }
             if (rc.senseRobotAtLocation(toAttack).health <= rc.getAttackDamage())
                 Utilities.addKillToKillsArray(rc, turnsWithKills);

@@ -11,5 +11,6 @@ public class HeadquarterDuck
         rc.writeSharedArray(6, rc.readSharedArray(7));
         rc.writeSharedArray(7, 0);
         rc.writeSharedArray(53, 0);
+        rc.writeSharedArray(54, 0);
     }
 }
