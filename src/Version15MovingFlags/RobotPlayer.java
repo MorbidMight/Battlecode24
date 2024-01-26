@@ -400,6 +400,26 @@ static MapLocation builderBombCircleCenter = null;
             return null;
         }
     }
+    public static int findClosestSpawnLocationToCluster(RobotController rc) throws GameActionException {
+        MapLocation spawn1 = Utilities.convertIntToLocation(rc.readSharedArray(0));
+        MapLocation spawn2 = Utilities.convertIntToLocation(rc.readSharedArray(1));
+        MapLocation spawn3 = Utilities.convertIntToLocation(rc.readSharedArray(2));
+        int distance_1 = spawn1.distanceSquaredTo(Utilities.getClosestCluster(rc, spawn1));
+        int distance_2 = spawn1.distanceSquaredTo(Utilities.getClosestCluster(rc, spawn2));
+        int distance_3 = spawn1.distanceSquaredTo(Utilities.getClosestCluster(rc, spawn3));
+        if (distance_1 < distance_2) {
+            if (distance_1 < distance_3) {
+                return 0;
+            } else {
+                return 2;
+            }
+        } else {
+            if (distance_2 < distance_3)
+                return 1;
+            else
+                return 2;
+        }
+    }
 
     //returns broadcastflag at index 0 so that all soldiers will go to the same general area and coordinate
     public static MapLocation findCoordinatedBroadcastFlag(RobotController rc) {
@@ -620,6 +640,24 @@ static MapLocation builderBombCircleCenter = null;
         int distance_1 = coordinatedTarget.distanceSquaredTo(Utilities.convertIntToLocation(rc.readSharedArray(0)));
         int distance_2 = coordinatedTarget.distanceSquaredTo(Utilities.convertIntToLocation(rc.readSharedArray(1)));
         int distance_3 = coordinatedTarget.distanceSquaredTo(Utilities.convertIntToLocation(rc.readSharedArray(2)));
+        if (distance_1 < distance_2) {
+            if (distance_1 < distance_3) {
+                return 0;
+            } else {
+                return 2;
+            }
+        } else {
+            if (distance_2 < distance_3)
+                return 1;
+            else
+                return 2;
+        }
+    }
+    public static int findClosestSpawnLocationToStolenFlag(RobotController rc, StolenFlag s) throws GameActionException {
+        MapLocation target = s.location;
+        int distance_1 = target.distanceSquaredTo(Utilities.convertIntToLocation(rc.readSharedArray(0)));
+        int distance_2 = target.distanceSquaredTo(Utilities.convertIntToLocation(rc.readSharedArray(1)));
+        int distance_3 = target.distanceSquaredTo(Utilities.convertIntToLocation(rc.readSharedArray(2)));
         if (distance_1 < distance_2) {
             if (distance_1 < distance_3) {
                 return 0;

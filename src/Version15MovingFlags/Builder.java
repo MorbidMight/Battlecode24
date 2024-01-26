@@ -54,9 +54,15 @@ static int radius = 0;
                 if(rc.hasFlag())
                 {
                     rc.dropFlag(rc.getLocation());
+                    if(rc.readSharedArray(40) == 0)
+                        rc.writeSharedArray(40, Utilities.convertLocationToInt(rc.getLocation()));
+                    else if(rc.readSharedArray(41) == 0)
+                        rc.writeSharedArray(41, Utilities.convertLocationToInt(rc.getLocation()));
+                    else if (rc.readSharedArray(42) == 0)
+                        rc.writeSharedArray(42, Utilities.convertLocationToInt(rc.getLocation()));
                     role = roles.explorer;
                 }
-                //buildMoat(rc);
+                buildMoat(rc);
             }
             //pick up flag if it is early game
             if(rc.canPickupFlag(rc.getLocation()) && turnCount < 10)

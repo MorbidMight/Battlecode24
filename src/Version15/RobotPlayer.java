@@ -209,13 +209,13 @@ static MapLocation builderBombCircleCenter = null;
                         int toPush = Utilities.convertLocationToInt(rc.getLocation());
                         if (rc.readSharedArray(0) == 0) {
                             rc.writeSharedArray(0, toPush);
-                            rc.setIndicatorString("look at me!!");
+                          //  rc.setIndicatorString("look at me!!");
                         } else if (rc.readSharedArray(1) == 0 && rc.readSharedArray(0) != toPush) {
                             rc.writeSharedArray(1, toPush);
-                            rc.setIndicatorString("look at me!!");
+                           // rc.setIndicatorString("look at me!!");
                         } else if (rc.readSharedArray(2) == 0 && rc.readSharedArray(1) != toPush) {
                             rc.writeSharedArray(2, toPush);
-                            rc.setIndicatorString("look at me!!");
+                           // rc.setIndicatorString("look at me!!");
                         }
                     }
 

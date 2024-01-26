@@ -268,6 +268,10 @@ public class Utilities
             }
         }
     }
+    //returns whether the location is a new default location of our flags
+    public static boolean isDefaultLocation(RobotController rc, MapLocation location) throws GameActionException {
+        return location.equals(convertIntToLocation(rc.readSharedArray(40))) || location.equals(convertIntToLocation(rc.readSharedArray(41))) || location.equals(convertIntToLocation(rc.readSharedArray(42)));
+    }
 
     public static void verifyFlagLocations(RobotController rc) throws GameActionException
     {
@@ -483,5 +487,21 @@ public class Utilities
             }
         }
         return false;
+    }
+    public static MapLocation getClosestCluster(RobotController rc, MapLocation origin) throws GameActionException
+    {
+        MapLocation closestCluster = null;
+        int lowestDistance = Integer.MAX_VALUE;
+        for(int i = 0; i < 3; i++)
+        {
+            MapLocation tempLocation = Utilities.convertIntToLocation(rc.readSharedArray(LAST_ROUND_LOCATION_1_INDEX + 4 * i));
+            int tempDistance = origin.distanceSquaredTo(tempLocation);
+            if(!tempLocation.equals(new MapLocation(0,0)) &&  tempDistance < lowestDistance)
+            {
+                closestCluster = tempLocation;
+                lowestDistance = tempDistance;
+            }
+        }
+        return closestCluster;
     }
 }
