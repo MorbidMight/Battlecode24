@@ -166,7 +166,7 @@ public class Utilities
         {
             if (rc.readSharedArray(x) == 0)
             {
-                rc.writeSharedArray(x, Utilities.convertLocationToInt(enemy));
+                //rc.writeSharedArray(x, Utilities.convertLocationToInt(enemy));
             }
         }
     }
@@ -178,7 +178,7 @@ public class Utilities
                 if (readLocation != 0) {
                     MapLocation location = Utilities.convertIntToLocation(readLocation);
                     if (rc.canSenseLocation(location) && !rc.canSenseRobotAtLocation(location)) {
-                        rc.writeSharedArray(i, 0);
+                        //rc.writeSharedArray(i, 0);
                     }
                 }
             }
@@ -317,6 +317,25 @@ public class Utilities
             {
                 StolenFlag tempFlag = Utilities.readFlag(rc, i);
                 int tempDistance = rc.getLocation().distanceSquaredTo(tempFlag.location);
+                if(tempDistance < closestDistance)
+                {
+                    closest = tempFlag;
+                    closestDistance = tempDistance;
+                }
+            }
+        }
+        return closest;
+    }
+    public static StolenFlag getClosestFlag(RobotController rc, MapLocation loc) throws GameActionException
+    {
+        StolenFlag closest = null;
+        int closestDistance = Integer.MAX_VALUE;
+        for(int i = 58; i <= 60; i++)
+        {
+            if(rc.readSharedArray(i) != 0)
+            {
+                StolenFlag tempFlag = Utilities.readFlag(rc, i);
+                int tempDistance = loc.distanceSquaredTo(tempFlag.location);
                 if(tempDistance < closestDistance)
                 {
                     closest = tempFlag;
