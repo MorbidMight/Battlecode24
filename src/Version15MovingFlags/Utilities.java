@@ -507,6 +507,18 @@ public class Utilities
         }
         return false;
     }
+    public static boolean locationIsBehindWall(RobotController rc, MapLocation L, MapLocation R){
+        double m  = (R.y-L.y+0.0)/(R.x-L.x);
+        double c = (m*L.x-L.y);
+        for(MapInfo T: rc.senseNearbyMapInfos()){
+            MapLocation t = T.getMapLocation();
+            double d = (m*t.x*-1+t.y+c)/(Math.sqrt(1+m*m));
+            if(d<=1&&T.isWall()){
+                return true;
+            }
+        }
+        return false;
+    }
     public static MapLocation getClosestCluster(RobotController rc, MapLocation origin) throws GameActionException
     {
         MapLocation closestCluster = null;

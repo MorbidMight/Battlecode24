@@ -79,8 +79,10 @@ public class Builder {
             //MapLocation target = scoredLocations.getFirst();
             assert scoredLocationsV2.peek() != null;
             MapLocation target = scoredLocationsV2.peek().location;
+            //System.out.println(target);
             if (!rc.getLocation().equals(target))
-                Pathfinding.combinedPathfinding(rc, target);
+                BFSKernel.BFS(rc, target);
+            //Pathfinding.combinedPathfinding(rc, target);
             if (rc.canSenseLocation(target) && rc.senseLegalStartingFlagPlacement(target)) {
                 if (rc.canDropFlag(target)) {
                     rc.dropFlag(target);
@@ -133,7 +135,7 @@ public class Builder {
 //                    rc.move(rc.getLocation().directionTo(centerOfMap).opposite().rotateLeft().rotateLeft());
 //                }
                 //explore(rc);
-                Pathfinding.bellmanFord5x5(rc, rc.getLocation().add(rc.getLocation().directionTo(rc.senseNearbyFlags(-1, rc.getTeam())[0].getLocation()).opposite()));
+                BFSKernel.BFS(rc, rc.getLocation().add(rc.getLocation().directionTo(rc.senseNearbyFlags(-1, rc.getTeam())[0].getLocation()).opposite()));
             }
         }
     }
@@ -330,18 +332,23 @@ public class Builder {
         for(MapInfo m : surroundingAreas){
             MapLocation temp = m.getMapLocation();
             if(!m.isPassable() && !m.isDam()){
-                if(temp.isAdjacentTo(location))
-                    score = (m.isWater()) ? score + 5 : score + 80;
-                else
-                    score = (m.isWater()) ? score + 1 : score + 30;
+                if(temp.isAdjacentTo(location)) {
+                    score = (m.isWater()) ? score + 3 : score + 60;
+                    if(Utilities.locationIsBehindWall(rc,centerOfMap, temp)){
+                        score += 100;
+                    }
+                }
+                else {
+                    score = (m.isWater()) ? score + 1 : score + 20;
+                }
             }
             if(m.isDam())
-                score-= 30;
+                score-= 20;
             if(m.isDam() && temp.isAdjacentTo(location))
                 score -= 100;
         }
-        score += location.distanceSquaredTo(centerOfMap) / 3;
-        score -= location.distanceSquaredTo(closestCorner) / 3;
+        score += location.distanceSquaredTo(centerOfMap) / 2;
+        score -= location.distanceSquaredTo(closestCorner) / 2;
         return score;
     }
     public static boolean isMapEdge(RobotController rc, MapLocation loc){
@@ -351,12 +358,14 @@ public class Builder {
     }
     public static void explore(RobotController rc) throws GameActionException {
         //explore a new area
-        if (turnsSinceLocGen == 20 || turnsSinceLocGen == 0 || rc.getLocation().equals(targetLoc) || (rc.canSenseLocation(targetLoc) && rc.senseMapInfo(targetLoc).getTeamTerritory() != rc.getTeam())) {
+        if (turnsSinceLocGen == 20 || turnsSinceLocGen == 0 || rc.getLocation().equals(targetLoc) || (rc.canSenseLocation(targetLoc) && rc.senseMapInfo(targetLoc).getTeamTerritory() != rc.getTeam()) || (rc.canSenseLocation(targetLoc) && !rc.senseMapInfo(targetLoc).isPassable())) {
             targetLoc = generateTargetLoc(rc);
-            Pathfinding.combinedPathfinding(rc, targetLoc);
+            //Pathfinding.combinedPathfinding(rc, targetLoc);
+            BFSKernel.BFS(rc, targetLoc);
             turnsSinceLocGen = 1;
         } else {
-            Pathfinding.combinedPathfinding(rc, targetLoc);
+            //Pathfinding.combinedPathfinding(rc, targetLoc);
+            BFSKernel.BFS(rc, targetLoc);
             turnsSinceLocGen++;
         }
     }

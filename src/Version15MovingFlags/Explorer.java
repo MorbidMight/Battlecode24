@@ -83,20 +83,22 @@ public class Explorer {
                 Pathfinding.bellmanFord5x5(rc, targetCrumb);
             }
             //explore a new area
-            else if (turnsSinceLocGen == 20 || turnsSinceLocGen == 0 || rc.getLocation().equals(targetLoc)) {
+            else if (turnsSinceLocGen == 20 || turnsSinceLocGen == 0 || rc.getLocation().equals(targetLoc) || (rc.canSenseLocation(targetLoc) && !rc.senseMapInfo(targetLoc).isPassable())) {
                 targetLoc = generateTargetLoc(rc);
                 if(rc.getRoundNum() > 70 && nearbyFlags.length > 0 && rc.senseNearbyFlags(-1, rc.getTeam())[0].isPickedUp()){
                     Pathfinding.bellmanFordFlag(rc, targetLoc, new StolenFlag(rc.senseNearbyFlags(-1, rc.getTeam())[0].getLocation(), true));
                 }
                 else
-                    Pathfinding.combinedPathfinding(rc, targetLoc);
+                    BFSKernel.BFS(rc, targetLoc);
+                    //Pathfinding.combinedPathfinding(rc, targetLoc);
                 turnsSinceLocGen = 1;
             } else {
                 if(rc.getRoundNum() > 70 && nearbyFlags.length > 0 && rc.senseNearbyFlags(-1, rc.getTeam())[0].isPickedUp()){
                     Pathfinding.bellmanFordFlag(rc, targetLoc, new StolenFlag(rc.senseNearbyFlags(-1, rc.getTeam())[0].getLocation(), true));
                 }
                 else
-                    Pathfinding.combinedPathfinding(rc, targetLoc);
+                    BFSKernel.BFS(rc, targetLoc);
+                    //Pathfinding.combinedPathfinding(rc, targetLoc);
                 turnsSinceLocGen++;
             }
         }
