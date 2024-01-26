@@ -25,8 +25,10 @@ public class Builder {
     final static int ROUND_TO_BUILD_EXPLOSION_BORDER = 0;
     static MapLocation centerOfMap = null;
     static ArrayDeque<MapLocation> scoredLocations = new ArrayDeque<MapLocation>();
+    static PriorityQueue<PotentialFlag> scoredLocationsV2 = new PriorityQueue<>();
     static int bestScore = -1;
     static int radius = 0;
+    static MapLocation closestCorner;
 
     static final int EXPLORE_PERIOD = 80;
 
@@ -37,6 +39,9 @@ public class Builder {
         //pick up flag if it is early game
         if (centerOfMap == null)
             centerOfMap = new MapLocation(rc.getMapWidth() / 2, rc.getMapHeight() / 2);
+        if(closestCorner == null){
+            closestCorner = findClosestCorner(rc);
+        }
         if (rc.getRoundNum() < 10 && !rc.hasFlag() && rc.canPickupFlag(rc.getLocation())) {
             rc.pickupFlag(rc.getLocation());
         }
@@ -44,14 +49,9 @@ public class Builder {
             MapInfo[] nearbyLocs = rc.senseNearbyMapInfos(GameConstants.INTERACT_RADIUS_SQUARED);
             for (MapInfo info : nearbyLocs) {
                 MapLocation loc = info.getMapLocation();
-                if (!scoredLocations.contains(loc)) {
+                if (!scoredLocationsV2.contains(loc)) {
                     int score = evaluateFlagLocation(loc, rc);
-                    if ((score > bestScore || bestScore == -1) && score != -1000) {
-                        bestScore = score;
-                        scoredLocations.addFirst(loc);
-                    } else {
-                        scoredLocations.addLast(loc);
-                    }
+                    scoredLocationsV2.add(new PotentialFlag(loc, score));
                 }
             }
             //move away from center
@@ -75,8 +75,10 @@ public class Builder {
 //            }
         }
 
-        if (rc.getRoundNum() > EXPLORE_PERIOD && rc.getRoundNum() < 160) {
-            MapLocation target = scoredLocations.getFirst();
+        if (rc.getRoundNum() > EXPLORE_PERIOD && rc.getRoundNum() < 170) {
+            //MapLocation target = scoredLocations.getFirst();
+            assert scoredLocationsV2.peek() != null;
+            MapLocation target = scoredLocationsV2.peek().location;
             if (!rc.getLocation().equals(target))
                 Pathfinding.combinedPathfinding(rc, target);
             if (rc.canSenseLocation(target) && rc.senseLegalStartingFlagPlacement(target)) {
@@ -93,14 +95,18 @@ public class Builder {
                     else if (rc.readSharedArray(42) == 0) {
                         rc.writeSharedArray(42, Utilities.convertLocationToInt(target));
                         //System.out.println(Utilities.convertIntToLocation(rc.readSharedArray(42)));
+                        rc.resign();
                     }
                     //role = roles.explorer;
                     role = roles.moat;
                 }
             } else {
                 while (rc.canSenseLocation(target) && !rc.senseLegalStartingFlagPlacement(target)) {
-                    scoredLocations.removeFirst();
-                    target = scoredLocations.getFirst();
+                    //scoredLocations.removeFirst();
+                    //target = scoredLocations.getFirst();
+                    scoredLocationsV2.poll();
+                    assert scoredLocationsV2.peek() != null;
+                    target = scoredLocationsV2.peek().location;
                 }
             }
             //buildMoat(rc);
@@ -114,6 +120,7 @@ public class Builder {
                     rc.writeSharedArray(41, Utilities.convertLocationToInt(rc.getLocation()));
                 else if (rc.readSharedArray(42) == 0) {
                     rc.writeSharedArray(42, Utilities.convertLocationToInt(rc.getLocation()));
+                    rc.resign();
                 }
                 role = roles.moat;
             } else {
@@ -324,16 +331,17 @@ public class Builder {
             MapLocation temp = m.getMapLocation();
             if(!m.isPassable() && !m.isDam()){
                 if(temp.isAdjacentTo(location))
-                    score = (m.isWater()) ? score + 5 : score + 70;
+                    score = (m.isWater()) ? score + 5 : score + 80;
                 else
                     score = (m.isWater()) ? score + 1 : score + 30;
             }
             if(m.isDam())
-                score--;
+                score-= 30;
             if(m.isDam() && temp.isAdjacentTo(location))
                 score -= 100;
         }
-        score += location.distanceSquaredTo(centerOfMap) / 5;
+        score += location.distanceSquaredTo(centerOfMap) / 3;
+        score -= location.distanceSquaredTo(closestCorner) / 3;
         return score;
     }
     public static boolean isMapEdge(RobotController rc, MapLocation loc){
@@ -343,8 +351,8 @@ public class Builder {
     }
     public static void explore(RobotController rc) throws GameActionException {
         //explore a new area
-        if (turnsSinceLocGen == 20 || turnsSinceLocGen == 0 || rc.getLocation().equals(targetLoc)) {
-            targetLoc = Explorer.generateTargetLoc(rc);
+        if (turnsSinceLocGen == 20 || turnsSinceLocGen == 0 || rc.getLocation().equals(targetLoc) || (rc.canSenseLocation(targetLoc) && rc.senseMapInfo(targetLoc).getTeamTerritory() != rc.getTeam())) {
+            targetLoc = generateTargetLoc(rc);
             Pathfinding.combinedPathfinding(rc, targetLoc);
             turnsSinceLocGen = 1;
         } else {
@@ -352,7 +360,34 @@ public class Builder {
             turnsSinceLocGen++;
         }
     }
+    public static MapLocation generateTargetLoc(RobotController rc) {
+        int x = rng.nextInt(rc.getMapWidth());
+        int y = rng.nextInt(rc.getMapHeight());
+        return new MapLocation(x, y);
+    }
+    public static MapLocation findClosestCorner(RobotController rc){
+        int x = rc.getLocation().x;
+        int y = rc.getLocation().y;
+        int mapSizeX = rc.getMapWidth();
+        int mapSizeY = rc.getMapHeight();
+        if(x > (float) mapSizeX / 2){
+            x = mapSizeX-1;
+        }
+        else{
+            x = 0;
+        }
+        // see above, but for y
+        if(y > (float)mapSizeY / 2){
+            y = mapSizeY-1;
+        }
+        else{
+            y = 0;
+        }
+        return new MapLocation(x, y);
+    }
+
 }
+
 
 class MapLocationWithDistance implements Comparable
 {
@@ -367,5 +402,18 @@ class MapLocationWithDistance implements Comparable
     public int compareTo(Object other)
     {
         return Integer.compare(distanceSquared,((MapLocationWithDistance) other).distanceSquared);
+    }
+}
+
+class PotentialFlag implements Comparable {
+    public int score;
+    public MapLocation location;
+    public PotentialFlag(MapLocation loc, int s){
+        this.score = s;
+        this.location = loc;
+    }
+    @Override
+    public int compareTo(Object o) {
+        return Integer.compare(((PotentialFlag) o).score, score);
     }
 }
