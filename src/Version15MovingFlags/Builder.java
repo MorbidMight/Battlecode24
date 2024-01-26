@@ -334,7 +334,7 @@ public class Builder {
             if(!m.isPassable() && !m.isDam()){
                 if(temp.isAdjacentTo(location)) {
                     score = (m.isWater()) ? score + 3 : score + 60;
-                    if(Utilities.locationIsBehindWall(rc,centerOfMap, temp)){
+                    if(Utilities.locationIsBehindWall(rc,centerOfMap, temp, 2)){
                         score += 100;
                     }
                 }
