@@ -315,8 +315,8 @@ static MapLocation builderBombCircleCenter = null;
         {
             Utilities.updateEnemyCluster(rc, robot.location);
         }
-        Utilities.recordEnemies(rc, enemyRobots);
-        Utilities.clearObsoleteEnemies(rc);
+        //Utilities.recordEnemies(rc, enemyRobots);
+        //Utilities.clearObsoleteEnemies(rc);
         Utilities.verifyFlagLocations(rc);
         Utilities.writeFlagLocations(rc);
     }
