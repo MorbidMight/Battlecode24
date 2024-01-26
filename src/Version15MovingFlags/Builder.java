@@ -131,7 +131,7 @@ public class Builder {
         }
     }
     public static void buildMoat (RobotController rc) throws GameActionException {
-        if(turnCount > 180)
+        if(turnCount > 215)
         {
            role = roles.explorer;
         }
