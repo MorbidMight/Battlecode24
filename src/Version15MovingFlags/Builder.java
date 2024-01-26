@@ -95,7 +95,7 @@ public class Builder {
                     else if (rc.readSharedArray(42) == 0) {
                         rc.writeSharedArray(42, Utilities.convertLocationToInt(target));
                         //System.out.println(Utilities.convertIntToLocation(rc.readSharedArray(42)));
-                        rc.resign();
+                        
                     }
                     //role = roles.explorer;
                     role = roles.moat;
@@ -120,7 +120,7 @@ public class Builder {
                     rc.writeSharedArray(41, Utilities.convertLocationToInt(rc.getLocation()));
                 else if (rc.readSharedArray(42) == 0) {
                     rc.writeSharedArray(42, Utilities.convertLocationToInt(rc.getLocation()));
-                    rc.resign();
+                    
                 }
                 role = roles.moat;
             } else {

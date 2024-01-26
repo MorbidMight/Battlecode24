@@ -29,6 +29,8 @@ public class Soldier
     final static float STOLEN_FLAG_CONSTANT = 2.7f;
     //records the enemies seen la st round, to create the stunlist
     static float aggresionIndex;
+    static float RETREAT_HEALTH = 150;
+    static boolean enemyAttackUpgrade;
 
 
 
@@ -49,10 +51,10 @@ public class Soldier
         else if(rc.readSharedArray(54) != 0 && rc.canSenseLocation(Utilities.convertIntToLocation(54)) && rc.senseRobotAtLocation(Utilities.convertIntToLocation(54)) == null){
             rc.writeSharedArray(54, 0);
         }
-        updateInfo(rc);
-        //used to update which flags we know are real or not
-        findCoordinatedActualFlag(rc);
         tryGetCrumbs(rc);
+        updateInfo(rc);
+        findCoordinatedActualFlag(rc);
+        //used to update which flags we know are real or not
         for(FlagInfo flag : nearbyFlagsEnemy){
             checkRecordEnemyFlag(rc, flag);
         }
@@ -124,7 +126,6 @@ public class Soldier
             if (flag.isPickedUp() || (rc.canSenseLocation(flag.getLocation()) && rc.senseMapInfo(flag.getLocation()).getSpawnZoneTeamObject() != rc.getTeam()))
                 return states.defense;
         }
-
         for (FlagInfo flag : nearbyFlagsEnemy) {
             if (flag.isPickedUp() && (enemyRobots.length > 0 ||rc.getLocation().distanceSquaredTo(findClosestSpawnLocation(rc)) >= 25)) {
                 escortee = rc.senseRobotAtLocation(flag.getLocation());
@@ -203,10 +204,11 @@ public class Soldier
 //                }
             }
             else{
-                    Pathfinding.combinedPathfinding(rc, closestFlag.location);
+                Pathfinding.combinedPathfinding(rc, closestFlag.location);
             }
         }
         if(rc.isActionReady()){
+            if(rc.isMovementReady()) runMicroAttack(rc);
             updateInfo(rc);
             attemptAttack(rc);
             attemptHeal(rc);
@@ -253,14 +255,14 @@ public class Soldier
                 attemptAttack(rc);
                 attemptHeal(rc);
             }
-            else if(healthRatio < 0.25f && allyRobots.length > enemyRobots.length + 1){
+            else if(healthRatio < 0.25f && (allyRobots.length > enemyRobots.length + 1) || healthRatio < 0.125f){
                 Pathfinding.bellmanFord5x5(rc, lowestHealth(enemyRobots));
                 updateInfo(rc);
                 attemptAttack(rc);
                 attemptHeal(rc);
             }
             //try and move into attack range of any nearby enemies
-            else if (((rc.isActionReady() || aggresionIndex > 10) /*|| ((allyRobots.length - enemyRobots.length > 6) && enemyRobotsAttackRange.length == 0)) */&& rc.getHealth() > 150)){
+            else if (((rc.isActionReady() || aggresionIndex > 10) /*|| ((allyRobots.length - enemyRobots.length > 6) && enemyRobotsAttackRange.length == 0)) */&& rc.getHealth() >= RETREAT_HEALTH)){
                 runMicroAttack(rc);
                 updateInfo(rc);
                 attemptAttack(rc);
@@ -287,7 +289,7 @@ public class Soldier
             if(knowFlag(rc)){
                 target = findClosestActualFlag(rc);
                 if(target != null){
-                    if(rc.canFill(rc.getLocation().add(rc.getLocation().directionTo(target)))){
+                    if(nearbyFlagsAlly.length == 0 && rc.canFill(rc.getLocation().add(rc.getLocation().directionTo(target)))){
                         rc.fill(rc.getLocation().add(rc.getLocation().directionTo(target)));
                     }
                     Pathfinding.combinedPathfinding(rc, target);
@@ -296,7 +298,7 @@ public class Soldier
             else if(getClosestCluster(rc) != null){
                 target = getClosestCluster(rc);
                 //Pathfinding.combinedPathfinding(rc, lastSeenEnemy.getLocation());
-                if(rc.canFill(rc.getLocation().add(rc.getLocation().directionTo(target))))
+                if(nearbyFlagsAlly.length == 0 && rc.canFill(rc.getLocation().add(rc.getLocation().directionTo(target))))
                     rc.fill(rc.getLocation().add(rc.getLocation().directionTo(target)));
                 Pathfinding.bellmanFord5x5(rc, target);
                 return;
@@ -305,7 +307,7 @@ public class Soldier
                 //MapLocation target = findCoordinatedBroadcastFlag(rc);
                 target = findClosestBroadcastFlags(rc);
                 if(target != null) {
-                    if (rc.canFill(rc.getLocation().add(rc.getLocation().directionTo(target)))) {
+                    if (nearbyFlagsAlly.length == 0 && rc.canFill(rc.getLocation().add(rc.getLocation().directionTo(target)))) {
                         rc.fill(rc.getLocation().add(rc.getLocation().directionTo(target)));
                     }
                     Pathfinding.combinedPathfinding(rc, findCoordinatedBroadcastFlag(rc));
@@ -404,6 +406,9 @@ public class Soldier
             StolenFlag temp = new StolenFlag(escortee.getLocation(), false);
             //**CHANGE ^^^
             Pathfinding.bellmanFordFlag(rc, temp.location, temp);
+            if(rc.canFill(rc.getLocation().add(rc.getLocation().directionTo(findClosestSpawnLocation(rc))))){
+                rc.fill(rc.getLocation().add(rc.getLocation().directionTo(findClosestSpawnLocation(rc))));
+            }
         }
         if(rc.isActionReady()) {
             updateInfo(rc);
@@ -481,6 +486,9 @@ public class Soldier
                 }
             }
         }
+//        if(rc.getID() == 11350 && rc.getRoundNum() > 1882 && rc.getRoundNum() < 1990){
+//            System.out.println(best + " : " + best.enemiesAttackRangedX + " : " + best.potentialEnemiesAttackRangedX);
+//        }
         if(best != null) {
             if (best.enemiesAttackRangedX <= 0 && rc.canMove(rc.getLocation().directionTo(best.location))) {
                 rc.move(rc.getLocation().directionTo(best.location));
@@ -912,6 +920,19 @@ public class Soldier
             return -1;
         else
             return lowDist;
+    }
+    public static void updateRetreatHealth(RobotController rc){
+        if(rc.getRoundNum() <= 905)
+            RETREAT_HEALTH += .03f;
+        if(!enemyAttackUpgrade) {
+            GlobalUpgrade[] upgrades = rc.getGlobalUpgrades(rc.getTeam().opponent());
+            for (GlobalUpgrade g : upgrades) {
+                if (g == GlobalUpgrade.ATTACK) {
+                    enemyAttackUpgrade = true;
+                    RETREAT_HEALTH += 60;
+                }
+            }
+        }
     }
 }
 
