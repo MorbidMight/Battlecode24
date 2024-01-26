@@ -237,7 +237,7 @@ public class Soldier
             else if(!isTrapAdjacent(rc, rc.getLocation(), toBeBuilt) && rc.canBuild(toBeBuilt, rc.getLocation())){
                 rc.build(toBeBuilt, rc.getLocation());
             }
-            if(rc.isActionReady() && rc.getCrumbs() > 1500){
+            if(rc.isActionReady() && rc.getCrumbs() > 2000 &&rc.getRoundNum()>300){
                 toBeBuilt = TrapType.EXPLOSIVE;
                 if(rc.canBuild(toBeBuilt, target)){
                     rc.build(toBeBuilt, target);
