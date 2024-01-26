@@ -48,7 +48,7 @@ static int radius = 0;
             builderBombCircleCenter = Utilities.convertIntToLocation(rc.readSharedArray(lowestIndex));
         }
         if (SittingOnFlag) {
-            if(turnCount > 30)
+            if(turnCount > 25)
             {
                 //role = roles.explorer;
                 if(rc.hasFlag())
@@ -60,9 +60,8 @@ static int radius = 0;
                         rc.writeSharedArray(41, Utilities.convertLocationToInt(rc.getLocation()));
                     else if (rc.readSharedArray(42) == 0)
                         rc.writeSharedArray(42, Utilities.convertLocationToInt(rc.getLocation()));
-                    role = roles.explorer;
                 }
-                buildMoat(rc);
+                role = roles.moat;
             }
             //pick up flag if it is early game
             if(rc.canPickupFlag(rc.getLocation()) && turnCount < 10)
@@ -118,40 +117,66 @@ static int radius = 0;
         }
     }
     public static void buildMoat (RobotController rc) throws GameActionException {
-        rc.setIndicatorDot(rc.getLocation(), 100,0,0);
-        FlagInfo[] flags = rc.senseNearbyFlags(-1);
-        /*if(rc.getLocation().distanceSquaredTo(flags[0].getLocation()) < 2)
+        if(turnCount > 180)
         {
-            if(rc.canMove(rc.getLocation().directionTo(flags[0].getLocation()).opposite()))
-                rc.move(rc.getLocation().directionTo(flags[0].getLocation()).opposite());
+           role = roles.explorer;
         }
+        MapLocation centerOfMap = new MapLocation(rc.getMapWidth() / 2, rc.getMapHeight() / 2);
+        FlagInfo[] flags = rc.senseNearbyFlags(-1);
+        //move away from flag
+        if(rc.getLocation().distanceSquaredTo(flags[0].getLocation()) < 9)
+        {
+            rc.setIndicatorString("moving away from flag");
+            if(rc.canMove(rc.getLocation().directionTo(flags[0].getLocation()).opposite())) {
+                rc.move(rc.getLocation().directionTo(flags[0].getLocation()).opposite());
+            }
+            else if(rc.canMove(rc.getLocation().directionTo(centerOfMap))) {
+                rc.move(rc.getLocation().directionTo(centerOfMap));
+
+            }
+        }
+        //move around flag
         else
         {
-            if(rc.canDig(rc.getLocation().add(rc.getLocation().directionTo(flags[0].getLocation())))) {
-                rc.dig(rc.getLocation().add(rc.getLocation().directionTo(flags[0].getLocation())));
+            MapLocation bestLoc = rc.getLocation();
+            int score = 100;
+            for(Direction dir: Direction.allDirections())
+            {
+                //moving in this direction is within a certain radius of flag
+                if(rc.getLocation().add(dir).distanceSquaredTo(flags[0].getLocation()) > 9 && rc.getLocation().add(dir).distanceSquaredTo(flags[0].getLocation()) < 25)
+                {
+                    if(rc.canMove(dir))
+                    {
+                        //best location is where it hasn't been
+                        if(!alreadyBeen.containsKey(rc.getLocation().add(dir)))
+                        {
+                           bestLoc = rc.getLocation().add(dir);
+                           break;
+                        }
+                        //best location is replaced if there is a location visited less frequently
+                        else
+                        {
+                            if(alreadyBeen.get(rc.getLocation().add(dir)) < score)
+                            {
+                                score = alreadyBeen.get(rc.getLocation().add(dir));
+                                bestLoc = rc.getLocation().add(dir);
+                            }
+                        }
+                    }
+                }
             }
-            if(rc.canDig(rc.getLocation().add(rc.getLocation().directionTo(flags[0].getLocation())).add(rc.getLocation().directionTo(flags[0].getLocation()).rotateRight()))) {
-                rc.dig(rc.getLocation().add(rc.getLocation().directionTo(flags[0].getLocation())));
-            }
-            if(rc.canDig(rc.getLocation().add(rc.getLocation().directionTo(flags[0].getLocation())).add(rc.getLocation().directionTo(flags[0].getLocation()).rotateLeft()))) {
-                rc.dig(rc.getLocation().add(rc.getLocation().directionTo(flags[0].getLocation())));
-            }
-            if(rc.canMove(rc.getLocation().directionTo(flags[0].getLocation()).rotateRight()))
-                rc.move(rc.getLocation().directionTo(flags[0].getLocation()).rotateRight());
-            else if(rc.canMove(rc.getLocation().directionTo(flags[0].getLocation()).rotateLeft()))
-                rc.move(rc.getLocation().directionTo(flags[0].getLocation()).rotateLeft());
-            else
-                role = roles.explorer;
-        }*/
+            rc.move(rc.getLocation().directionTo(bestLoc));
+            updateAlreadyBeen(rc);
+
+        }
+        //dig
         for(Direction dir: Direction.allDirections())
         {
-            MapLocation centerOfMap = new MapLocation(rc.getMapWidth() / 2, rc.getMapHeight() / 2);
-            //if(!dir.equals(rc.getLocation().directionTo(centerOfMap)))
-            //{
-            //}
-            if(rc.canDig(rc.getLocation().add(dir)))
+            //dig within a certain radius of the flag
+            if( rc.getLocation().add(dir).distanceSquaredTo(flags[0].getLocation()) < 10 && rc.getLocation().add(dir).distanceSquaredTo(flags[0].getLocation()) > 3)
             {
-                rc.dig(rc.getLocation().add(dir));
+                if(rc.canDig(rc.getLocation().add(dir)))
+                    rc.dig(rc.getLocation().add(dir));
             }
         }
     }

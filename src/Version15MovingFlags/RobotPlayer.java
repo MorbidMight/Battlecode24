@@ -85,7 +85,7 @@ static MapLocation builderBombCircleCenter = null;
     };
 
     enum roles {
-        explorer, soldier, builder, healer, offensiveBuilder, defensiveBuilder
+        explorer, soldier, builder, healer, offensiveBuilder, defensiveBuilder, moat
     }
 
 
@@ -232,6 +232,9 @@ static MapLocation builderBombCircleCenter = null;
                                 break;
                             case defensiveBuilder:
                                 DefensiveBuilder.runDefensiveBuilder(rc);
+                                break;
+                            case moat:
+                                Builder.buildMoat(rc);
                                 break;
                         }
                     }
