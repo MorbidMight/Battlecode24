@@ -1,6 +1,7 @@
 package Version15MovingFlags;
 
 import battlecode.common.*;
+import battlecode.world.Trap;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -62,6 +63,14 @@ public class Soldier
         //make sure we store the location of at least one enemy, so we know where one was if we need it next turn and can't see any
         if(enemyRobots.length > 0)
             lastSeenEnemy = enemyRobots[0];
+        //if we can see one of our flags in its home spot, try and build a trap on it just cause
+        else if (nearbyFlagsAlly.length != 0 && Utilities.isDefaultLocation(rc, nearbyFlagsAlly[0].getLocation())){
+            TrapType toBeBuilt = TrapType.STUN;
+            MapLocation target = nearbyFlagsAlly[0].getLocation();
+            if(!isTrapAdjacent(rc, rc.getLocation(), toBeBuilt) && rc.canBuild(toBeBuilt, target)){
+                rc.build(toBeBuilt, target);
+            }
+        }
         else if(lastSeenEnemy != null && rc.canSenseRobotAtLocation(lastSeenEnemy.getLocation())){
             lastSeenEnemy = null;
         }

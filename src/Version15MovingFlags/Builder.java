@@ -30,7 +30,8 @@ public class Builder {
     static int radius = 0;
     static MapLocation closestCorner;
 
-    static final int EXPLORE_PERIOD = 80;
+    static final int EXPLORE_PERIOD = 85;
+    static final int PLACEMENT_PERIOD = 140;
 
 
     public static void runBuilder(RobotController rc) throws GameActionException {
