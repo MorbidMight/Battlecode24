@@ -10,11 +10,11 @@ emojiMap = {
     'Error': ':heavy_exclamation_mark:'
 }
 errors = []
-currentBot = 'Version8'
+currentBot = 'Version15MovingFlags'
 
-bots = ['Version6', 'Version3', 'Version2', 'Version1Center', 'Version4', 'Version5', 'Version7', 'Version8Water']
+bots = ['Version15', 'Version14', 'Version13']
 botsSet = set(bots)
-maps = ['DefaultSmall', 'DefaultMedium', 'DefaultLarge', 'DefaultHuge', 'AceOfSpades', 'Alien', 'Ambush', 'BigDucksBigPond', 'Canals', 'Duck', 'Hockey', 'Rivers']
+maps = ['AceOfSpades', 'Alien', 'Ambush', 'BigDucksBigPond', 'Canals', 'Duck', 'Hockey', 'Rivers', 'Racetrack', 'Rainobw', 'Bunkers', 'Checkered', 'Fountain', 'Divergent']
 mapsSet = set(maps)
 
 matches = set(product(bots, maps))

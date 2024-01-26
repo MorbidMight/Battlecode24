@@ -65,6 +65,7 @@ public class Explorer {
                 }
             }
         } else {
+            FlagInfo[] nearbyFlags = rc.senseNearbyFlags(-1, rc.getTeam());
             //tries to get neary crumbs
             MapLocation[] nearbyCrumbs = rc.senseNearbyCrumbs(-1);
             MapLocation targetCrumb = null;
@@ -84,10 +85,18 @@ public class Explorer {
             //explore a new area
             else if (turnsSinceLocGen == 20 || turnsSinceLocGen == 0 || rc.getLocation().equals(targetLoc)) {
                 targetLoc = generateTargetLoc(rc);
-                Pathfinding.bugNav2(rc, targetLoc);
+                if(rc.getRoundNum() > 70 && nearbyFlags.length > 0 && rc.senseNearbyFlags(-1, rc.getTeam())[0].isPickedUp()){
+                    Pathfinding.bellmanFordFlag(rc, targetLoc, new StolenFlag(rc.senseNearbyFlags(-1, rc.getTeam())[0].getLocation(), true));
+                }
+                else
+                    Pathfinding.combinedPathfinding(rc, targetLoc);
                 turnsSinceLocGen = 1;
             } else {
-                Pathfinding.combinedPathfinding(rc, targetLoc);
+                if(rc.getRoundNum() > 70 && nearbyFlags.length > 0 && rc.senseNearbyFlags(-1, rc.getTeam())[0].isPickedUp()){
+                    Pathfinding.bellmanFordFlag(rc, targetLoc, new StolenFlag(rc.senseNearbyFlags(-1, rc.getTeam())[0].getLocation(), true));
+                }
+                else
+                    Pathfinding.combinedPathfinding(rc, targetLoc);
                 turnsSinceLocGen++;
             }
         }

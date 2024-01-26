@@ -23,8 +23,8 @@ public class HeadquarterDuck
             Utilities.editBitSharedArray(rc, 1021, false);
             lockCount = 0;
         }
-        if(Utilities.getClosestFlag(rc) != null){
-            int x = RobotPlayer.findClosestSpawnLocationToStolenFlag(rc, Utilities.getClosestFlag(rc));
+        if(Utilities.getClosestFlag(rc, new MapLocation(10, 10)) != null){
+            int x = RobotPlayer.findClosestSpawnLocationToStolenFlag(rc, Utilities.getClosestFlag(rc, new MapLocation(rc.getMapWidth() / 2, rc.getMapHeight() / 2)));
             if (x != -1){
                 Utilities.editBitSharedArray(rc, 1021, true);
                 //00

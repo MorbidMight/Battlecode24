@@ -101,7 +101,6 @@ static MapLocation builderBombCircleCenter = null;
         initialize(rc);
         while (true) {
             Utilities.checkForRevivedRobots(rc,turnsWithKills);
-
             //changes explorers to soldiers at round 200
             if (rc.getRoundNum() >= GameConstants.SETUP_ROUNDS && role == roles.explorer) {
                 role = roles.soldier;
@@ -145,7 +144,7 @@ static MapLocation builderBombCircleCenter = null;
                             rc.spawn(SpawnLocations[spawnIndex]);
                             if(rc.senseNearbyFlags(-1,rc.getTeam())[0].getLocation().equals(rc.getLocation())){
                                 role = roles.builder;
-                                SittingOnFlag = true;
+                                //SittingOnFlag = true;
                             }
                             else{
                                 role = roles.explorer;
@@ -209,7 +208,6 @@ static MapLocation builderBombCircleCenter = null;
                             rc.setIndicatorString("look at me!!");
                         }
                     }
-
                     if (rc.isSpawned()) {
                         switch (role) {
                             case builder:
@@ -320,8 +318,8 @@ static MapLocation builderBombCircleCenter = null;
         {
             Utilities.updateEnemyCluster(rc, robot.location);
         }
-        Utilities.recordEnemies(rc, enemyRobots);
-        Utilities.clearObsoleteEnemies(rc);
+        //Utilities.recordEnemies(rc, enemyRobots);
+        //Utilities.clearObsoleteEnemies(rc);
         Utilities.verifyFlagLocations(rc);
         Utilities.writeFlagLocations(rc);
     }

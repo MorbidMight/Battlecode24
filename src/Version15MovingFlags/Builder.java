@@ -4,6 +4,9 @@ import battlecode.common.*;
 import battlecode.world.Flag;
 import battlecode.world.Trap;
 
+import java.util.ArrayDeque;
+import java.util.Deque;
+
 import java.awt.*;
 import java.util.Map;
 import java.util.PriorityQueue;
@@ -20,99 +23,109 @@ public class Builder {
     //used for flagsitters
     static boolean isActive = true;
     final static int ROUND_TO_BUILD_EXPLOSION_BORDER = 0;
-static int radius = 0;
-    public static void runBuilder(RobotController rc) throws GameActionException {
-        if(turnCount > 180)
-        {
-            //role = roles.explorer;
-        }
-        MapLocation centerOfMap = new MapLocation(rc.getMapWidth() / 2, rc.getMapHeight() / 2);
-        if(turnCount > 1000 && !SittingOnFlag) {
-            role = roles.offensiveBuilder;
-            return;
-        }
-        radius = 7;
+    static MapLocation centerOfMap = null;
+    static ArrayDeque<MapLocation> scoredLocations = new ArrayDeque<MapLocation>();
+    static int bestScore = -1;
+    static int radius = 0;
 
-        if (builderBombCircleCenter == null && rc.getRoundNum() >= 3) {
-            int[] distances = new int[3];
-            distances[0] = rc.getLocation().distanceSquaredTo(Utilities.convertIntToLocation(rc.readSharedArray(0)));
-            distances[1] = rc.getLocation().distanceSquaredTo(Utilities.convertIntToLocation(rc.readSharedArray(1)));
-            distances[2] = rc.getLocation().distanceSquaredTo(Utilities.convertIntToLocation(rc.readSharedArray(2)));
-            int lowestIndex = 0;
-            if (distances[0] > distances[1]) {
-                lowestIndex = 1;
-            }
-            if (distances[lowestIndex] > distances[2]) {
-                lowestIndex = 2;
-            }
-            builderBombCircleCenter = Utilities.convertIntToLocation(rc.readSharedArray(lowestIndex));
+    static final int EXPLORE_PERIOD = 80;
+
+
+    public static void runBuilder(RobotController rc) throws GameActionException {
+        if (rc.getRoundNum() >= 201)
+            role = roles.soldier;
+        //pick up flag if it is early game
+        if (centerOfMap == null)
+            centerOfMap = new MapLocation(rc.getMapWidth() / 2, rc.getMapHeight() / 2);
+        if (rc.getRoundNum() < 10 && !rc.hasFlag() && rc.canPickupFlag(rc.getLocation())) {
+            rc.pickupFlag(rc.getLocation());
         }
-        if (SittingOnFlag) {
-            if(turnCount > 25)
-            {
-                //role = roles.explorer;
-                if(rc.hasFlag())
-                {
-                    rc.dropFlag(rc.getLocation());
-                    if(rc.readSharedArray(40) == 0)
-                        rc.writeSharedArray(40, Utilities.convertLocationToInt(rc.getLocation()));
-                    else if(rc.readSharedArray(41) == 0)
-                        rc.writeSharedArray(41, Utilities.convertLocationToInt(rc.getLocation()));
-                    else if (rc.readSharedArray(42) == 0)
-                        rc.writeSharedArray(42, Utilities.convertLocationToInt(rc.getLocation()));
+        if (rc.hasFlag() && rc.getRoundNum() < EXPLORE_PERIOD) {
+            MapInfo[] nearbyLocs = rc.senseNearbyMapInfos(GameConstants.INTERACT_RADIUS_SQUARED);
+            for (MapInfo info : nearbyLocs) {
+                MapLocation loc = info.getMapLocation();
+                if (!scoredLocations.contains(loc)) {
+                    int score = evaluateFlagLocation(loc, rc);
+                    if ((score > bestScore || bestScore == -1) && score != -1000) {
+                        bestScore = score;
+                        scoredLocations.addFirst(loc);
+                    } else {
+                        scoredLocations.addLast(loc);
+                    }
                 }
-                role = roles.moat;
-            }
-            //pick up flag if it is early game
-            if(rc.canPickupFlag(rc.getLocation()) && turnCount < 10)
-            {
-                rc.pickupFlag(rc.getLocation());
             }
             //move away from center
-            if(rc.canMove(rc.getLocation().directionTo(centerOfMap).opposite()))
-            {
-                rc.move(rc.getLocation().directionTo(centerOfMap).opposite());
-            }
-            else if(rc.canMove(rc.getLocation().directionTo(centerOfMap).opposite().rotateLeft())){
-               rc.move(rc.getLocation().directionTo(centerOfMap).opposite().rotateLeft());
-            }
+            //Pathfinding.bugNav2(rc, rc.getLocation().add(rc.getLocation().directionTo(centerOfMap).opposite()));
+            explore(rc);
+//            if (rc.canMove(rc.getLocation().directionTo(centerOfMap).opposite())) {
+//                rc.move(rc.getLocation().directionTo(centerOfMap).opposite());
+//            } else if (rc.canMove(rc.getLocation().directionTo(centerOfMap).opposite().rotateLeft())) {
+//                rc.move(rc.getLocation().directionTo(centerOfMap).opposite().rotateLeft());
+//            } else if (rc.canMove(rc.getLocation().directionTo(centerOfMap).opposite().rotateLeft().rotateLeft())) {
+//                rc.move(rc.getLocation().directionTo(centerOfMap).opposite().rotateLeft().rotateLeft());
+//            }
+//            else if (rc.canMove(rc.getLocation().directionTo(centerOfMap).opposite().rotateLeft().rotateLeft().rotateLeft())) {
+//                rc.move(rc.getLocation().directionTo(centerOfMap).opposite().rotateLeft().rotateLeft().rotateLeft());
+//            }
+//            else if (rc.canMove(rc.getLocation().directionTo(centerOfMap).opposite().rotateLeft().rotateLeft().rotateLeft().rotateLeft())) {
+//                rc.move(rc.getLocation().directionTo(centerOfMap).opposite().rotateLeft().rotateLeft().rotateLeft().rotateLeft());
+//            }
+//            else if (rc.canMove(rc.getLocation().directionTo(centerOfMap).opposite().rotateLeft().rotateLeft().rotateLeft().rotateLeft().rotateLeft())) {
+//                rc.move(rc.getLocation().directionTo(centerOfMap).opposite().rotateLeft().rotateLeft().rotateLeft().rotateLeft().rotateLeft());
+//            }
         }
-        else//When there is no active task
-        {
-            MapLocation center = builderBombCircleCenter;//Will orbit around the flag
-            if (center == null) {
-                center = findClosestSpawnLocation(rc);
-            }
 
-
-            RobotInfo[] enemies = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
-            if (enemies.length > 0) {
-                MapLocation ops = Utilities.averageRobotLocation(enemies);
-                Pathfinding.tryToMove(rc, rc.adjacentLocation(rc.getLocation().directionTo(ops).opposite()));
-                if(rc.canBuild(TrapType.EXPLOSIVE,rc.adjacentLocation(rc.getLocation().directionTo(ops)))){
-                    rc.canBuild(TrapType.EXPLOSIVE,rc.adjacentLocation(rc.getLocation().directionTo(ops)));
+        if (rc.getRoundNum() > EXPLORE_PERIOD && rc.getRoundNum() < 160) {
+            MapLocation target = scoredLocations.getFirst();
+            if (!rc.getLocation().equals(target))
+                Pathfinding.combinedPathfinding(rc, target);
+            if (rc.canSenseLocation(target) && rc.senseLegalStartingFlagPlacement(target)) {
+                if (rc.canDropFlag(target)) {
+                    rc.dropFlag(target);
+                    if (rc.readSharedArray(40) == 0) {
+                        rc.writeSharedArray(40, Utilities.convertLocationToInt(target));
+                        //System.out.println(Utilities.convertIntToLocation(rc.readSharedArray(40)));
+                    }
+                    else if (rc.readSharedArray(41) == 0) {
+                        rc.writeSharedArray(41, Utilities.convertLocationToInt(target));
+                        //System.out.println(Utilities.convertIntToLocation(rc.readSharedArray(41)));
+                    }
+                    else if (rc.readSharedArray(42) == 0) {
+                        rc.writeSharedArray(42, Utilities.convertLocationToInt(target));
+                        //System.out.println(Utilities.convertIntToLocation(rc.readSharedArray(42)));
+                    }
+                    role = roles.explorer;
                 }
-
-            }
-            UpdateExplosionBorder(rc);
-            rc.setIndicatorLine(rc.getLocation(), center, 255, 255, 255);
-            if (rc.getLocation().distanceSquaredTo(center) < Math.pow(radius - 1, 2)) {
-                Pathfinding.tryToMove(rc, rc.adjacentLocation(center.directionTo(rc.getLocation())));
-            } else if (rc.getLocation().distanceSquaredTo(center) > Math.pow(radius + 1, 2)) {
-                Pathfinding.tryToMove(rc, rc.adjacentLocation(center.directionTo(rc.getLocation()).opposite()));
-
-            } else{
-
-                if ((rc.getRoundNum() / 40) % 2 == 0) {
-                    if (rc.canFill(rc.adjacentLocation(center.directionTo(rc.getLocation()).rotateLeft().rotateLeft())))
-                        rc.fill((rc.adjacentLocation(center.directionTo(rc.getLocation()).rotateLeft().rotateLeft())));
-                    Pathfinding.tryToMove(rc, rc.adjacentLocation(center.directionTo(rc.getLocation()).rotateLeft().rotateLeft()));
-                } else {
-                    if (rc.canFill(rc.adjacentLocation(center.directionTo(rc.getLocation()).rotateRight().rotateRight())))
-                        rc.fill((rc.adjacentLocation(center.directionTo(rc.getLocation()).rotateRight().rotateRight())));
-                    Pathfinding.tryToMove(rc, rc.adjacentLocation(center.directionTo(rc.getLocation()).rotateRight().rotateRight()));
-
+            } else {
+                while (rc.canSenseLocation(target) && !rc.senseLegalStartingFlagPlacement(target)) {
+                    scoredLocations.removeFirst();
+                    target = scoredLocations.getFirst();
                 }
+            }
+            //buildMoat(rc);
+        } else if (rc.getRoundNum() >= 170 && rc.hasFlag()) {
+            //System.out.println(rc.getLocation());
+            if (rc.senseLegalStartingFlagPlacement(rc.getLocation()) && rc.canDropFlag(rc.getLocation())) {
+                rc.dropFlag(rc.getLocation());
+                if (rc.readSharedArray(40) == 0)
+                    rc.writeSharedArray(40, Utilities.convertLocationToInt(rc.getLocation()));
+                else if (rc.readSharedArray(41) == 0)
+                    rc.writeSharedArray(41, Utilities.convertLocationToInt(rc.getLocation()));
+                else if (rc.readSharedArray(42) == 0) {
+                    rc.writeSharedArray(42, Utilities.convertLocationToInt(rc.getLocation()));
+                }
+                role = roles.explorer;
+            } else {
+                //move away from center
+//                if (rc.canMove(rc.getLocation().directionTo(centerOfMap).opposite())) {
+//                    rc.move(rc.getLocation().directionTo(centerOfMap).opposite());
+//                } else if (rc.canMove(rc.getLocation().directionTo(centerOfMap).opposite().rotateLeft())) {
+//                    rc.move(rc.getLocation().directionTo(centerOfMap).opposite().rotateLeft());
+//                } else if (rc.canMove(rc.getLocation().directionTo(centerOfMap).opposite().rotateLeft().rotateLeft())) {
+//                    rc.move(rc.getLocation().directionTo(centerOfMap).opposite().rotateLeft().rotateLeft());
+//                }
+                //explore(rc);
+                Pathfinding.bellmanFord5x5(rc, rc.getLocation().add(rc.getLocation().directionTo(rc.senseNearbyFlags(-1, rc.getTeam())[0].getLocation()).opposite()));
             }
         }
     }
@@ -291,6 +304,47 @@ static int radius = 0;
             averageTrapLocation = new MapLocation(x / count, y / count);
         }
         return averageTrapLocation;
+    }
+    public static int evaluateFlagLocation(MapLocation location, RobotController rc) throws GameActionException {
+        MapInfo[] surroundingAreas = rc.senseNearbyMapInfos(location, 8);
+        int score = 0;
+        if(!rc.senseLegalStartingFlagPlacement(location)){
+            return -1000;
+        }
+        if (isMapEdge(rc, location)){
+            score += 100;
+        }
+        for(MapInfo m : surroundingAreas){
+            MapLocation temp = m.getMapLocation();
+            if(!m.isPassable() && !m.isDam()){
+                if(temp.isAdjacentTo(location))
+                    score = (m.isWater()) ? score + 5 : score + 70;
+                else
+                    score = (m.isWater()) ? score + 1 : score + 30;
+            }
+            if(m.isDam())
+                score--;
+            if(m.isDam() && temp.isAdjacentTo(location))
+                score -= 100;
+        }
+        score += location.distanceSquaredTo(centerOfMap) / 5;
+        return score;
+    }
+    public static boolean isMapEdge(RobotController rc, MapLocation loc){
+        int width = rc.getMapWidth();
+        int height = rc.getMapHeight();
+        return loc.x == 0 || loc.y == 0 || loc.x == width -1 || loc.y == height - 1;
+    }
+    public static void explore(RobotController rc) throws GameActionException {
+        //explore a new area
+        if (turnsSinceLocGen == 20 || turnsSinceLocGen == 0 || rc.getLocation().equals(targetLoc)) {
+            targetLoc = Explorer.generateTargetLoc(rc);
+            Pathfinding.combinedPathfinding(rc, targetLoc);
+            turnsSinceLocGen = 1;
+        } else {
+            Pathfinding.combinedPathfinding(rc, targetLoc);
+            turnsSinceLocGen++;
+        }
     }
 }
 
