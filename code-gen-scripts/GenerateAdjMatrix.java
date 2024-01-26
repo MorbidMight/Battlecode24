@@ -16,52 +16,52 @@ public class GenerateAdjMatrix
    };
    public static void main(String[] args) throws IOException
    {
-      writeToFile(listNeighborsToStringArray(matrixToArrayOfNeighbors(createMatrix())), "bellmanFordMatrix.txt");
+      writeToFile(listNeighborsToStringArray(matrixToArrayOfNeighbors(createMatrix())), "neighbors7x7.txt");
    }
 
    public static int[][] createMatrix ()
    {
-      GridPoint center = new GridPoint(3, 3);
-      int[][] adjacencyMatrix = new int[25][25];
+      GridPoint center = new GridPoint(4, 4);
+      int[][] adjacencyMatrix = new int[49][49];
       int count = 0;
       
-      for (int i = center.y + 2; i >= center.y - 2; i--) {
-         for (int j = center.x - 2; j <= center.x + 2; j++) {
+      for (int i = center.y + 3; i >= center.y - 3; i--) {
+         for (int j = center.x - 3; j <= center.x + 3; j++) {
             System.out.println(new GridPoint(i, j));
             for (int k = 0; k < 8; k++) {
                GridPoint tempLocation = (new GridPoint(j, i)).add(directions[k]);
-               if(tempLocation.x > 5 || tempLocation.x < 1) continue;
-               if(tempLocation.y > 5 || tempLocation.y < 1) continue;
+               if(tempLocation.x > 7 || tempLocation.x < 1) continue;
+               if(tempLocation.y > 7 || tempLocation.y < 1) continue;
                try {
                   int squareToCheck = -1;
                   switch (k) {
                      case 0:
-                        squareToCheck = count - 5;
+                        squareToCheck = count - 7;
                         break;
                      case 1:
                         if(count == 4) System.out.println("here");
-                        squareToCheck = count - 4;
+                        squareToCheck = count - 6;
                         break;
                      case 2:
                         squareToCheck = count + 1;
                         break;
                      case 3:
-                        squareToCheck = count + 6;
+                        squareToCheck = count + 8;
                         break;
                      case 4:
-                        squareToCheck = count + 5;
+                        squareToCheck = count + 7;
                         break;
                      case 5:
-                        squareToCheck = count + 4;
+                        squareToCheck = count + 6;
                         break;
                      case 6:
                         squareToCheck = count - 1;
                         break;
                      case 7:
-                        squareToCheck = count - 6;
+                        squareToCheck = count - 8;
                         break;
                   }
-                  if (squareToCheck < 0 || squareToCheck > 24)
+                  if (squareToCheck < 0 || squareToCheck > 48)
                      continue;
                   adjacencyMatrix[count][squareToCheck] = 1;
                } catch (Exception e) {
@@ -81,7 +81,7 @@ public class GenerateAdjMatrix
       {
          temp += x + "   ";
       }
-      for(int x = 9; x < 25; x++)
+      for(int x = 9; x < 49; x++)
       {
          temp += x + "  ";
       }
@@ -103,12 +103,12 @@ public class GenerateAdjMatrix
 
    public static String[] matrixToStringArray(int[][] matrix)
    {
-      String[] array = new String[27];
-      array[0] = "public static final int[][] bellmanFordAdjacencyMatrix = new int[][]";
-      array[1] = "{";
+      String[] array = new String[51];
+      array[0] = "adjMatrix = [";
+      array[1] = "[";
       for(int i = 0; i < matrix.length; i++)
       {
-         array[i + 2] = "{";
+         array[i + 2] = "[";
          for(int j = 0; j < matrix[i].length; j++)
          {
             if(j != matrix[i].length - 1)
@@ -117,22 +117,22 @@ public class GenerateAdjMatrix
                array[i + 2] += matrix[i][j];
          }
          if(i != matrix.length - 1)
-            array[i + 2] += "},";
+            array[i + 2] += "],";
          else
-            array[i + 2] += "}";
+            array[i + 2] += "]";
       }
-      array[26] += "};";
+      array[50] += "];";
       return array;
    }
 
    public static String[] listNeighborsToStringArray(ArrayList<ArrayList<Integer>> matrix)
    {
-      String[] array = new String[27];
-      array[0] = "public static final int[][] neighborLookup5x5 = new int[][]";
-      array[1] = "{";
+      String[] array = new String[51];
+      array[0] = "neighbors = ";
+      array[1] = "[";
       for(int i = 0; i < matrix.size(); i++)
       {
-         array[i + 2] = "{";
+         array[i + 2] = "[";
          for(int j = 0; j < matrix.get(i).size(); j++)
          {
             if(j != matrix.get(i).size() - 1)
@@ -141,11 +141,11 @@ public class GenerateAdjMatrix
                array[i + 2] += matrix.get(i).get(j);
          }
          if(i != matrix.size() - 1)
-            array[i + 2] += "},";
+            array[i + 2] += "],";
          else
-            array[i + 2] += "}";
+            array[i + 2] += "]";
       }
-      array[26] += "};";
+      array[50] += "];";
       return array;
    }
 

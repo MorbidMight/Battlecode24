@@ -83,7 +83,7 @@ public class Pathfinding
         switch (pathfindingState)
         {
             case bellmanFord:
-                bellmanFord5x5(rc, destination);
+                BFSKernel.BFS(rc, destination);
                 updateAlreadyBeen(rc);
                 if(alreadyBeen.get(rc.getLocation()) > 2)
                 {

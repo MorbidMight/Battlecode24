@@ -1,5 +1,6 @@
 package Version14;
 
+import Version15.BFSKernel;
 import battlecode.common.*;
 
 import java.util.ArrayList;
@@ -126,7 +127,7 @@ public class Soldier
             MapLocation target = null;
             if(lastSeenEnemy != null){
                 //Pathfinding.combinedPathfinding(rc, lastSeenEnemy.getLocation());
-                Pathfinding.bellmanFord5x5(rc, lastSeenEnemy);
+                BFSKernel.BFS(rc, lastSeenEnemy);
                 return;
             }
             else if(knowFlag(rc)){
@@ -276,7 +277,7 @@ public class Soldier
         attemptAttack(rc);
         if(closestFlag != null){
             if(rc.canSenseLocation(closestFlag.location)){
-                Pathfinding.bellmanFord5x5(rc, closestFlag.location);
+                BFSKernel.BFS(rc, closestFlag.location);
                 if(rc.isActionReady()) {
                     updateInfo(rc);
                     attemptAttack(rc);
@@ -371,7 +372,7 @@ public class Soldier
             MapLocation target = null;
             if(lastSeenEnemy != null){
                 //Pathfinding.combinedPathfinding(rc, lastSeenEnemy.getLocation());
-                Pathfinding.bellmanFord5x5(rc, lastSeenEnemy);
+                BFSKernel.BFS(rc, lastSeenEnemy);
                 return;
             }
             else if(knowFlag(rc)){
@@ -424,7 +425,7 @@ public class Soldier
                 rc.fill(rc.getLocation().add(rc.getLocation().directionTo(targetFlag.getLocation())));
             }
             if(rc.getLocation().distanceSquaredTo(targetFlag.getLocation()) < 16) {
-                Pathfinding.bellmanFord5x5(rc, targetFlag.getLocation());
+                BFSKernel.BFS(rc, targetFlag.getLocation());
             }
             else if(rc.isActionReady()){
                 if(rc.canPickupFlag(targetFlag.getLocation())) {
