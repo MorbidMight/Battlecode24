@@ -495,25 +495,41 @@ public class Utilities
 
     }
 
-    public static boolean locationIsBehindWall(RobotController rc, MapLocation L){
-        double m  = (rc.getLocation().y-L.y+0.0)/(rc.getLocation().x-L.x);
-        double c = (m*L.x-L.y);
-        for(MapInfo T: rc.senseNearbyMapInfos()){
-            MapLocation t = T.getMapLocation();
-            double d = (m*t.x*-1+t.y+c)/(Math.sqrt(1+m*m));
-            if(d<=1&&T.isWall()){
-                return true;
-            }
+
+    public static boolean angleIsGreaterThan90(Direction a, Direction b){
+        while(a!=Direction.SOUTH){
+            a = a.rotateLeft();
+            b = b.rotateLeft();
         }
-        return false;
+        return b==Direction.NORTH || b==Direction.NORTHEAST || b==Direction.NORTHWEST;
+
+    }
+    public static boolean locationIsBehindWall(RobotController rc, MapLocation L){
+        return locationIsBehindWall(rc,L,rc.getLocation());
     }
     public static boolean locationIsBehindWall(RobotController rc, MapLocation L, MapLocation R){
         double m  = (R.y-L.y+0.0)/(R.x-L.x);
         double c = (m*L.x-L.y);
         for(MapInfo T: rc.senseNearbyMapInfos()){
             MapLocation t = T.getMapLocation();
-            double d = (m*t.x*-1+t.y+c)/(Math.sqrt(1+m*m));
-            if(d<=1&&T.isWall()){
+            if(!angleIsGreaterThan90(t.directionTo(L),t.directionTo(R))){
+                /*If the directions point in the same way that means that t
+                is not inbetween L and R. If it was inbetween the the
+                angle would be obtuse
+                 */
+                continue;
+            }
+            double d1 = Math.pow(t.y-m*t.x+c,2);
+            /*
+            this comparison is kinda weird but basically it uses the distance from a point
+            to a line formula* and compares it to 1. However since division and sqrt are expensive,
+            I've done some algebra to get rid of them
+
+            * given aX + bY + C = 0 and (P,Q)
+            distance = (aP + bQ + c)/sqrt(A^2+B^2)
+             */
+
+            if(T.isWall()&&1+m*m>=d1){
                 return true;
             }
         }
