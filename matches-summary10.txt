@@ -1,0 +1,17 @@
+|  | Version15 | Version14 | Version13 |
+| :---: | :---: | :---: | :---: |
+| AceOfSpades | Tied (990, 2000) | Won (734, 663) | Won (1469, 796) |
+| Alien | Tied (1231, 1198) | Won (807, 1979) | Tied (1288, 2000) |
+| Ambush | Lost (1322, 481) | Won (842, 400) | Won (1163, 1560) |
+| BigDucksBigPond | Won (2000, 1354) | Won (1351, 1299) | Won (2000, 1375) |
+| Canals | Won (1701, 1685) | Won (1055, 990) | Won (2000, 1495) |
+| Duck | Tied (2000, 2000) | Won (1527, 1437) | Won (2000, 2000) |
+| Hockey | Won (1486, 1419) | Won (930, 1391) | Won (1272, 962) |
+| Rivers | Tied (661, 2000) | Tied (789, 920) | Tied (454, 530) |
+| Racetrack | Tied (837, 439) | Won (901, 679) | Tied (679, 667) |
+| Rainobw | Error | Error | Error |
+| Bunkers | Tied (976, 775) | Tied (1214, 650) | Tied (2000, 1126) |
+| Checkered | Won (2000, 1719) | Tied (679, 1468) | Tied (590, 1853) |
+| Fountain | Tied (682, 1069) | Won (2000, 1337) | Won (822, 1441) |
+| Divergent | Tied (2000, 2000) | Won (2000, 2000) | Won (2000, 2000) |
+
