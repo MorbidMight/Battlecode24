@@ -32,8 +32,8 @@ public class Builder {
 
 
     public static void runBuilder(RobotController rc) throws GameActionException {
-//        if (rc.getRoundNum() >= 201)
-//            role = roles.soldier;
+        if (rc.getRoundNum() >= 201)
+            role = roles.soldier;
         //pick up flag if it is early game
         if (centerOfMap == null)
             centerOfMap = new MapLocation(rc.getMapWidth() / 2, rc.getMapHeight() / 2);
