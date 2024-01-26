@@ -94,7 +94,8 @@ public class Builder {
                         rc.writeSharedArray(42, Utilities.convertLocationToInt(target));
                         //System.out.println(Utilities.convertIntToLocation(rc.readSharedArray(42)));
                     }
-                    role = roles.explorer;
+                    //role = roles.explorer;
+                    role = roles.moat;
                 }
             } else {
                 while (rc.canSenseLocation(target) && !rc.senseLegalStartingFlagPlacement(target)) {
