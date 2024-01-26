@@ -115,7 +115,7 @@ public class Builder {
                 else if (rc.readSharedArray(42) == 0) {
                     rc.writeSharedArray(42, Utilities.convertLocationToInt(rc.getLocation()));
                 }
-                role = roles.explorer;
+                role = roles.moat;
             } else {
                 //move away from center
 //                if (rc.canMove(rc.getLocation().directionTo(centerOfMap).opposite())) {
@@ -179,9 +179,10 @@ public class Builder {
                     }
                 }
             }
-            rc.move(rc.getLocation().directionTo(bestLoc));
+            if(rc.canMove(rc.getLocation().directionTo(bestLoc))) {
+                rc.move(rc.getLocation().directionTo(bestLoc));
+            }
             updateAlreadyBeen(rc);
-
         }
         //dig
         for(Direction dir: Direction.allDirections())

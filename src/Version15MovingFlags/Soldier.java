@@ -289,7 +289,7 @@ public class Soldier
             if(knowFlag(rc)){
                 target = findClosestActualFlag(rc);
                 if(target != null){
-                    if(rc.canFill(rc.getLocation().add(rc.getLocation().directionTo(target)))){
+                    if(nearbyFlagsAlly.length == 0 && rc.canFill(rc.getLocation().add(rc.getLocation().directionTo(target)))){
                         rc.fill(rc.getLocation().add(rc.getLocation().directionTo(target)));
                     }
                     Pathfinding.combinedPathfinding(rc, target);
@@ -298,7 +298,7 @@ public class Soldier
             else if(getClosestCluster(rc) != null){
                 target = getClosestCluster(rc);
                 //Pathfinding.combinedPathfinding(rc, lastSeenEnemy.getLocation());
-                if(rc.canFill(rc.getLocation().add(rc.getLocation().directionTo(target))))
+                if(nearbyFlagsAlly.length == 0 && rc.canFill(rc.getLocation().add(rc.getLocation().directionTo(target))))
                     rc.fill(rc.getLocation().add(rc.getLocation().directionTo(target)));
                 Pathfinding.bellmanFord5x5(rc, target);
                 return;
@@ -307,7 +307,7 @@ public class Soldier
                 //MapLocation target = findCoordinatedBroadcastFlag(rc);
                 target = findClosestBroadcastFlags(rc);
                 if(target != null) {
-                    if (rc.canFill(rc.getLocation().add(rc.getLocation().directionTo(target)))) {
+                    if (nearbyFlagsAlly.length == 0 && rc.canFill(rc.getLocation().add(rc.getLocation().directionTo(target)))) {
                         rc.fill(rc.getLocation().add(rc.getLocation().directionTo(target)));
                     }
                     Pathfinding.combinedPathfinding(rc, findCoordinatedBroadcastFlag(rc));
