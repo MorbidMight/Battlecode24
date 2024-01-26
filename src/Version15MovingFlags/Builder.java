@@ -131,13 +131,17 @@ public class Builder {
         }
     }
     public static void buildMoat (RobotController rc) throws GameActionException {
-        if(turnCount > 215)
+        if(rc.getRoundNum() > 215)
         {
            role = roles.explorer;
         }
         MapLocation centerOfMap = new MapLocation(rc.getMapWidth() / 2, rc.getMapHeight() / 2);
         FlagInfo[] flags = rc.senseNearbyFlags(-1);
         //move away from flag
+        if(flags.length == 0){
+            role = roles.explorer;
+            return;
+        }
         if(rc.getLocation().distanceSquaredTo(flags[0].getLocation()) < 9)
         {
             rc.setIndicatorString("moving away from flag");
