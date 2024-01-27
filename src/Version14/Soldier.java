@@ -387,7 +387,6 @@ public class Soldier
             }
             else{
                 target = findCoordinatedBroadcastFlag(rc);
-                //target = findClosestBroadcastFlags(rc);
                 if(target != null && rc.getLocation().distanceSquaredTo(target) < 6){
                     invalidBroadcasts.add(target);
                 }

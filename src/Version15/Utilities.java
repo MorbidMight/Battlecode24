@@ -343,6 +343,7 @@ public class Utilities
                 numClusters++;
             }
         }
+
         MapLocation[] currAvgClusters = getCurrentEnemyClusters(rc);
         int closestClusterIndex = -1;
         int shortestDistance = Integer.MAX_VALUE;
@@ -356,9 +357,10 @@ public class Utilities
                 closestClusterIndex = i;
             }
         }
-        if(closestClusterIndex == -1) return;
 
-        if(shortestDistance > RobotPlayer.MAX_MAP_DIST_SQUARED / 9 && numClusters < 3)
+        if(closestClusterIndex == -1) closestClusterIndex = numClusters;
+
+        if(shortestDistance > RobotPlayer.MAX_MAP_DIST_SQUARED / 56)
         {
             closestClusterIndex = numClusters;
         }
@@ -392,13 +394,16 @@ public class Utilities
         return locs;
     }
 
-    public static MapLocation[] getLastRoundClusters(RobotController rc) throws GameActionException
+    public static Cluster[] getLastRoundClusters(RobotController rc) throws GameActionException
     {
-        MapLocation[] locs = new MapLocation[3];
-        locs[0] = Utilities.convertIntToLocation(rc.readSharedArray(LAST_ROUND_LOCATION_1_INDEX));
-        locs[1] = Utilities.convertIntToLocation(rc.readSharedArray(LAST_ROUND_LOCATION_2_INDEX));
-        locs[2] = Utilities.convertIntToLocation(rc.readSharedArray(LAST_ROUND_LOCATION_3_INDEX));
-        return locs;
+        Cluster[] clusters = new Cluster[3];
+        clusters[0] = new Cluster(Utilities.convertIntToLocation(rc.readSharedArray(LAST_ROUND_LOCATION_1_INDEX)),
+        getEnemyCountFromCluster(rc.readSharedArray(LAST_ROUND_LOCATION_1_INDEX)));
+        clusters[1] = new Cluster(Utilities.convertIntToLocation(rc.readSharedArray(LAST_ROUND_LOCATION_2_INDEX)),
+                getEnemyCountFromCluster(rc.readSharedArray(LAST_ROUND_LOCATION_2_INDEX)));
+        clusters[2] = new Cluster(Utilities.convertIntToLocation(rc.readSharedArray(LAST_ROUND_LOCATION_3_INDEX)),
+                getEnemyCountFromCluster(rc.readSharedArray(LAST_ROUND_LOCATION_3_INDEX)));
+        return clusters;
     }
 
     public static MapLocation generateAverageLocation(int totalX, int totalY, int total)
@@ -413,22 +418,35 @@ public class Utilities
         }
     }
 
+    public static int createClusterInt(MapLocation location, int numEnemies)
+    {
+        int numToStore = numEnemies / 22;
+        numToStore = numToStore << 12;
+        return convertLocationToInt(location) | numToStore;
+    }
+
+    public static int getEnemyCountFromCluster(int cluster)
+    {
+        return (61440 & cluster) >> 12;
+    }
+
     public static void resetAvgEnemyLoc(RobotController rc) throws GameActionException {
         MapLocation[] clusters = getCurrentEnemyClusters(rc);
+
         rc.writeSharedArray(LAST_ROUND_LOCATION_1_INDEX,
-                clusters[0].x != -1 ? convertLocationToInt(clusters[0]) : 0);
+                clusters[0].x != -1 ? createClusterInt(clusters[0], rc.readSharedArray(CURRENT_ROUND_TOTAL_1_INDEX)) : 0);
         rc.writeSharedArray(CURRENT_ROUND_X_1_INDEX, 0);
         rc.writeSharedArray(CURRENT_ROUND_Y_1_INDEX, 0);
         rc.writeSharedArray(CURRENT_ROUND_TOTAL_1_INDEX, 0);
 
         rc.writeSharedArray(LAST_ROUND_LOCATION_2_INDEX,
-                clusters[1].x != -1 ? convertLocationToInt(clusters[1]) : 0);
+                clusters[1].x != -1 ? createClusterInt(clusters[1], rc.readSharedArray(CURRENT_ROUND_TOTAL_2_INDEX)) : 0);
         rc.writeSharedArray(CURRENT_ROUND_X_2_INDEX, 0);
         rc.writeSharedArray(CURRENT_ROUND_Y_2_INDEX, 0);
         rc.writeSharedArray(CURRENT_ROUND_TOTAL_2_INDEX, 0);
 
         rc.writeSharedArray(LAST_ROUND_LOCATION_3_INDEX,
-                clusters[2].x != -1 ? convertLocationToInt(clusters[2]) : 0);
+                clusters[2].x != -1 ? createClusterInt(clusters[2], rc.readSharedArray(CURRENT_ROUND_TOTAL_3_INDEX)): 0);
         rc.writeSharedArray(CURRENT_ROUND_X_3_INDEX, 0);
         rc.writeSharedArray(CURRENT_ROUND_Y_3_INDEX, 0);
         rc.writeSharedArray(CURRENT_ROUND_TOTAL_3_INDEX, 0);

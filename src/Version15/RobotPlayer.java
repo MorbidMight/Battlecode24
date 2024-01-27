@@ -126,10 +126,15 @@ static MapLocation builderBombCircleCenter = null;
 
             // Try/catch blocks stop unhandled exceptions, which cause your robot to explode.
             try {
+                if(rc.getRoundNum() == 2100)
+                {
+                    rc.resign();
+                }
                 if(turnOrder == 0)
                 {
                     HeadquarterDuck.runHeadquarterDuck(rc);
                 }
+
                 // Make sure you spawn your robot in before you attempt to take any actions!
                 // Robots not spawned in do not have vision of any tiles and cannot perform any actions.
                 if (turnCount == 1) {//first turn fill the spawn location into the array ranked
@@ -275,12 +280,13 @@ static MapLocation builderBombCircleCenter = null;
                     }*/
 
                 }
-                MapLocation[] clusters = Utilities.getLastRoundClusters(rc);
+                Cluster[] clusters = Utilities.getLastRoundClusters(rc);
                 if(turnOrder == 0)
                 {
-                    rc.setIndicatorDot(clusters[0], 255, 0, 0);
-                    rc.setIndicatorDot(clusters[1], 0, 255, 0);
-                    rc.setIndicatorDot(clusters[2], 0, 0, 255);
+                    System.out.println(Arrays.toString(clusters));
+                    rc.setIndicatorDot(clusters[0].location, 255, 0, 0);
+                    rc.setIndicatorDot(clusters[1].location, 0, 255, 0);
+                    rc.setIndicatorDot(clusters[2].location, 0, 0, 255);
                 }
 
 

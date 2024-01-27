@@ -11,8 +11,8 @@ import static Version15.RobotPlayer.*;
 public class Pathfinding
 {
 
-    enum PathfindingState{bugNav2, bellmanFord}
-    static PathfindingState pathfindingState = PathfindingState.bellmanFord;
+    enum PathfindingState{bugNav2, BFS}
+    static PathfindingState pathfindingState = PathfindingState.BFS;
     public static final int BUG_NAV_TURNS = 50;
     public static int turnsUsingBugNav = 0;
     public static final int MAX_BYTECODE_USAGE = 10000;
@@ -82,7 +82,7 @@ public class Pathfinding
     public static void combinedPathfinding(RobotController rc, MapLocation destination) throws GameActionException {
         switch (pathfindingState)
         {
-            case bellmanFord:
+            case BFS:
                 BFSKernel.BFS(rc, destination);
                 updateAlreadyBeen(rc);
                 if(alreadyBeen.get(rc.getLocation()) > 2)
@@ -97,7 +97,7 @@ public class Pathfinding
                 if(turnsUsingBugNav >= BUG_NAV_TURNS)
                 {
                     turnsUsingBugNav = 0;
-                    pathfindingState = PathfindingState.bellmanFord;
+                    pathfindingState = PathfindingState.BFS;
                 }
                 break;
         }

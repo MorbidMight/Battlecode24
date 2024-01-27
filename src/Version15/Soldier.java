@@ -1,13 +1,9 @@
 package Version15;
 
-import Version15MovingFlags.BFSKernel;
 import battlecode.common.*;
-
-import java.nio.file.Path;
-import java.util.ArrayList;
-
-import static Version15.RobotPlayer.*;
 import static Version15.Utilities.*;
+import static Version15.RobotPlayer.*;
+
 
 enum states{
     defense, attack, heist, escort, flagCarrier
