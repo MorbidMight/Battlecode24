@@ -321,8 +321,46 @@ public class Builder {
         }
         return averageTrapLocation;
     }
+
     public static int evaluateFlagLocation(MapLocation location, RobotController rc) throws GameActionException {
-        MapInfo[] surroundingAreas = rc.senseNearbyMapInfos(location, 8);
+        int score = 0;
+        if (!rc.senseLegalStartingFlagPlacement(location)) {
+            return -1000;
+        }
+        if (isMapEdge(rc, location)) {
+            score += 100;
+        }
+
+        //Covered by wall
+        if(rc.senseMapInfo(location.add(location.directionTo(centerOfMap))).isWall()) {
+            score += 125;
+            if(rc.senseMapInfo(location.add(location.directionTo(centerOfMap).rotateLeft())).isWall())
+                score+=100;
+            if(rc.senseMapInfo(location.add(location.directionTo(centerOfMap).rotateRight())).isWall())
+                score+=100;
+        }
+        for (MapInfo M : rc.senseNearbyMapInfos(location, 8)) {
+            MapLocation m = M.getMapLocation();
+            if (m.isAdjacentTo(location)) {
+                if(M.isWall())
+                    score+= 100;
+                if(M.isWater())
+                    score+= 10;
+                if(M.isDam())
+                    score-= 500;
+
+            } else {
+                if (M.isWall())
+                    score += 10;
+                if (M.isWater())
+                    score += 3;
+                if (M.isDam())
+                    score -= 175;
+            }
+        }
+        return score;
+
+        /*MapInfo[] surroundingAreas = rc.senseNearbyMapInfos(location, 8);
         int score = 0;
         if(!rc.senseLegalStartingFlagPlacement(location)){
             return -1000;
@@ -344,13 +382,14 @@ public class Builder {
                 }
             }
             if(m.isDam())
-                score-= 20;
+                score-= 200;
             if(m.isDam() && temp.isAdjacentTo(location))
-                score -= 100;
+                score -= 750;
         }
         score += location.distanceSquaredTo(centerOfMap) / 2;
         score -= location.distanceSquaredTo(closestCorner) / 2;
         return score;
+    */
     }
     public static boolean isMapEdge(RobotController rc, MapLocation loc){
         int width = rc.getMapWidth();
