@@ -636,20 +636,6 @@ static MapLocation builderBombCircleCenter = null;
         int distance_1 = coordinatedTarget.distanceSquaredTo(Utilities.convertIntToLocation(rc.readSharedArray(0)));
         int distance_2 = coordinatedTarget.distanceSquaredTo(Utilities.convertIntToLocation(rc.readSharedArray(1)));
         int distance_3 = coordinatedTarget.distanceSquaredTo(Utilities.convertIntToLocation(rc.readSharedArray(2)));
-//        //distance 1 is less than distance 2, distance 2 can't be smallest
-//        if (distance_1 < distance_2) {
-//            //distance 1 is smaller than both, must be smallest
-//            if (distance_1 < distance_3) {
-//                return 0;
-//            } else {
-//                return 2;
-//            }
-//        } else {
-//            if (distance_2 < distance_3)
-//                return 1;
-//            else
-//                return 2;
-//        }
         if(distance_1 <= distance_2 && distance_1 <= distance_3){
             return 0;
         }

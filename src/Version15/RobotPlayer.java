@@ -364,18 +364,16 @@ static MapLocation builderBombCircleCenter = null;
         int distance_1 = rc.getLocation().distanceSquaredTo(Utilities.convertIntToLocation(rc.readSharedArray(0)));
         int distance_2 = rc.getLocation().distanceSquaredTo(Utilities.convertIntToLocation(rc.readSharedArray(1)));
         int distance_3 = rc.getLocation().distanceSquaredTo(Utilities.convertIntToLocation(rc.readSharedArray(2)));
-        if (distance_1 < distance_2) {
-            if (distance_1 < distance_3) {
-                targetLoc = Utilities.convertIntToLocation(rc.readSharedArray(0));
-            } else {
-                targetLoc = Utilities.convertIntToLocation(rc.readSharedArray(2));
-            }
-        } else {
-            if (distance_2 < distance_3)
-                targetLoc = Utilities.convertIntToLocation(rc.readSharedArray(1));
-            else
-                targetLoc = Utilities.convertIntToLocation(rc.readSharedArray(2));
+        if(distance_1 <= distance_2 && distance_1 <= distance_3){
+            targetLoc = Utilities.convertIntToLocation(rc.readSharedArray(0));
         }
+        else if(distance_2 <= distance_1 && distance_2 <= distance_3){
+            targetLoc = Utilities.convertIntToLocation(rc.readSharedArray(1));
+        }
+        else{
+            targetLoc = Utilities.convertIntToLocation(rc.readSharedArray(2));
+        }
+
         return targetLoc;
     }
 
@@ -612,17 +610,14 @@ static MapLocation builderBombCircleCenter = null;
         int distance_1 = coordinatedTarget.distanceSquaredTo(Utilities.convertIntToLocation(rc.readSharedArray(0)));
         int distance_2 = coordinatedTarget.distanceSquaredTo(Utilities.convertIntToLocation(rc.readSharedArray(1)));
         int distance_3 = coordinatedTarget.distanceSquaredTo(Utilities.convertIntToLocation(rc.readSharedArray(2)));
-        if (distance_1 < distance_2) {
-            if (distance_1 < distance_3) {
-                return 0;
-            } else {
-                return 2;
-            }
-        } else {
-            if (distance_2 < distance_3)
-                return 1;
-            else
-                return 2;
+        if(distance_1 <= distance_2 && distance_1 <= distance_3){
+            return 0;
+        }
+        else if(distance_2 <= distance_1 && distance_2 <= distance_3){
+            return 1;
+        }
+        else{
+            return 2;
         }
     }
     public static int findClosestSpawnLocationToCluster(RobotController rc) throws GameActionException {
@@ -632,17 +627,14 @@ static MapLocation builderBombCircleCenter = null;
         int distance_1 = spawn1.distanceSquaredTo(Utilities.getClosestCluster(rc, spawn1));
         int distance_2 = spawn1.distanceSquaredTo(Utilities.getClosestCluster(rc, spawn2));
         int distance_3 = spawn1.distanceSquaredTo(Utilities.getClosestCluster(rc, spawn3));
-        if (distance_1 < distance_2) {
-            if (distance_1 < distance_3) {
-                return 0;
-            } else {
-                return 2;
-            }
-        } else {
-            if (distance_2 < distance_3)
-                return 1;
-            else
-                return 2;
+        if(distance_1 <= distance_2 && distance_1 <= distance_3){
+            return 0;
+        }
+        else if(distance_2 <= distance_1 && distance_2 <= distance_3){
+            return 1;
+        }
+        else{
+            return 2;
         }
     }
     public static int findClosestSpawnLocationToCoordinatedTarget(RobotController rc) throws GameActionException {
@@ -652,17 +644,14 @@ static MapLocation builderBombCircleCenter = null;
         int distance_1 = coordinatedTarget.distanceSquaredTo(Utilities.convertIntToLocation(rc.readSharedArray(0)));
         int distance_2 = coordinatedTarget.distanceSquaredTo(Utilities.convertIntToLocation(rc.readSharedArray(1)));
         int distance_3 = coordinatedTarget.distanceSquaredTo(Utilities.convertIntToLocation(rc.readSharedArray(2)));
-        if (distance_1 < distance_2) {
-            if (distance_1 < distance_3) {
-                return 0;
-            } else {
-                return 2;
-            }
-        } else {
-            if (distance_2 < distance_3)
-                return 1;
-            else
-                return 2;
+        if(distance_1 <= distance_2 && distance_1 <= distance_3){
+            return 0;
+        }
+        else if(distance_2 <= distance_1 && distance_2 <= distance_3){
+            return 1;
+        }
+        else{
+            return 2;
         }
     }
 
