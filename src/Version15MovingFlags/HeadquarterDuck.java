@@ -45,12 +45,16 @@ public class HeadquarterDuck
         }
         else if(!Utilities.readBitSharedArray(rc, 1021)){
             int x;
-            if(Soldier.knowFlag(rc))
+            if(Soldier.knowFlag(rc)) {
                 x = RobotPlayer.findClosestSpawnLocationToCoordinatedTarget(rc);
+                System.out.println("know flag : " + x);
+            }
             else if (Utilities.getClosestCluster(rc, new MapLocation(10, 10)) != null) {
                 x = RobotPlayer.findClosestSpawnLocationToCluster(rc);
+                System.out.println("cluster! : " + x);
             } else {
                 x = RobotPlayer.findClosestSpawnLocationToCoordinatedBroadcast(rc);
+                System.out.println("broadcast : " + x);
             }
             if (x != -1){
                 //00

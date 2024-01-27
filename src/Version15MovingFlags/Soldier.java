@@ -183,7 +183,8 @@ public class Soldier
         attemptAttack(rc);
         if(closestFlag != null){
             if(rc.canSenseLocation(closestFlag.location)){
-                Pathfinding.bellmanFord5x5(rc, closestFlag.location);
+                //Pathfinding.bellmanFord5x5(rc, closestFlag.location);
+                BFSKernel.BFS(rc, closestFlag.location);
                 if(rc.isActionReady()) {
                     updateInfo(rc);
                     attemptAttack(rc);
@@ -267,7 +268,8 @@ public class Soldier
                 attemptHeal(rc);
             }
             else if(healthRatio < 0.25f && (allyRobots.length > enemyRobots.length + 1) || healthRatio < 0.125f){
-                Pathfinding.bellmanFord5x5(rc, lowestHealth(enemyRobots));
+                //Pathfinding.bellmanFord5x5(rc, lowestHealth(enemyRobots));
+                BFSKernel.BFS(rc, lowestHealth(enemyRobots));
                 updateInfo(rc);
                 attemptAttack(rc);
                 attemptHeal(rc);
@@ -311,7 +313,8 @@ public class Soldier
                 //Pathfinding.combinedPathfinding(rc, lastSeenEnemy.getLocation());
                 if(nearbyFlagsAlly.length == 0 && rc.canFill(rc.getLocation().add(rc.getLocation().directionTo(target))))
                     rc.fill(rc.getLocation().add(rc.getLocation().directionTo(target)));
-                Pathfinding.bellmanFord5x5(rc, target);
+                //Pathfinding.bellmanFord5x5(rc, target);
+                BFSKernel.BFS(rc, target);
                 return;
             }
             else{
@@ -342,7 +345,8 @@ public class Soldier
                 rc.fill(rc.getLocation().add(rc.getLocation().directionTo(targetFlag.getLocation())));
             }
             if(rc.getLocation().distanceSquaredTo(targetFlag.getLocation()) < 16) {
-                Pathfinding.bellmanFord5x5(rc, targetFlag.getLocation());
+                //Pathfinding.bellmanFord5x5(rc, targetFlag.getLocation());
+                BFSKernel.BFS(rc, targetFlag.getLocation());
             }
             else if(rc.isActionReady()){
                 if(rc.canPickupFlag(targetFlag.getLocation())) {
