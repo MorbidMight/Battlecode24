@@ -47,10 +47,10 @@ public class Builder {
             rc.pickupFlag(rc.getLocation());
         }
         if (rc.hasFlag() && rc.getRoundNum() < EXPLORE_PERIOD) {
-            MapInfo[] nearbyLocs = rc.senseNearbyMapInfos(2);
+            MapInfo[] nearbyLocs = rc.senseNearbyMapInfos(GameConstants.INTERACT_RADIUS_SQUARED);
             for (MapInfo info : nearbyLocs) {
                 MapLocation loc = info.getMapLocation();
-                if (info.isPassable() && !scoredLocationsV2.contains(loc)) {
+                if (!scoredLocationsV2.contains(loc)) {
                     int score = evaluateFlagLocation(loc, rc);
                     scoredLocationsV2.add(new PotentialFlag(loc, score));
                 }
@@ -321,8 +321,46 @@ public class Builder {
         }
         return averageTrapLocation;
     }
+
     public static int evaluateFlagLocation(MapLocation location, RobotController rc) throws GameActionException {
-        MapInfo[] surroundingAreas = rc.senseNearbyMapInfos(location, 5);
+        int score = 0;
+        if (!rc.senseLegalStartingFlagPlacement(location)) {
+            return -1000;
+        }
+        if (isMapEdge(rc, location)) {
+            score += 100;
+        }
+
+        //Covered by wall
+        if(rc.senseMapInfo(location.add(location.directionTo(centerOfMap))).isWall()) {
+            score += 125;
+            if(rc.senseMapInfo(location.add(location.directionTo(centerOfMap).rotateLeft())).isWall())
+                score+=100;
+            if(rc.senseMapInfo(location.add(location.directionTo(centerOfMap).rotateRight())).isWall())
+                score+=100;
+        }
+        for (MapInfo M : rc.senseNearbyMapInfos(location, 8)) {
+            MapLocation m = M.getMapLocation();
+            if (m.isAdjacentTo(location)) {
+                if(M.isWall())
+                    score+= 100;
+                if(M.isWater())
+                    score+= 10;
+                if(M.isDam())
+                    score-= 500;
+
+            } else {
+                if (M.isWall())
+                    score += 10;
+                if (M.isWater())
+                    score += 3;
+                if (M.isDam())
+                    score -= 175;
+            }
+        }
+        return score;
+
+        /*MapInfo[] surroundingAreas = rc.senseNearbyMapInfos(location, 8);
         int score = 0;
         if(!rc.senseLegalStartingFlagPlacement(location)){
             return -1000;
@@ -333,17 +371,25 @@ public class Builder {
         for(MapInfo m : surroundingAreas){
             MapLocation temp = m.getMapLocation();
             if(!m.isPassable() && !m.isDam()){
-                    score = (m.isWater()) ? score + 3 : score + 100;
+                if(temp.isAdjacentTo(location)) {
+                    score = (m.isWater()) ? score + 3 : score + 60;
                     if(Utilities.locationIsBehindWall(rc,centerOfMap, temp, 2)){
                         score += 100;
                     }
+                }
+                else {
+                    score = (m.isWater()) ? score + 1 : score + 20;
+                }
             }
             if(m.isDam())
-                score-= 100;
+                score-= 200;
+            if(m.isDam() && temp.isAdjacentTo(location))
+                score -= 750;
         }
-        score += location.distanceSquaredTo(centerOfMap);
-        score -= location.distanceSquaredTo(closestCorner);
+        score += location.distanceSquaredTo(centerOfMap) / 2;
+        score -= location.distanceSquaredTo(closestCorner) / 2;
         return score;
+    */
     }
     public static boolean isMapEdge(RobotController rc, MapLocation loc){
         int width = rc.getMapWidth();
