@@ -66,9 +66,11 @@ public class Soldier
         else if(lastSeenEnemy != null && rc.canSenseRobotAtLocation(lastSeenEnemy.getLocation())){
             lastSeenEnemy = null;
         }
-        if(nearbyFlagsEnemy.length != 0 && rc.canPickupFlag(nearbyFlagsEnemy[0].getLocation())){
-            rc.pickupFlag(nearbyFlagsEnemy[0].getLocation());
-            state = states.flagCarrier;
+        for(FlagInfo flag : nearbyFlagsEnemy){
+            if(rc.canPickupFlag(flag.getLocation())){
+                rc.pickupFlag(flag.getLocation());
+                state = states.flagCarrier;
+            }
         }
         state = trySwitchState(rc);
         rc.setIndicatorString(state.toString());
@@ -128,7 +130,7 @@ public class Soldier
                 return states.defense;
         }
         for (FlagInfo flag : nearbyFlagsEnemy) {
-            if (flag.isPickedUp() && (enemyRobots.length > 0 ||rc.getLocation().distanceSquaredTo(findClosestSpawnLocation(rc)) >= 25)) {
+            if (flag.isPickedUp() && (enemyRobots.length > 0 ||rc.getLocation().distanceSquaredTo(findClosestSpawnLocation(rc)) >= 36)) {
                 escortee = rc.senseRobotAtLocation(flag.getLocation());
                 return states.escort;
             }
