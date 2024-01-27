@@ -717,8 +717,8 @@ public class Soldier
     }
 
     public static void attemptHeal(RobotController rc) throws GameActionException{
-        if(potentialEnemiesPrepareAttack.length != 0 && rc.getLevel(SkillType.HEAL) == 3 && rc.getLevel(SkillType.ATTACK) < 4)
-            return;
+//        if(potentialEnemiesPrepareAttack.length != 0 && rc.getLevel(SkillType.HEAL) == 3 && rc.getLevel(SkillType.ATTACK) < 4)
+//            return;
         RobotInfo toHeal = bestHeal(rc, allyRobotsHealRange);
         if(toHeal != null && rc.canHeal(toHeal.getLocation()) && toHeal.health < (1000 - rc.getHealAmount()))
             rc.heal(toHeal.getLocation());
