@@ -85,23 +85,28 @@ public class Builder {
                 BFSKernel.BFS(rc, target);
             //Pathfinding.combinedPathfinding(rc, target);
             if (rc.canSenseLocation(target) && rc.senseLegalStartingFlagPlacement(target)) {
-                if (rc.canDropFlag(target)) {
-                    rc.dropFlag(target);
-                    if (rc.readSharedArray(40) == 0) {
-                        rc.writeSharedArray(40, Utilities.convertLocationToInt(target));
-                        //System.out.println(Utilities.convertIntToLocation(rc.readSharedArray(40)));
+                if(rc.canBuild(TrapType.WATER, target))
+                    rc.build(TrapType.WATER, target);
+                if(rc.senseMapInfo(target).getTrapType() == TrapType.WATER)
+                {
+                    if (rc.canDropFlag(target)) {
+                        rc.dropFlag(target);
+                        if (rc.readSharedArray(40) == 0) {
+                            rc.writeSharedArray(40, Utilities.convertLocationToInt(target));
+                            //System.out.println(Utilities.convertIntToLocation(rc.readSharedArray(40)));
+                        }
+                        else if (rc.readSharedArray(41) == 0) {
+                            rc.writeSharedArray(41, Utilities.convertLocationToInt(target));
+                            //System.out.println(Utilities.convertIntToLocation(rc.readSharedArray(41)));
+                        }
+                        else if (rc.readSharedArray(42) == 0) {
+                            rc.writeSharedArray(42, Utilities.convertLocationToInt(target));
+                            //System.out.println(Utilities.convertIntToLocation(rc.readSharedArray(42)));
+
+                        }
+                        //role = roles.explorer;
+                        role = roles.moat;
                     }
-                    else if (rc.readSharedArray(41) == 0) {
-                        rc.writeSharedArray(41, Utilities.convertLocationToInt(target));
-                        //System.out.println(Utilities.convertIntToLocation(rc.readSharedArray(41)));
-                    }
-                    else if (rc.readSharedArray(42) == 0) {
-                        rc.writeSharedArray(42, Utilities.convertLocationToInt(target));
-                        //System.out.println(Utilities.convertIntToLocation(rc.readSharedArray(42)));
-                        
-                    }
-                    //role = roles.explorer;
-                    role = roles.moat;
                 }
             } else {
                 while (rc.canSenseLocation(target) && !rc.senseLegalStartingFlagPlacement(target)) {
@@ -147,6 +152,10 @@ public class Builder {
         }
         MapLocation centerOfMap = new MapLocation(rc.getMapWidth() / 2, rc.getMapHeight() / 2);
         FlagInfo[] flags = rc.senseNearbyFlags(-1);
+        if(rc.getLocation().equals(flags[0].getLocation()))
+            if(rc.canBuild(TrapType.WATER, rc.getLocation()))
+               rc.build(TrapType.WATER, rc.getLocation());
+            rc.setIndicatorDot(rc.getLocation(), 100,100,0);
         //move away from flag
         if(flags.length == 0){
             role = roles.explorer;
@@ -324,11 +333,44 @@ public class Builder {
 
     public static int evaluateFlagLocation(MapLocation location, RobotController rc) throws GameActionException {
         int score = 0;
+        int height = rc.getMapHeight();
+        int width = rc.getMapWidth();
+        /*if(location.y < height/2) {
+            //bottom left
+            if(location.x < width/2){
+                score -= location.distanceSquaredTo(new MapLocation(0,0)) * 2;
+            }
+            //bottom right
+            else{
+                score -= location.distanceSquaredTo(new MapLocation(width - 1,0)) * 2;
+            }
+        }
+        else {
+            //top left
+            if(location.x < width/2){
+                score -= location.distanceSquaredTo(new MapLocation(0,height - 1))* 2;
+            }
+            //top right
+            else{
+                score -= location.distanceSquaredTo(new MapLocation(width - 1,height - 1))* 2;
+            }
+        }*/
+        //decrease to score if close to map
+        score += ((location.distanceSquaredTo(centerOfMap) * 1.5) / (Math.sqrt(Math.pow(height, 2) + Math.pow(width, 2)))) * 250;
+
         if (!rc.senseLegalStartingFlagPlacement(location)) {
             return -1000;
         }
         if (isMapEdge(rc, location)) {
             score += 100;
+        }
+        //decrease score if on or near spawn
+        for(MapLocation curr: SpawnLocations)
+        {
+            if (location.equals(curr))
+                score -= 600;
+            else if(location.isAdjacentTo(curr))
+                score -= 300;
         }
 
         //Covered by wall

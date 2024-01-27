@@ -142,7 +142,7 @@ public class Explorer {
         RobotInfo[] enemyRobots = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
         if (enemyRobots.length >= 1){
             for (MapInfo t : rc.senseNearbyMapInfos(GameConstants.INTERACT_RADIUS_SQUARED)) {
-                if (!Soldier.isTrapAdjacent(rc, t.getMapLocation()) && rc.canBuild(TrapType.STUN, t.getMapLocation())) {
+                if (!Soldier.isTrapAdjacent(rc, t.getMapLocation()) && rc.canBuild(TrapType.STUN, t.getMapLocation()) && rc.getCrumbs() > 100) {
                     rc.build(TrapType.STUN, t.getMapLocation());
                 }
             }

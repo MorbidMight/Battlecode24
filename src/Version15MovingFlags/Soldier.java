@@ -65,7 +65,7 @@ public class Soldier
             lastSeenEnemy = enemyRobots[0];
         //if we can see one of our flags in its home spot, try and build a trap on it just cause
         else if (nearbyFlagsAlly.length != 0 && Utilities.isDefaultLocation(rc, nearbyFlagsAlly[0].getLocation())){
-            TrapType toBeBuilt = TrapType.STUN;
+            TrapType toBeBuilt = TrapType.WATER;
             MapLocation target = nearbyFlagsAlly[0].getLocation();
             if(!isTrapAdjacent(rc, rc.getLocation(), toBeBuilt) && rc.canBuild(toBeBuilt, target)){
                 rc.build(toBeBuilt, target);
