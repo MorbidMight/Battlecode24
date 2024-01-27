@@ -1,8 +1,8 @@
-package Version15;
+package Version16;
 
 import battlecode.common.*;
-import static Version15.Utilities.*;
-import static Version15.RobotPlayer.*;
+import static Version16.Utilities.*;
+import static Version16.RobotPlayer.*;
 
 
 enum states{

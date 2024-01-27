@@ -1,12 +1,12 @@
-package Version15;
+package Version16;
 
 import battlecode.common.*;
 
 import java.util.ArrayList;
 
-import static Version15.RobotPlayer.*;
-import static Version15.Utilities.averageRobotLocation;
-import static Version15.Utilities.bestHeal;
+import static Version16.RobotPlayer.*;
+import static Version16.Utilities.averageRobotLocation;
+import static Version16.Utilities.bestHeal;
 
 public class OffensiveBuilder {
     static RobotInfo[] enemyRobots;
