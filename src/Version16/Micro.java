@@ -233,6 +233,50 @@ public class Micro {
         }
         return false;
     }
+    public static double DPSAlly(RobotInfo unit){
+        int base = (rc.getRoundNum() >= 600) ? 210 : 150;
+        switch(unit.attackLevel){
+            case 0:
+                return base;
+            case 1:
+                return base + base * 0.05;
+            case 2:
+                return base + base * 0.07;
+            case 3:
+                return base + base * 0.1;
+            case 4:
+                return base + base * 0.3;
+            case 5:
+                return base + base * 0.35;
+            case 6:
+                return base + base * 0.6;
+            default:
+                return base;
+        }
+    }
+
+    public static double DPSEnemy(RobotInfo unit){
+        int base = (Soldier.enemyAttackUpgrade) ? 210 : 150;
+        switch(unit.attackLevel){
+            case 0:
+                return base;
+            case 1:
+                return base + base * 0.05;
+            case 2:
+                return base + base * 0.07;
+            case 3:
+                return base + base * 0.1;
+            case 4:
+                return base + base * 0.3;
+            case 5:
+                return base + base * 0.35;
+            case 6:
+                return base + base * 0.6;
+            default:
+                return base;
+        }
+    }
+
 }
 
 

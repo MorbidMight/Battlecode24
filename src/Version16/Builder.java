@@ -241,7 +241,7 @@ static int radius = 0;
                     continue;
                 MapLocation temp = new MapLocation(x + dx, y + dy);
                 MapInfo tempInfo = rc.senseMapInfo(temp);
-                if(tempInfo.isSpawnZone() && tempInfo.getTrapType() != TrapType.NONE)
+                if(!temp.equals(rc.getLocation()) && tempInfo.isSpawnZone() && tempInfo.getTrapType() != TrapType.NONE)
                     return true;
             }
         }
