@@ -28,34 +28,39 @@ static int radius = 0;
 
         if (SittingOnFlag) {
             //update where we want soldiers to spawn
-            if(!Utilities.readBitSharedArray(rc, 1021)){
+            if (!Utilities.readBitSharedArray(rc, 1021)) {
                 int x;
-                if(Soldier.knowFlag(rc))
+                if (Soldier.knowFlag(rc))
                     x = RobotPlayer.findClosestSpawnLocationToCoordinatedTarget(rc);
                 else if (Utilities.getClosestCluster(rc) != null) {
                     x = RobotPlayer.findClosestSpawnLocationToCluster(rc);
                 } else {
                     x = RobotPlayer.findClosestSpawnLocationToCoordinatedBroadcast(rc);
                 }
-                if (x != -1){
+                if (x != -1) {
                     //00
-                    if(x == 0){
+                    if (x == 0) {
                         Utilities.editBitSharedArray(rc, 1023, false);
                         Utilities.editBitSharedArray(rc, 1022, false);
                     }
                     //01
-                    else if(x == 1){
+                    else if (x == 1) {
                         Utilities.editBitSharedArray(rc, 1022, false);
-                        Utilities.editBitSharedArray(rc, 1023, true); }
+                        Utilities.editBitSharedArray(rc, 1023, true);
+                    }
                     //x == 2, desire 10
-                    else if (x == 2){
+                    else if (x == 2) {
                         Utilities.editBitSharedArray(rc, 1022, true);
                         Utilities.editBitSharedArray(rc, 1023, false);
                     }
                 }
             }
-            if(isActive)
+
+            if (isActive) {
+                if (rc.canBuild(TrapType.STUN, rc.getLocation()))
+                    rc.build(TrapType.STUN, rc.getLocation());
                 UpdateExplosionBorder2(rc);
+            }
             RobotInfo toHeal = Utilities.bestHeal(rc, rc.senseNearbyRobots(GameConstants.HEAL_RADIUS_SQUARED, rc.getTeam()));
             if(toHeal != null && rc.canHeal(toHeal.getLocation())){
                 rc.heal(toHeal.getLocation());

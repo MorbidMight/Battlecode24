@@ -45,7 +45,7 @@ static MapLocation builderBombCircleCenter = null;
     static ArrayList<MapLocation> prevDestinations;
 
     //Ratios for spawning
-    public static final int NUMSOLDIERS = 46;
+    public static final int NUMSOLDIERS = 47;
     public static final int NUMBUILDERS = 0;
     public static final int OFFENSIVEBUILDERS = 1;
 
@@ -158,10 +158,10 @@ static MapLocation builderBombCircleCenter = null;
                             else{
                                 int spawnNum = rc.readSharedArray(52);
                                 rc.writeSharedArray(52, spawnNum + 1);
-                                if(spawnNum == NUMSOLDIERS / 2) {
-                                    role = roles.offensiveBuilder;
-                                }
-                                else if(spawnNum < NUMSOLDIERS + 1){
+//                                if(spawnNum == NUMSOLDIERS / 2) {
+//                                    role = roles.offensiveBuilder;
+//                                }
+                                /*else*/ if(spawnNum < NUMSOLDIERS + 1){
                                     role = roles.explorer;
                                 }
                                 else{
