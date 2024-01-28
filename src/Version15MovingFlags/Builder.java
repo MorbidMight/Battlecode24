@@ -30,11 +30,20 @@ public class Builder {
     static int radius = 0;
     static MapLocation closestCorner;
 
-    static final int EXPLORE_PERIOD = 85;
+    static final int EXPLORE_PERIOD = 65;
     static final int PLACEMENT_PERIOD = 140;
 
 
     public static void runBuilder(RobotController rc) throws GameActionException {
+        if(turnCount < 1)
+            moveToSpawn = false;
+        if(moveToSpawn)
+        {
+            rc.setIndicatorDot(rc.getLocation(), 0,100,0);
+            Pathfinding.combinedPathfinding(rc, SpawnLocations[0]);
+        }
+        else
+            rc.setIndicatorDot(rc.getLocation(), 0,0,100);
         if (rc.getRoundNum() >= 201)
             role = roles.soldier;
         //pick up flag if it is early game
@@ -76,7 +85,7 @@ public class Builder {
 //            }
         }
 
-        if (rc.getRoundNum() > EXPLORE_PERIOD && rc.getRoundNum() < 170) {
+        if (rc.getRoundNum() > EXPLORE_PERIOD && rc.getRoundNum() < 180) {
             //MapLocation target = scoredLocations.getFirst();
             assert scoredLocationsV2.peek() != null;
             MapLocation target = scoredLocationsV2.peek().location;
@@ -141,7 +150,12 @@ public class Builder {
 //                    rc.move(rc.getLocation().directionTo(centerOfMap).opposite().rotateLeft().rotateLeft());
 //                }
                 //explore(rc);
-                BFSKernel.BFS(rc, rc.getLocation().add(rc.getLocation().directionTo(rc.senseNearbyFlags(-1, rc.getTeam())[0].getLocation()).opposite()));
+                rc.setIndicatorDot(rc.getLocation(), 0, 100, 0);
+                BFSKernel.BFS(rc, SpawnLocations[0]);//rc.getLocation().add(rc.getLocation().directionTo(rc.senseNearbyFlags(-1, rc.getTeam())[0].getLocation()).opposite()));
+                /*if(rc.canMove(rc.getLocation().directionTo(rc.senseNearbyFlags(-1, rc.getTeam())[0].getLocation()).opposite()))
+                {
+                    rc.move(rc.getLocation().directionTo(rc.senseNearbyFlags(-1, rc.getTeam())[0].getLocation()).opposite());
+                }*/
             }
         }
     }
@@ -163,6 +177,8 @@ public class Builder {
         }
         if(rc.getLocation().distanceSquaredTo(flags[0].getLocation()) < 9)
         {
+            if(rc.canBuild(TrapType.EXPLOSIVE, rc.getLocation()))
+                rc.build(TrapType.EXPLOSIVE, rc.getLocation());
             rc.setIndicatorString("moving away from flag");
             if(rc.canMove(rc.getLocation().directionTo(flags[0].getLocation()).opposite())) {
                 rc.move(rc.getLocation().directionTo(flags[0].getLocation()).opposite());
@@ -371,6 +387,13 @@ public class Builder {
                 score -= 600;
             else if(location.isAdjacentTo(curr))
                 score -= 300;
+        }
+        //increase score if near dam
+        MapInfo[] nearbyMapInfo = rc.senseNearbyMapInfos();
+        for(MapInfo x: nearbyMapInfo)
+        {
+            if(x.isDam())
+                score -= 50;
         }
 
         //Covered by wall

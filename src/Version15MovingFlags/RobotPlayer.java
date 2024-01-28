@@ -62,6 +62,7 @@ static MapLocation builderBombCircleCenter = null;
     static int turnOrder = 0;
 
     static int MAX_MAP_DIST_SQUARED;
+    static boolean moveToSpawn;
 
     /**
      * A random number generator.

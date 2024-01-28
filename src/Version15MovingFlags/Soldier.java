@@ -36,6 +36,7 @@ public class Soldier
 
 
     static states state;
+
     public static void runSoldier(RobotController rc) throws GameActionException {
         if (!rc.isSpawned()) {
             lastSeenEnemy = null;
