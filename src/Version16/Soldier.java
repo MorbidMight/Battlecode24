@@ -430,7 +430,7 @@ public class Soldier
                 }
                 else if(square.enemiesAttackRangedX == 2){
                     if(square.potentialKill){
-                        score = 5000 + square.enemiesVisiondX + square.alliesVisiondX * -1 + square.alliesHealRangedX * 0.25f + square.potentialEnemiesAttackRangedX * -5.5f;
+                        score = 5000 + square.enemiesVisiondX + square.alliesVisiondX * -1 + square.alliesHealRangedX * 0.25f + square.potentialEnemiesAttackRangedX * -5.5f - (float)square.totalDPS;
                     }
                     else{
                         score = square.enemiesAttackRangedX * 2 * aggresionIndex + square.enemiesVisiondX + square.alliesVisiondX * -1 + square.alliesHealRangedX * 1.25f + square.potentialEnemiesAttackRangedX * -3.65f;
@@ -484,9 +484,6 @@ public class Soldier
                 }
             }
         }
-//        if(rc.getID() == 11350 && rc.getRoundNum() > 1882 && rc.getRoundNum() < 1990){
-//            System.out.println(best + " : " + best.enemiesAttackRangedX + " : " + best.potentialEnemiesAttackRangedX);
-//        }
         if(best != null) {
             if (best.enemiesAttackRangedX <= 0 && rc.canMove(rc.getLocation().directionTo(best.location))) {
                 rc.move(rc.getLocation().directionTo(best.location));
@@ -513,27 +510,6 @@ public class Soldier
             }
         }
     }
-    //for when we can't attack now, but we can next turn - try to avoid moving into enemy movement range, but also avoid losing sight of enemies
-    public static void runMicroPrepare(RobotController rc) throws GameActionException {
-        engagementMicroSquare[] options = new engagementMicroSquare[8];
-        populateMicroArray(rc, options);
-        engagementMicroSquare best = null;
-        float highScore = Integer.MIN_VALUE;
-        for(engagementMicroSquare square : options){
-            if(square.passable){
-                float score = square.enemiesAttackRangedX * -4 + square.enemiesVisiondX * 1.3f + square.alliesVisiondX * 1.0f + square.alliesHealRangedX * 0.25f + square.potentialEnemiesAttackRangedX * 2 + square.potentialEnemiesPrepareAttackdX * 1.0f;
-                if(score > highScore){
-                    highScore = score;
-                    best = square;
-                }
-            }
-        }
-        if(best != null) {
-            if (best.enemiesAttackRangedX <= 0 && rc.canMove(rc.getLocation().directionTo(best.location))) {
-                rc.move(rc.getLocation().directionTo(best.location));
-            }
-        }
-    }
     public static void populateMicroArray(RobotController rc, engagementMicroSquare[] options) throws GameActionException {
         int index = 0;
         MapLocation curLoc = rc.getLocation();
@@ -545,7 +521,7 @@ public class Soldier
         int newY = 0;
         for (int k = -1; k <= 1; k++) {
 //            if (-1 == 0 && k == 0)
-//                continue;
+//\\                continue;
             newX = curX + -1;
             newY = curY + k;
             if (newX < mapWidth && newX >= 0 && newY >= 0 && newY < mapHeight) {
@@ -565,6 +541,9 @@ public class Soldier
                     options[index].potentialKill = isKillable(rc, enemyRobotsAttackRangeNewLoc);
                     options[index].enemiesVisiondX = enemyRobotsNewLoc.length - enemyRobots.length;
                     options[index].enemiesAttackRangedX = enemyRobotsAttackRangeNewLoc.length - enemyRobotsAttackRange.length;
+                    if(options[index].enemiesAttackRangedX == 2){
+                        options[index].totalDPS = (DPSEnemy(enemyRobotsAttackRangeNewLoc[0]) + DPSEnemy(enemyRobotsAttackRangeNewLoc[1]));
+                    }
                     options[index].alliesVisiondX = allyRobotsNewLoc.length - allyRobots.length;
                     options[index].alliesHealRangedX = allyRobotsHealRangeNewLoc.length - allyRobotsHealRange.length;
                     options[index].potentialEnemiesAttackRangedX = (potentialEnemiesAttackRangeNewLoc.length - enemyRobotsAttackRangeNewLoc.length) - (potentialEnemiesAttackRange.length - enemyRobotsAttackRange.length);
@@ -599,6 +578,9 @@ public class Soldier
                     options[index].potentialKill = isKillable(rc, enemyRobotsAttackRangeNewLoc);
                     options[index].enemiesVisiondX = enemyRobotsNewLoc.length - enemyRobots.length;
                     options[index].enemiesAttackRangedX = enemyRobotsAttackRangeNewLoc.length - enemyRobotsAttackRange.length;
+                    if(options[index].enemiesAttackRangedX == 2){
+                        options[index].totalDPS = (DPSEnemy(enemyRobotsAttackRangeNewLoc[0]) + DPSEnemy(enemyRobotsAttackRangeNewLoc[1]));
+                    }
                     options[index].alliesVisiondX = allyRobotsNewLoc.length - allyRobots.length;
                     options[index].alliesHealRangedX = allyRobotsHealRangeNewLoc.length - allyRobotsHealRange.length;
                     options[index].potentialEnemiesAttackRangedX = (potentialEnemiesAttackRangeNewLoc.length - enemyRobotsAttackRangeNewLoc.length) - (potentialEnemiesAttackRange.length - enemyRobotsAttackRange.length);
@@ -633,6 +615,9 @@ public class Soldier
                     options[index].potentialKill = isKillable(rc, enemyRobotsAttackRangeNewLoc);
                     options[index].enemiesVisiondX = enemyRobotsNewLoc.length - enemyRobots.length;
                     options[index].enemiesAttackRangedX = enemyRobotsAttackRangeNewLoc.length - enemyRobotsAttackRange.length;
+                    if(options[index].enemiesAttackRangedX == 2){
+                        options[index].totalDPS = (DPSEnemy(enemyRobotsAttackRangeNewLoc[0]) + DPSEnemy(enemyRobotsAttackRangeNewLoc[1]));
+                    }
                     options[index].alliesVisiondX = allyRobotsNewLoc.length - allyRobots.length;
                     options[index].alliesHealRangedX = allyRobotsHealRangeNewLoc.length - allyRobotsHealRange.length;
                     options[index].potentialEnemiesAttackRangedX = (potentialEnemiesAttackRangeNewLoc.length - enemyRobotsAttackRangeNewLoc.length) - (potentialEnemiesAttackRange.length - enemyRobotsAttackRange.length);
@@ -1016,6 +1001,7 @@ class engagementMicroSquare {
     public Boolean potentialKill;
     public int totalHealthEnemiesdX;
     public int totalHealthAlliesdX;
+    public double totalDPS;
 
     public engagementMicroSquare() {
 
