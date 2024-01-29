@@ -28,6 +28,8 @@ public strictfp class RobotPlayer {
     //counts number of turns since a flag sitter has seen a friendly flag
     static int countSinceSeenFlag = 0;
     static int turnCount = 0;
+    //can be 0, 1, or 2 corresponding to array index 0,1,2 - when -1, doesn't know
+    static int spawnOrigin = -1;
     static MapLocation[] SpawnLocations = new MapLocation[27]; //All the spawn locations. low:close to center high:away from center
     static roles role;
 static MapLocation builderBombCircleCenter = null;
@@ -124,6 +126,9 @@ static MapLocation builderBombCircleCenter = null;
 
             // Try/catch blocks stop unhandled exceptions, which cause your robot to explode.
             try {
+                if(turnCount >= 3 && spawnOrigin == -1 && rc.isSpawned()){
+                    determineOrigin(rc);
+                }
                 if(role == roles.flagSitter && !rc.isSpawned()){
                     if(countSinceLocked != 0)countSinceLocked++;
                     countSinceSeenFlag++;
@@ -592,6 +597,16 @@ static MapLocation builderBombCircleCenter = null;
         for (MapInfo info : locations) {
             seenLocations.put(info.getMapLocation(), info);
         }
+    }
+
+    public static void determineOrigin(RobotController rc) throws GameActionException {
+        MapLocation target = findClosestSpawnLocation(rc);
+        MapLocation spawn1 = Utilities.convertIntToLocation(rc.readSharedArray(0));
+        MapLocation spawn2 = Utilities.convertIntToLocation(rc.readSharedArray(1));
+        MapLocation spawn3 = Utilities.convertIntToLocation(rc.readSharedArray(2));
+        if(target.equals(spawn1)) spawnOrigin = 0;
+        else if(target.equals(spawn2)) spawnOrigin = 1;
+        else if(target.equals(spawn3)) spawnOrigin = 2;
     }
 
     public static MapLocation findClosestActualFlag(RobotController rc) throws GameActionException {
