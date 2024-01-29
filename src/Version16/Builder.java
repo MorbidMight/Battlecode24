@@ -81,11 +81,11 @@ static int radius = 0;
                     rc.setIndicatorString("Dont come help me!");
                     isActive = false;
                     countSinceSeenFlag++;
+                    if(countSinceLocked != 0){
+                        Utilities.editBitSharedArray(rc, 1021, false);
+                    }
                     if(countSinceSeenFlag > 40){
-                        if(rc.getCrumbs() > 1000 || rc.getLevel(SkillType.BUILD) >= 4)
-                            role = roles.offensiveBuilder;
-                        else
-                            role = roles.soldier;
+                        role = roles.soldier;
                         return;
                     }
                     int locInt = Utilities.convertLocationToInt(rc.getLocation());
@@ -122,21 +122,27 @@ static int radius = 0;
             if (countSinceLocked >= 30) {
                 countSinceLocked = 0;
                 Utilities.editBitSharedArray(rc, 1021, false);
+                if (rc.getLocation().equals(Utilities.convertIntToLocation(rc.readSharedArray(0)))) Utilities.editBitSharedArray(rc, 12, false);
+                else if (rc.getLocation().equals(Utilities.convertIntToLocation(rc.readSharedArray(1)))) Utilities.editBitSharedArray(rc, 28, false);
+                else if (rc.getLocation().equals(Utilities.convertIntToLocation(rc.readSharedArray(2)))) Utilities.editBitSharedArray(rc, 44, false);
             }
             //check if nearby enemies are coming to attack, call for robots to prioritize spawning at ur flag
-            if (rc.senseNearbyRobots(GameConstants.VISION_RADIUS_SQUARED, rc.getTeam().opponent()).length > rc.senseNearbyRobots(GameConstants.VISION_RADIUS_SQUARED, rc.getTeam()).length) {
+            if (isActive && rc.senseNearbyRobots(GameConstants.VISION_RADIUS_SQUARED, rc.getTeam().opponent()).length > rc.senseNearbyRobots(GameConstants.VISION_RADIUS_SQUARED, rc.getTeam()).length) {
                 //spawn everyone in 0-8 if possible, also lock so it wont cycle
                 if (rc.getLocation().equals(Utilities.convertIntToLocation(rc.readSharedArray(0)))) {
+                    Utilities.editBitSharedArray(rc, 12, true);
                     Utilities.editBitSharedArray(rc, 1022, false);
                     Utilities.editBitSharedArray(rc, 1023, false);
                     //lock
                     Utilities.editBitSharedArray(rc, 1021, true);
                 } else if (rc.getLocation().equals(Utilities.convertIntToLocation(rc.readSharedArray(1)))) {
+                    Utilities.editBitSharedArray(rc, 28, true);
                     Utilities.editBitSharedArray(rc, 1022, false);
                     Utilities.editBitSharedArray(rc, 1023, true);
                     //lock
                     Utilities.editBitSharedArray(rc, 1021, true);
                 } else {
+                    Utilities.editBitSharedArray(rc, 44, true);
                     Utilities.editBitSharedArray(rc, 1022, true);
                     Utilities.editBitSharedArray(rc, 1023, false);
                     //lock

@@ -130,6 +130,10 @@ static MapLocation builderBombCircleCenter = null;
                 {
                     rc.resign();
                 }
+                if(role == roles.builder && !rc.isSpawned() && SittingOnFlag && countSinceLocked != 0 && countSinceSeenFlag != 0){
+                    countSinceLocked++;
+                    countSinceSeenFlag++;
+                }
                 if(turnOrder == 0)
                 {
                     HeadquarterDuck.runHeadquarterDuck(rc);

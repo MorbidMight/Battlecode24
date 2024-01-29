@@ -232,7 +232,7 @@ public class Soldier
             }
         }
         if(rc.isActionReady()){
-            attemptAttack(rc);
+             attemptAttack(rc);
             //if(potentialEnemiesAttackRange.length == 0) attemptHealConditional(rc, (int) RETREAT_HEALTH);
         }
         if(enemyRobots.length != 0){
@@ -548,6 +548,7 @@ public class Soldier
                     options[index].alliesHealRangedX = allyRobotsHealRangeNewLoc.length - allyRobotsHealRange.length;
                     options[index].potentialEnemiesAttackRangedX = (potentialEnemiesAttackRangeNewLoc.length - enemyRobotsAttackRangeNewLoc.length) - (potentialEnemiesAttackRange.length - enemyRobotsAttackRange.length);
                     options[index].potentialEnemiesPrepareAttackdX = (potentialEnemiesPrepareAttackNewLoc.length - potentialEnemiesAttackRangeNewLoc.length) - (potentialEnemiesPrepareAttack.length - potentialEnemiesAttackRange.length);
+                    //options[index].potentialDeath = potentialDeath(rc, potentialEnemiesAttackRangeNewLoc);
                     //options[index].totalHealthAlliesdX = totalHealth(allyRobotsNewLoc) - totalHealth(allyRobots);
                     //options[index].totalHealthEnemiesdX = totalHealth(enemyRobotsNewLoc) - totalHealth(enemyRobots);
                 }
@@ -585,6 +586,7 @@ public class Soldier
                     options[index].alliesHealRangedX = allyRobotsHealRangeNewLoc.length - allyRobotsHealRange.length;
                     options[index].potentialEnemiesAttackRangedX = (potentialEnemiesAttackRangeNewLoc.length - enemyRobotsAttackRangeNewLoc.length) - (potentialEnemiesAttackRange.length - enemyRobotsAttackRange.length);
                     options[index].potentialEnemiesPrepareAttackdX = (potentialEnemiesPrepareAttackNewLoc.length - potentialEnemiesAttackRangeNewLoc.length) - (potentialEnemiesPrepareAttack.length - potentialEnemiesAttackRange.length);
+                    //options[index].potentialDeath = potentialDeath(rc, potentialEnemiesAttackRangeNewLoc);
                     //options[index].totalHealthAlliesdX = totalHealth(allyRobotsNewLoc) - totalHealth(allyRobots);
                     //options[index].totalHealthEnemiesdX = totalHealth(enemyRobotsNewLoc) - totalHealth(enemyRobots);
                 }
@@ -622,6 +624,7 @@ public class Soldier
                     options[index].alliesHealRangedX = allyRobotsHealRangeNewLoc.length - allyRobotsHealRange.length;
                     options[index].potentialEnemiesAttackRangedX = (potentialEnemiesAttackRangeNewLoc.length - enemyRobotsAttackRangeNewLoc.length) - (potentialEnemiesAttackRange.length - enemyRobotsAttackRange.length);
                     options[index].potentialEnemiesPrepareAttackdX = (potentialEnemiesPrepareAttackNewLoc.length - potentialEnemiesAttackRangeNewLoc.length) - (potentialEnemiesPrepareAttack.length - potentialEnemiesAttackRange.length);
+                    //options[index].potentialDeath = potentialDeath(rc, potentialEnemiesAttackRangeNewLoc);
                     //options[index].totalHealthAlliesdX = totalHealth(allyRobotsNewLoc) - totalHealth(allyRobots);
                     //options[index].totalHealthEnemiesdX = totalHealth(enemyRobotsNewLoc) - totalHealth(enemyRobots);
                 }
@@ -638,6 +641,14 @@ public class Soldier
                 return true;
         }
         return false;
+    }
+    public static boolean potentialDeath(RobotController rc, RobotInfo[] enemies){
+        int i = rc.getHealth();
+        double totalDPS = 0;
+        for(RobotInfo r : enemies){
+            totalDPS += DPSEnemy(r);
+        }
+        return i <= totalDPS;
     }
 
     public static void attemptAttack(RobotController rc) throws GameActionException {
@@ -1002,6 +1013,7 @@ class engagementMicroSquare {
     public int totalHealthEnemiesdX;
     public int totalHealthAlliesdX;
     public double totalDPS;
+    public Boolean potentialDeath;
 
     public engagementMicroSquare() {
 
