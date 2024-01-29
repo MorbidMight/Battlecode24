@@ -11,6 +11,8 @@ public class Explorer {
         if (!rc.isSpawned()) {
             return;
         }
+        breakFree(rc);
+
         if(dam == null)
             dam = canSeeDam(rc);
         if (isAdjacentToDam(rc) && turnCount < 120 && rc.senseMapInfo(rc.getLocation()).getTrapType() == TrapType.NONE) {
@@ -147,5 +149,22 @@ public class Explorer {
                 }
             }
         }
+    }
+    public static void breakFree(RobotController rc) throws GameActionException {
+        if(isStuck(rc)){
+            for(Direction d : Direction.allDirections()){
+                if(rc.canFill(rc.getLocation().add(d))){
+                    rc.fill(rc.getLocation().add(d));
+                }
+            }
+        }
+    }
+    public static boolean isStuck(RobotController rc) throws GameActionException {
+        for(MapInfo m : rc.senseNearbyMapInfos(2)){
+            if(m.isPassable() && rc.senseRobotAtLocation(m.getMapLocation()) == null){
+                return false;
+            }
+        }
+        return true;
     }
 }
