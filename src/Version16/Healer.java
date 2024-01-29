@@ -1,5 +1,7 @@
 package Version16;
 
+import Version16.Util.Pathfinding;
+import Version16.Util.Utilities;
 import battlecode.common.*;
 
 import static Version16.RobotPlayer.findClosestBroadcastFlags;

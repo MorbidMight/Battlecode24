@@ -1,5 +1,6 @@
-package Version16;
+package Version16.Util;
 
+import Version16.RobotPlayer;
 import battlecode.common.*;
 
 import java.util.HashMap;
@@ -90,7 +91,7 @@ public class Pathfinding
         switch (pathfindingState)
         {
             case BFS:
-                BFSKernel.BFS(rc, destination);
+                BFSKernel7x7.BFS(rc, destination);
                 updateAlreadyBeen(rc);
                 if(alreadyBeen.get(rc.getLocation()) > 2)
                 {
@@ -638,11 +639,6 @@ public class Pathfinding
         {
             previousDestination = destination;
             lineLocations = createLine(rc.getLocation(), destination);
-        }
-
-        for(MapLocation ml : lineLocations)
-        {
-            rc.setIndicatorDot(ml, 255,0,0);
         }
 
         if(bugState == 0)

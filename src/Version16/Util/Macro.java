@@ -1,41 +1,92 @@
-package Version16;
+package Version16.Util;
 
 import battlecode.common.*;
 
-import java.util.ArrayList;
+import java.util.*;
+
+import static Version16.Util.Utilities.*;
 
 public class Macro
 {
     static int numJailedEnemies;
     static int numJailedAllies;
-    static int turnsOnFront;
     static Cluster[] enemyClusters;
     static FlagInfo[] nearbyFlags;
+    static MapLocation[] distressedFlags;
+    static MapLocation[] broadcastFlags;
+    static MapLocation[] knownFlags;
+    static MapLocation myLocation;
+
     public static void doMacro(RobotController rc) throws GameActionException
     {
         initializeMacroVariables(rc);
-
-        if(nearbyFlags.length != 0)
+        MapLocation[] possibleMoveLocations = new MapLocation[6];
+        int i = 0;
+        for(MapLocation ml : distressedFlags)
         {
-            Pathfinding.combinedPathfinding(rc, nearbyFlags[0].getLocation());
+            possibleMoveLocations[i] = ml;
+            i++;
         }
-        //maybe assign a cost to each possible action, what are the possible actions?
-        //moving towards a flag, moving towards a cluster, rotate off a front,
-
-        /*
-            first decision is whether to move towards a cluster or a flag
-         */
-        if(numJailedEnemies + 10 > numJailedAllies)
+        if(knownFlags.length > 0)
         {
-            MapLocation flagLocationToPursue = getBestFlagLocation(rc);
-            Pathfinding.combinedPathfinding(rc, flagLocationToPursue);
-
-        }else
-        {
-            //move towards cluster, most overwhelmed one
-            Cluster mostOverwhelmed = getMostOverwhelmedCluster(rc, enemyClusters);
-            Pathfinding.combinedPathfinding(rc, mostOverwhelmed.location);
+           for(MapLocation ml : knownFlags)
+           {
+               possibleMoveLocations[i] = ml;
+               i++;
+           }
         }
+        else
+        {
+            for(MapLocation ml : broadcastFlags)
+            {
+                possibleMoveLocations[i] = ml;;
+                i++;
+            }
+        }
+
+        MapLocation closestPossibleMoveLocation = null;
+        int closestDistance = Integer.MAX_VALUE;
+        for (MapLocation ml : possibleMoveLocations)
+        {
+            if(ml == null || ml.equals(NULL_MAP_LOCATION)) continue;
+            int tempDistance = ml.distanceSquaredTo(rc.getLocation());
+            if (tempDistance < closestDistance)
+            {
+                closestDistance = tempDistance;
+                closestPossibleMoveLocation = ml;
+            }
+        }
+        //we have the last flag
+        if(closestPossibleMoveLocation == null)
+        {
+            MapLocation stolenFlag = Utilities.convertIntToLocation(rc.readSharedArray(58));
+            if(!stolenFlag.equals(NULL_MAP_LOCATION))
+            {
+                StolenFlag temp = new StolenFlag(stolenFlag, false);
+                Pathfinding.bellmanFordFlag(rc, temp.location, temp);
+            }
+            else
+            {
+                BFSKernel7x7.BFS(rc, getLowestHealthAllyCluster(rc));
+            }
+        }
+        else
+        {
+            BFSKernel7x7.BFS(rc, closestPossibleMoveLocation);
+        }
+    }
+
+    public static MapLocation[] getDistressedFlags(RobotController rc) throws GameActionException
+    {
+        ArrayList<MapLocation> distressedFlags = new ArrayList<>();
+        for(int i = 0; i < 2; i++)
+        {
+            if(Utilities.readBitSharedArray(rc, 12 + i * 16))
+            {
+                distressedFlags.add(Utilities.convertIntToLocation(rc.readSharedArray(i)));
+            }
+        }
+         return distressedFlags.toArray(new MapLocation[0]);
     }
 
     public static MapLocation getBestFlagLocation(RobotController rc) throws GameActionException
@@ -123,7 +174,31 @@ public class Macro
             }
         }
         return enemyClusters[mostOverwhelmedIndex];
+    }
 
+    public static MapLocation getLowestHealthAllyCluster(RobotController rc) throws GameActionException
+    {
+        int[] allyClusterHealth = Utilities.getLastRoundAllyHealth(rc);
+        int lowest = Integer.MAX_VALUE;
+        int lowestIndex = 0;
+        for(int i = 0; i < allyClusterHealth.length; i++)
+        {
+            if(allyClusterHealth[i] < lowest)
+            {
+                lowest = allyClusterHealth[i];
+                lowestIndex = i;
+            }
+        }
+        switch(lowestIndex)
+        {
+            case 0:
+                return Utilities.convertIntToLocation(rc.readSharedArray(Utilities.LAST_ROUND_ALLY_LOCATION_1));
+            case 1:
+                return Utilities.convertIntToLocation(rc.readSharedArray(Utilities.LAST_ROUND_ALLY_LOCATION_2));
+            case 2:
+                return Utilities.convertIntToLocation(rc.readSharedArray(Utilities.LAST_ROUND_ALLY_LOCATION_3));
+        }
+        return null;
     }
 
     public static void initializeMacroVariables(RobotController rc) throws GameActionException
@@ -132,5 +207,9 @@ public class Macro
         numJailedEnemies = rc.readSharedArray(8);
         enemyClusters = Utilities.getLastRoundClusters(rc);
         nearbyFlags = rc.senseNearbyFlags(-1, rc.getTeam().opponent());
+        distressedFlags = getDistressedFlags(rc);
+        knownFlags = getKnownFlags(rc);
+        broadcastFlags = rc.senseBroadcastFlagLocations();
+        myLocation = rc.getLocation();
     }
 }

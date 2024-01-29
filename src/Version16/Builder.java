@@ -1,9 +1,9 @@
 package Version16;
 
+import Version16.Util.Pathfinding;
+import Version16.Util.Utilities;
 import battlecode.common.*;
 
-import java.awt.*;
-import java.util.Map;
 import java.util.PriorityQueue;
 
 import static Version16.RobotPlayer.*;
@@ -30,7 +30,7 @@ static int radius = 0;
             //update where we want soldiers to spawn
             if (!Utilities.readBitSharedArray(rc, 1021)) {
                 int x;
-                if (Soldier.knowFlag(rc))
+                if (Utilities.knowFlag(rc))
                     x = RobotPlayer.findClosestSpawnLocationToCoordinatedTarget(rc);
                 else if (Utilities.getClosestCluster(rc) != null) {
                     x = RobotPlayer.findClosestSpawnLocationToCluster(rc);
@@ -118,6 +118,12 @@ static int radius = 0;
             }
             if (countSinceLocked != 0) {
                 countSinceLocked++;
+            }
+            if(rc.senseNearbyRobots(-1, rc.getTeam().opponent()).length == 0)
+            {
+                if (rc.getLocation().equals(Utilities.convertIntToLocation(rc.readSharedArray(0)))) Utilities.editBitSharedArray(rc, 12, false);
+                else if (rc.getLocation().equals(Utilities.convertIntToLocation(rc.readSharedArray(1)))) Utilities.editBitSharedArray(rc, 28, false);
+                else if (rc.getLocation().equals(Utilities.convertIntToLocation(rc.readSharedArray(2)))) Utilities.editBitSharedArray(rc, 44, false);
             }
             if (countSinceLocked >= 30) {
                 countSinceLocked = 0;

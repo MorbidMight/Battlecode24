@@ -1,9 +1,10 @@
 package Version16;
 
+import Version16.Util.BFSKernel7x7;
+import Version16.Util.Pathfinding;
 import battlecode.common.*;
 
 import static Version16.RobotPlayer.*;
-import static Version16.Utilities.averageRobotLocation;
 
 public class Explorer {
     static MapLocation dam;
@@ -41,7 +42,7 @@ public class Explorer {
                     rc.fill(targetCrumb);
                 }
                 //Pathfinding.bellmanFord5x5(rc, targetCrumb);
-                BFSKernel.BFS(rc, targetCrumb);
+                BFSKernel7x7.BFS(rc, targetCrumb);
             }
             if (rc.canFill(rc.adjacentLocation(rc.getLocation().directionTo(centerOfMap)))) {
                 rc.fill(rc.adjacentLocation(rc.getLocation().directionTo(centerOfMap)));
@@ -55,10 +56,10 @@ public class Explorer {
             if (!isAdjacent) {
                 if (dam != null) {
                     //Pathfinding.bellmanFord5x5(rc, dam);
-                    BFSKernel.BFS(rc, dam);
+                    BFSKernel7x7.BFS(rc, dam);
                 } else {
                     //Pathfinding.bellmanFord5x5(rc, centerOfMap);
-                    BFSKernel.BFS(rc, centerOfMap);
+                    BFSKernel7x7.BFS(rc, centerOfMap);
                 }
             }
         } else {
@@ -77,13 +78,13 @@ public class Explorer {
                     rc.fill(targetCrumb);
                 }
                 //Pathfinding.bellmanFord5x5(rc, targetCrumb);
-                BFSKernel.BFS(rc, targetCrumb);
+                BFSKernel7x7.BFS(rc, targetCrumb);
             }
             //explore a new area
             else if (turnsSinceLocGen == 20 || turnsSinceLocGen == 0 || rc.getLocation().equals(targetLoc) || (rc.canSenseLocation(targetLoc) && !rc.senseMapInfo(targetLoc).isPassable())) {
                 targetLoc = generateTargetLoc(rc);
                 //Pathfinding.bugNav2(rc, targetLoc);
-                BFSKernel.BFS(rc, targetLoc);
+                BFSKernel7x7.BFS(rc, targetLoc);
                 turnsSinceLocGen = 1;
             } else {
                 Pathfinding.combinedPathfinding(rc, targetLoc);

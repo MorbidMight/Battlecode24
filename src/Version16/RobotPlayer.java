@@ -1,11 +1,11 @@
 package Version16;
 
+import Version16.Util.BFSKernel9x9;
+import Version16.Util.UnrolledScan;
+import Version16.Util.Utilities;
 import battlecode.common.*;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Random;
+import java.util.*;
 
 /**
  * RobotPlayer is the class that describes your main robot strategy.
@@ -21,23 +21,24 @@ public strictfp class RobotPlayer {
      * these variables are static, in Battlecode they aren't actually shared between your robots.
      */
 
+    static boolean debug = false;
+
     static int[] turnsWithKills = new int[25]; //The turns when the robot preformed a kill, compares it to the the current turn count to figure out when a
 
     //used to unlock spawn locs 20 turns after locking it, if no longer under attack - otherwise, reset count
     static int countSinceLocked = 0;
     //counts number of turns since a flag sitter has seen a friendly flag
     static int countSinceSeenFlag = 0;
-    static int turnCount = 0;
+    public static int turnCount = 0;
     static MapLocation[] SpawnLocations = new MapLocation[27]; //All the spawn locations. low:close to center high:away from center
     static roles role;
-static MapLocation builderBombCircleCenter = null;
+    static MapLocation builderBombCircleCenter = null;
     static boolean SittingOnFlag = false; //for builders if they sit on the flag and spam explosion bombs
     static final int MoatRadius = 9; //Radius of the moat squared
 
-    static HashMap<MapLocation, MapInfo> seenLocations = new HashMap<MapLocation, MapInfo>();
+    public static MapInfo[][] seenLocations;
 
-    static HashMap<MapLocation, Integer> alreadyBeen = new HashMap<MapLocation, Integer>();
-
+    public static HashMap<MapLocation, Integer> alreadyBeen = new HashMap<MapLocation, Integer>();
 
     static final int BombFrequency = 5; //number of turns between defensive builders trying to place a mine
 
@@ -53,15 +54,15 @@ static MapLocation builderBombCircleCenter = null;
     //offensive builders is 50 - numsoldiers - numbuilders - 3
 
     //flag sitters will always be 3, heals is 50 - (soldiers + builders + flag sitters)
-    static Random rng;
+    public static Random rng;
 
     //used by explorers
     static int turnsSinceLocGen = 0;
     static MapLocation targetLoc;
 
-    static int turnOrder = 0;
+    public static int turnOrder = 0;
 
-    static int MAX_MAP_DIST_SQUARED;
+    public static int MAX_MAP_DIST_SQUARED;
 
     /**
      * A random number generator.
@@ -73,7 +74,7 @@ static MapLocation builderBombCircleCenter = null;
     /**
      * Array containing all the possible movement directions.
      */
-    static final Direction[] directions = {
+    public static final Direction[] directions = {
             Direction.NORTH,
             Direction.NORTHEAST,
             Direction.EAST,
@@ -99,6 +100,13 @@ static MapLocation builderBombCircleCenter = null;
     @SuppressWarnings("unused")
     public static void run(RobotController rc) throws GameActionException {
         initialize(rc);
+        for(int i = 0; i < seenLocations.length; i++)
+        {
+            for(int j = 0; j < seenLocations[0].length; j++)
+            {
+                seenLocations[i][j] = new MapInfo(new MapLocation(j, i), true, false, false,-1, false, 0, TrapType.NONE, rc.getTeam());
+            }
+        }
         while (true) {
 //            if(role == roles.soldier){
 //                Soldier.updateRetreatHealth(rc);
@@ -126,10 +134,6 @@ static MapLocation builderBombCircleCenter = null;
 
             // Try/catch blocks stop unhandled exceptions, which cause your robot to explode.
             try {
-                if(rc.getRoundNum() == 2020)
-                {
-                    rc.resign();
-                }
                 if(role == roles.builder && !rc.isSpawned() && SittingOnFlag && countSinceLocked != 0 && countSinceSeenFlag != 0){
                     countSinceLocked++;
                     countSinceSeenFlag++;
@@ -184,7 +188,6 @@ static MapLocation builderBombCircleCenter = null;
                             }
                         } else {
                             if (!rc.isSpawned()) {
-
                                 //decide which place to spawn at based on last two bits of shared array
                                 //loop through spawn locations, try adjacent ones, then try non adjacent ones
                                 MapLocation targetSpawn = null;
@@ -214,48 +217,79 @@ static MapLocation builderBombCircleCenter = null;
                             }
                         }
                     }
-                } else {
-                    doRoutineTurnTasks(rc);
-                    //write our own flag locations to shared array at start
-                    if (turnCount == 2 && rc.senseNearbyFlags(-1)[0].getLocation().equals(rc.getLocation())) {
-                        int toPush = Utilities.convertLocationToInt(rc.getLocation());
-                        if (rc.readSharedArray(0) == 0) {
-                            rc.writeSharedArray(0, toPush);
-                          //  rc.setIndicatorString("look at me!!");
-                        } else if (rc.readSharedArray(1) == 0 && rc.readSharedArray(0) != toPush) {
-                            rc.writeSharedArray(1, toPush);
-                           // rc.setIndicatorString("look at me!!");
-                        } else if (rc.readSharedArray(2) == 0 && rc.readSharedArray(1) != toPush) {
-                            rc.writeSharedArray(2, toPush);
-                           // rc.setIndicatorString("look at me!!");
+                } else
+                {
+                    if (debug)
+                    {
+                        if(turnOrder != 0)
+                        {
+                            return;
                         }
+                        doRoutineTurnTasks(rc);
+                        if(rc.getRoundNum() == 200)
+                        {
+                            rc.resign();
+                        }
+                        UnrolledScan.updateSeenLocations(rc.senseNearbyMapInfos());
+                        MapInfo[] mapInfos = rc.senseNearbyMapInfos();
+                        for(MapInfo info : mapInfos)
+                        {
+                            rc.setIndicatorDot(info.getMapLocation(), 255,0,0);
+                        }
+                        BFSKernel9x9.BFS(rc, new MapLocation(rc.getMapWidth(),rc.getMapHeight()));
+                        rc.setIndicatorString("" + rc.senseNearbyMapInfos().length);
                     }
+                    else
+                    {
+                        doRoutineTurnTasks(rc);
+                        //write our own flag locations to shared array at start
+                        if (turnCount == 2 && rc.senseNearbyFlags(-1)[0].getLocation().equals(rc.getLocation()))
+                        {
+                            int toPush = Utilities.convertLocationToInt(rc.getLocation());
+                            if (rc.readSharedArray(0) == 0)
+                            {
+                                rc.writeSharedArray(0, toPush);
+                                //  rc.setIndicatorString("look at me!!");
+                            }
+                            else if (rc.readSharedArray(1) == 0 && rc.readSharedArray(0) != toPush)
+                            {
+                                rc.writeSharedArray(1, toPush);
+                                // rc.setIndicatorString("look at me!!");
+                            }
+                            else if (rc.readSharedArray(2) == 0 && rc.readSharedArray(1) != toPush)
+                            {
+                                rc.writeSharedArray(2, toPush);
+                                // rc.setIndicatorString("look at me!!");
+                            }
+                        }
 
-                    if (rc.isSpawned()) {
-                        switch (role) {
-                            case builder:
-                                Builder.runBuilder(rc);
-                                rc.setIndicatorString("builder");
-                                break;
-                            case explorer:
-                                Explorer.runExplorer(rc);
-                                rc.setIndicatorString("explorer");
-                                break;
-                            case healer:
-                                Healer.runHealer(rc);
-                                rc.setIndicatorString("healer");
-                                break;
-                            case soldier:
-                                Soldier.runSoldier(rc);
-                                break;
-                            case offensiveBuilder:
-                                OffensiveBuilder.runOffensiveBuilder(rc);
-                                break;
-                            case defensiveBuilder:
-                                DefensiveBuilder.runDefensiveBuilder(rc);
-                                break;
+                        if (rc.isSpawned())
+                        {
+                            switch (role)
+                            {
+                                case builder:
+                                    Builder.runBuilder(rc);
+                                    rc.setIndicatorString("builder");
+                                    break;
+                                case explorer:
+                                    Explorer.runExplorer(rc);
+                                    rc.setIndicatorString("explorer");
+                                    break;
+                                case healer:
+                                    Healer.runHealer(rc);
+                                    rc.setIndicatorString("healer");
+                                    break;
+                                case soldier:
+                                    Soldier.runSoldier(rc);
+                                    break;
+                                case offensiveBuilder:
+                                    OffensiveBuilder.runOffensiveBuilder(rc);
+                                    break;
+                                case defensiveBuilder:
+                                    DefensiveBuilder.runDefensiveBuilder(rc);
+                                    break;
+                            }
                         }
-                    }
 //
 //                    //pickup enemy flag after setup phase ends
 //                    if (rc.canPickupFlag(rc.getLocation()) && rc.getRoundNum() > GameConstants.SETUP_ROUNDS) {
@@ -283,13 +317,14 @@ static MapLocation builderBombCircleCenter = null;
                             break;
                     }*/
 
-                }
-                Cluster[] clusters = Utilities.getLastRoundClusters(rc);
-                if(turnOrder == 0)
-                {
-                    rc.setIndicatorDot(clusters[0].location, 255, 0, 0);
-                    rc.setIndicatorDot(clusters[1].location, 0, 255, 0);
-                    rc.setIndicatorDot(clusters[2].location, 0, 0, 255);
+                    }
+                    MapLocation[] clusters = Utilities.getLastRoundAllyClusters(rc);
+                    if (turnOrder == 0)
+                    {
+                        rc.setIndicatorDot(clusters[0], 255, 0, 0);
+                        rc.setIndicatorDot(clusters[1], 0, 255, 0);
+                        rc.setIndicatorDot(clusters[2], 0, 0, 255);
+                    }
                 }
 
 
@@ -324,22 +359,22 @@ static MapLocation builderBombCircleCenter = null;
         turnOrder = rc.readSharedArray(62);
         rc.writeSharedArray(62,turnOrder + 1);
         MAX_MAP_DIST_SQUARED = rc.getMapHeight() * rc.getMapHeight() + rc.getMapWidth() * rc.getMapWidth();
+        seenLocations = new MapInfo[rc.getMapHeight()][rc.getMapWidth()];
         rc.setIndicatorString(turnOrder + "");
     }
 
     //Perform tasks every round
     public static void doRoutineTurnTasks(RobotController rc) throws GameActionException
     {
-        Cluster closestCluster = Utilities.getClosestCluster(rc);
         //if(closestCluster != null)
           //  rc.setIndicatorLine(rc.getLocation(), closestCluster, 0, 255, 0);
         RobotInfo[] enemyRobots = rc.senseNearbyRobots(GameConstants.VISION_RADIUS_SQUARED, rc.getTeam().opponent());
-        for (RobotInfo robot : enemyRobots)
+        UnrolledScan.updateSeenLocations(rc.senseNearbyMapInfos());
+        /*for (RobotInfo robot : enemyRobots)
         {
             Utilities.updateEnemyCluster(rc, robot.location);
-        }
-        Utilities.recordEnemies(rc, enemyRobots);
-        Utilities.clearObsoleteEnemies(rc);
+        }*/
+        Utilities.updateAllyCluster(rc, rc.getLocation());
         Utilities.verifyFlagLocations(rc);
         Utilities.writeFlagLocations(rc);
     }
@@ -546,14 +581,6 @@ static MapLocation builderBombCircleCenter = null;
             }
         }
         return toAttack;
-    }
-
-    static void updateSeenLocations(RobotController rc) {
-        MapInfo[] locations = rc.senseNearbyMapInfos();
-        //this might be inefficient maybe switch to for loop
-        for (MapInfo info : locations) {
-            seenLocations.put(info.getMapLocation(), info);
-        }
     }
 
     public static MapLocation findClosestActualFlag(RobotController rc) throws GameActionException {

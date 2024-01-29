@@ -280,13 +280,6 @@ static MapLocation builderBombCircleCenter = null;
                     }*/
 
                 }
-                Cluster[] clusters = Utilities.getLastRoundClusters(rc);
-                if(turnOrder == 0)
-                {
-                    rc.setIndicatorDot(clusters[0].location, 255, 0, 0);
-                    rc.setIndicatorDot(clusters[1].location, 0, 255, 0);
-                    rc.setIndicatorDot(clusters[2].location, 0, 0, 255);
-                }
 
 
             } catch (GameActionException e) {

@@ -1,25 +1,44 @@
-package Version16;
+package Version16.Util;
 
+import Version16.RobotPlayer;
 import battlecode.common.*;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 
 public class Utilities
 {
-    static final int LAST_ROUND_LOCATION_1_INDEX = 28;
-    static final int CURRENT_ROUND_X_1_INDEX = 29;
-    static final int CURRENT_ROUND_Y_1_INDEX = 30;
-    static final int CURRENT_ROUND_TOTAL_1_INDEX = 31;
-    static final int LAST_ROUND_LOCATION_2_INDEX = 32;
-    static final int CURRENT_ROUND_X_2_INDEX = 33;
-    static final int CURRENT_ROUND_Y_2_INDEX = 34;
-    static final int CURRENT_ROUND_TOTAL_2_INDEX = 35;
-    static final int LAST_ROUND_LOCATION_3_INDEX = 36;
-    static final int CURRENT_ROUND_X_3_INDEX = 37;
-    static final int CURRENT_ROUND_Y_3_INDEX = 38;
-    static final int CURRENT_ROUND_TOTAL_3_INDEX = 39;
+    public static final int LAST_ROUND_ALLY_LOCATION_1 = 9;
+    public static final int LAST_ROUND_ALLY_HEALTH_1 = 10;
+    public static final int CURRENT_ROUND_ALLY_X_1 = 11;
+    public static final int CURRENT_ROUND_ALLY_Y_1 = 12;
+    public static final int CURRENT_ROUND_HEALTH_1 = 13;
+    public static final int CURRENT_ROUND_ALLY_TOTAL_1 = 14;
+    public static final int LAST_ROUND_ALLY_LOCATION_2 = 15;
+    public static final int LAST_ROUND_ALLY_HEALTH_2 = 16;
+    public static final int CURRENT_ROUND_ALLY_X_2 = 17;
+    public static final int CURRENT_ROUND_ALLY_Y_2 = 18;
+    public static final int CURRENT_ROUND_HEALTH_2 = 19;
+    public static final int CURRENT_ROUND_ALLY_TOTAL_2 = 20;
+    public static final int LAST_ROUND_ALLY_LOCATION_3 = 21;
+    public static final int LAST_ROUND_ALLY_HEALTH_3 = 22;
+    public static final int CURRENT_ROUND_ALLY_X_3 = 23;
+    public static final int CURRENT_ROUND_ALLY_Y_3 = 24;
+    public static final int CURRENT_ROUND_HEALTH_3 = 25;
+    public static final int CURRENT_ROUND_ALLY_TOTAL_3 = 26;
+    public static final int LAST_ROUND_LOCATION_1_INDEX = 28;
+    public static final int CURRENT_ROUND_X_1_INDEX = 29;
+    public static final int CURRENT_ROUND_Y_1_INDEX = 30;
+    public static final int CURRENT_ROUND_TOTAL_1_INDEX = 31;
+    public static final int LAST_ROUND_LOCATION_2_INDEX = 32;
+    public static final int CURRENT_ROUND_X_2_INDEX = 33;
+    public static final int CURRENT_ROUND_Y_2_INDEX = 34;
+    public static final int CURRENT_ROUND_TOTAL_2_INDEX = 35;
+    public static final int LAST_ROUND_LOCATION_3_INDEX = 36;
+    public static final int CURRENT_ROUND_X_3_INDEX = 37;
+    public static final int CURRENT_ROUND_Y_3_INDEX = 38;
+    public static final int CURRENT_ROUND_TOTAL_3_INDEX = 39;
 
-    static final MapLocation NULL_MAP_LOCATION = new MapLocation(0,0);
+    public static final MapLocation NULL_MAP_LOCATION = new MapLocation(0,0);
 
 
 
@@ -72,11 +91,6 @@ public class Utilities
     }
 
 
-
-
-
-
-
     public static int openFlagIndex(RobotController rc) throws GameActionException
     {
         int index1 = rc.readSharedArray(58);
@@ -122,97 +136,6 @@ public class Utilities
         return new MapLocation((intLocation & 4032) >> 6, (intLocation & 63));
     }
 
-    public static int openTaskIndex(RobotController rc) throws GameActionException
-    {
-        //builders have tasks 6-28, soldiers have tasks 28 - 51
-        //eventually - codegen into list of instructions
-        for(int i = 6; i < 28 ; i++)
-        {
-            if(rc.readSharedArray(i) == 0)
-            {
-                return i;
-            }
-        }
-        return -1;
-    }
-
-    public static int activeTaskIndex(RobotController rc) throws GameActionException {
-        //builders have tasks 6-28, soldiers have tasks 28 - 51
-        //eventually - codegen into list of instructions
-        for(int i = 6; i < 28 ; i++)
-        {
-            if(rc.readSharedArray(i) != 0)
-            {
-                return i;
-            }
-        }
-        return -1;
-    }
-
-    public static int openEnemyIndex(RobotController rc) throws GameActionException
-    {
-        //builders have tasks 6-28, soldiers have tasks 28 - 51
-        //eventually - codegen into list of instructions
-        for(int i = 28; i < 51 ; i++)
-        {
-            if(rc.readSharedArray(i) == 0)
-            {
-                return i;
-            }
-        }
-        return -1;
-    }
-
-    public static void reportEnemy(RobotController rc, MapLocation enemy) throws GameActionException {
-        for (int x = 40; x < 51; x++)
-        {
-            if (rc.readSharedArray(x) == 0)
-            {
-                rc.writeSharedArray(x, Utilities.convertLocationToInt(enemy));
-            }
-        }
-    }
-
-    public static void clearObsoleteEnemies(RobotController rc) throws GameActionException {
-        if (rc.canWriteSharedArray(0, 0)) {
-            for (int i = 40; i < 51; i++) {
-                int readLocation = rc.readSharedArray(i);
-                if (readLocation != 0) {
-                    MapLocation location = Utilities.convertIntToLocation(readLocation);
-                    if (rc.canSenseLocation(location) && !rc.canSenseRobotAtLocation(location)) {
-                        rc.writeSharedArray(i, 0);
-                    }
-                }
-            }
-        }
-    }
-
-    public static void recordEnemies(RobotController rc, RobotInfo[] enemies) throws GameActionException
-    {
-        for(RobotInfo enemy: enemies)
-        {
-            Utilities.reportEnemy(rc, enemy.getLocation());
-        }
-    }
-    public static MapLocation newGetClosestEnemy(RobotController rc) throws GameActionException {
-        MapLocation closest = null;
-        for(int x = 40; x < 51; x++)
-        {
-            if(rc.readSharedArray(x) == 0) continue;
-            if(closest == null)
-            {
-                closest = Utilities.convertIntToLocation(rc.readSharedArray(x));
-                continue;
-            }
-            MapLocation tempLocation = Utilities.convertIntToLocation(rc.readSharedArray(x));
-            if(rc.getLocation().distanceSquaredTo(tempLocation) < closest.distanceSquaredTo(tempLocation))
-            {
-                closest = new MapLocation(tempLocation.x, tempLocation.y);
-            }
-            return closest;
-        }
-        return closest;
-    }
 
     //array must be greater than 0
     public static MapLocation averageRobotLocation(RobotInfo[] robots)
@@ -352,6 +275,7 @@ public class Utilities
         for(int i = 0; i < currAvgClusters.length; i++)
         {
             MapLocation tempLocation = currAvgClusters[i];
+            if(tempLocation.equals(new MapLocation(-1, -1))) continue;
             int tempDistance = location.distanceSquaredTo(tempLocation);
             if(tempDistance < shortestDistance)
             {
@@ -373,9 +297,55 @@ public class Utilities
         int xTotal = rc.readSharedArray(xIndex);
         int yTotal = rc.readSharedArray(yIndex);
         int numEnemies = rc.readSharedArray(numEnemiesIndex);
+        if(RobotPlayer.turnOrder == 0)
+            System.out.println(xIndex);
         rc.writeSharedArray(xIndex, xTotal + location.x);
         rc.writeSharedArray(yIndex, yTotal + location.y);
         rc.writeSharedArray(numEnemiesIndex, numEnemies + 1);
+    }
+
+    public static void updateAllyCluster(RobotController rc, MapLocation location) throws GameActionException
+    {
+        int numClusters = 0;
+        for (int i = CURRENT_ROUND_ALLY_TOTAL_1; i <= CURRENT_ROUND_ALLY_TOTAL_3; i += 6) {
+            if (rc.readSharedArray(i) != 0) {
+                numClusters++;
+            }
+        }
+
+        MapLocation[] currAvgClusters = getCurrentAllyClusters(rc);
+        int closestClusterIndex = -1;
+        int shortestDistance = Integer.MAX_VALUE;
+        for(int i = 0; i < currAvgClusters.length; i++)
+        {
+            MapLocation tempLocation = currAvgClusters[i];
+            if(tempLocation.equals(new MapLocation(-1, -1))) continue;
+            int tempDistance = location.distanceSquaredTo(tempLocation);
+            if(tempDistance < shortestDistance)
+            {
+                shortestDistance = tempDistance;
+                closestClusterIndex = i;
+            }
+        }
+
+        if(closestClusterIndex == -1) closestClusterIndex = 0;
+        if(shortestDistance > RobotPlayer.MAX_MAP_DIST_SQUARED / 56 && numClusters < 3)
+        {
+            closestClusterIndex = numClusters;
+        }
+
+        int xIndex = CURRENT_ROUND_ALLY_X_1 + 6 * closestClusterIndex;
+        int yIndex = CURRENT_ROUND_ALLY_Y_1 + 6 * closestClusterIndex;
+        int healthIndex = CURRENT_ROUND_HEALTH_1 + 6 * closestClusterIndex;
+        int numAlliesIndex = CURRENT_ROUND_ALLY_TOTAL_1 + 6 * closestClusterIndex;
+        int xTotal = rc.readSharedArray(xIndex);
+        int yTotal = rc.readSharedArray(yIndex);
+        int healthTotal = rc.readSharedArray(healthIndex);
+        int numAllies = rc.readSharedArray(numAlliesIndex);
+        rc.writeSharedArray(xIndex, xTotal + location.x);
+        rc.writeSharedArray(yIndex, yTotal + location.y);
+        rc.writeSharedArray(healthIndex, healthTotal + rc.getHealth());
+        rc.writeSharedArray(numAlliesIndex, numAllies + 1);
     }
 
     public static MapLocation[] getCurrentEnemyClusters(RobotController rc) throws GameActionException
@@ -396,6 +366,33 @@ public class Utilities
         return locs;
     }
 
+    public static MapLocation[] getCurrentAllyClusters(RobotController rc) throws GameActionException
+    {
+        MapLocation[] locs = new MapLocation[3];
+        locs[0] = generateAverageLocation(
+                rc.readSharedArray(CURRENT_ROUND_ALLY_X_1),
+                rc.readSharedArray(CURRENT_ROUND_ALLY_Y_1),
+                rc.readSharedArray(CURRENT_ROUND_ALLY_TOTAL_1));
+        locs[1] = generateAverageLocation(
+                rc.readSharedArray(CURRENT_ROUND_ALLY_X_2),
+                rc.readSharedArray(CURRENT_ROUND_ALLY_Y_2),
+                rc.readSharedArray(CURRENT_ROUND_ALLY_TOTAL_2));
+        locs[2] = generateAverageLocation(
+                rc.readSharedArray(CURRENT_ROUND_ALLY_X_3),
+                rc.readSharedArray(CURRENT_ROUND_ALLY_Y_3),
+                rc.readSharedArray(CURRENT_ROUND_ALLY_TOTAL_3));
+        return locs;
+    }
+
+    public static int[] getCurrentAllyHealth(RobotController rc) throws GameActionException
+    {
+        int[] avgHealth = new int[3];
+        avgHealth[0] = rc.readSharedArray(CURRENT_ROUND_HEALTH_1);
+        avgHealth[1] = rc.readSharedArray(CURRENT_ROUND_HEALTH_2);
+        avgHealth[2] = rc.readSharedArray(CURRENT_ROUND_HEALTH_3);
+        return avgHealth;
+    }
+
     public static Cluster[] getLastRoundClusters(RobotController rc) throws GameActionException
     {
         Cluster[] clusters = new Cluster[3];
@@ -405,6 +402,27 @@ public class Utilities
                 getEnemyCountFromCluster(rc.readSharedArray(LAST_ROUND_LOCATION_2_INDEX)));
         clusters[2] = new Cluster(Utilities.convertIntToLocation(rc.readSharedArray(LAST_ROUND_LOCATION_3_INDEX)),
                 getEnemyCountFromCluster(rc.readSharedArray(LAST_ROUND_LOCATION_3_INDEX)));
+        return clusters;
+    }
+
+    public static int[] getLastRoundAllyHealth(RobotController rc) throws GameActionException
+    {
+        int[] clusters = new int[3];
+        clusters[0] = rc.readSharedArray(LAST_ROUND_ALLY_HEALTH_1);
+        clusters[1] = rc.readSharedArray(LAST_ROUND_ALLY_HEALTH_2);
+        clusters[2] = rc.readSharedArray(LAST_ROUND_ALLY_HEALTH_3);
+        return clusters;
+    }
+
+
+
+
+    public static MapLocation[] getLastRoundAllyClusters(RobotController rc) throws GameActionException
+    {
+        MapLocation[] clusters = new MapLocation[3];
+        clusters[0] = convertIntToLocation(rc.readSharedArray(LAST_ROUND_ALLY_LOCATION_1));
+        clusters[1] = convertIntToLocation(rc.readSharedArray(LAST_ROUND_ALLY_LOCATION_2));
+        clusters[2] = convertIntToLocation(rc.readSharedArray(LAST_ROUND_ALLY_LOCATION_3));
         return clusters;
     }
 
@@ -436,22 +454,57 @@ public class Utilities
         MapLocation[] clusters = getCurrentEnemyClusters(rc);
 
         rc.writeSharedArray(LAST_ROUND_LOCATION_1_INDEX,
-                clusters[0].x != -1 ? createClusterInt(clusters[0], rc.readSharedArray(CURRENT_ROUND_TOTAL_1_INDEX)) : 0);
+                clusters[0].x != -1 ? convertLocationToInt(clusters[0]) : 0);
         rc.writeSharedArray(CURRENT_ROUND_X_1_INDEX, 0);
         rc.writeSharedArray(CURRENT_ROUND_Y_1_INDEX, 0);
         rc.writeSharedArray(CURRENT_ROUND_TOTAL_1_INDEX, 0);
 
         rc.writeSharedArray(LAST_ROUND_LOCATION_2_INDEX,
-                clusters[1].x != -1 ? createClusterInt(clusters[1], rc.readSharedArray(CURRENT_ROUND_TOTAL_2_INDEX)) : 0);
+                clusters[1].x != -1 ? convertLocationToInt(clusters[0]) : 0);
         rc.writeSharedArray(CURRENT_ROUND_X_2_INDEX, 0);
         rc.writeSharedArray(CURRENT_ROUND_Y_2_INDEX, 0);
         rc.writeSharedArray(CURRENT_ROUND_TOTAL_2_INDEX, 0);
 
         rc.writeSharedArray(LAST_ROUND_LOCATION_3_INDEX,
-                clusters[2].x != -1 ? createClusterInt(clusters[2], rc.readSharedArray(CURRENT_ROUND_TOTAL_3_INDEX)): 0);
+                clusters[2].x != -1 ? convertLocationToInt(clusters[0]): 0);
         rc.writeSharedArray(CURRENT_ROUND_X_3_INDEX, 0);
         rc.writeSharedArray(CURRENT_ROUND_Y_3_INDEX, 0);
         rc.writeSharedArray(CURRENT_ROUND_TOTAL_3_INDEX, 0);
+    }
+
+    public static void resetAvgAllyLoc(RobotController rc) throws GameActionException {
+        MapLocation[] clusters = getCurrentAllyClusters(rc);
+        int[] averageHealth = getCurrentAllyHealth(rc);
+
+        int total1 = rc.readSharedArray(CURRENT_ROUND_ALLY_TOTAL_1);
+        rc.writeSharedArray(LAST_ROUND_ALLY_LOCATION_1,
+                clusters[0].x != -1 ? convertLocationToInt(clusters[0]) : 0);
+        rc.writeSharedArray(LAST_ROUND_ALLY_HEALTH_1,
+                total1 > 0 ? averageHealth[0] / total1 : 0);
+        rc.writeSharedArray(CURRENT_ROUND_ALLY_X_1, 0);
+        rc.writeSharedArray(CURRENT_ROUND_ALLY_Y_1, 0);
+        rc.writeSharedArray(CURRENT_ROUND_HEALTH_1, 0);
+        rc.writeSharedArray(CURRENT_ROUND_ALLY_TOTAL_1, 0);
+
+        int total2 = rc.readSharedArray(CURRENT_ROUND_ALLY_TOTAL_2);
+        rc.writeSharedArray(LAST_ROUND_ALLY_LOCATION_2,
+                clusters[1].x != -1 ? convertLocationToInt(clusters[1]) : 0);
+        rc.writeSharedArray(LAST_ROUND_ALLY_HEALTH_2,
+                total2 > 0 ? averageHealth[1] / total2 : 0);
+        rc.writeSharedArray(CURRENT_ROUND_ALLY_X_2, 0);
+        rc.writeSharedArray(CURRENT_ROUND_ALLY_Y_2, 0);
+        rc.writeSharedArray(CURRENT_ROUND_HEALTH_2, 0);
+        rc.writeSharedArray(CURRENT_ROUND_ALLY_TOTAL_2, 0);
+
+        int total3 = rc.readSharedArray(CURRENT_ROUND_ALLY_TOTAL_3);
+        rc.writeSharedArray(LAST_ROUND_ALLY_LOCATION_3,
+                clusters[2].x != -1 ? convertLocationToInt(clusters[2]) : 0);
+        rc.writeSharedArray(LAST_ROUND_ALLY_HEALTH_3,
+                total3 > 0 ? averageHealth[2] / total3 : 0);
+        rc.writeSharedArray(CURRENT_ROUND_ALLY_X_3, 0);
+        rc.writeSharedArray(CURRENT_ROUND_ALLY_Y_3, 0);
+        rc.writeSharedArray(CURRENT_ROUND_HEALTH_3, 0);
+        rc.writeSharedArray(CURRENT_ROUND_ALLY_TOTAL_3, 0);
     }
 
     public static Cluster getClosestCluster(RobotController rc) throws GameActionException
@@ -529,5 +582,25 @@ public class Utilities
             dir = dir.rotateLeft();
         }
         return(test ==Direction.NORTH || test == Direction.NORTHWEST||test == Direction.NORTHEAST);
+    }
+
+    //returns false if we dont know any flag locations, true otherwise
+    public static boolean knowFlag(RobotController rc) throws GameActionException {
+        int index3 = rc.readSharedArray(3);
+        int index4 = rc.readSharedArray(4);
+        int index5 = rc.readSharedArray(5);
+        return index3 != 0 || index4 != 0 || index5 != 0;
+    }
+
+    public static MapLocation[] getKnownFlags(RobotController rc) throws GameActionException
+    {
+        ArrayList<MapLocation> knownFlags = new ArrayList<>();
+        int index3 = rc.readSharedArray(3);
+        if(index3 != 0) knownFlags.add(convertIntToLocation(index3));
+        int index4 = rc.readSharedArray(4);
+        if(index4 != 0) knownFlags.add(convertIntToLocation(index4));
+        int index5 = rc.readSharedArray(5);
+        if(index5 != 0) knownFlags.add(convertIntToLocation(index5));
+        return knownFlags.toArray(new MapLocation[0]);
     }
 }

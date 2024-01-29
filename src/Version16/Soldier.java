@@ -1,7 +1,8 @@
 package Version16;
 
+import Version16.Util.*;
 import battlecode.common.*;
-import static Version16.Utilities.*;
+import static Version16.Util.Utilities.*;
 import static Version16.RobotPlayer.*;
 
 
@@ -166,8 +167,9 @@ public class Soldier
         if(closestFlag != null){
             if(rc.canSenseLocation(closestFlag.location)){
                 //Pathfinding.bellmanFord5x5(rc, closestFlag.location);
-                BFSKernel.BFS(rc, closestFlag.location);
-                if(rc.isActionReady()) {
+                BFSKernel7x7.BFS(rc, closestFlag.location);
+                if(rc.isActionReady())
+                {
                     updateInfo(rc);
                     attemptAttack(rc);
                     attemptHeal(rc);
@@ -252,7 +254,7 @@ public class Soldier
             }
             else if(healthRatio < 0.25f && (allyRobots.length > enemyRobots.length + 1) || healthRatio < 0.125f){
                 //Pathfinding.bellmanFord5x5(rc, lowestHealth(enemyRobots));
-                BFSKernel.BFS(rc, lowestHealth(enemyRobots));
+                BFSKernel7x7.BFS(rc, lowestHealth(enemyRobots));
                 updateInfo(rc);
                 attemptAttack(rc);
                 attemptHeal(rc);
@@ -281,7 +283,7 @@ public class Soldier
         }
         //if we cant see any enemies, run macro not micro - move towards known flags, and if not possible, move towards broadcast flags
         else{
-            MapLocation target;
+           /*MapLocation target;
             if(knowFlag(rc)){
                 target = findClosestActualFlag(rc);
                 if(target != null){
@@ -292,7 +294,7 @@ public class Soldier
                 }
             }
             else if(getClosestCluster(rc) != null){
-                target = getClosestCluster(rc).location;
+                target = Macro.getMostOverwhelmedCluster(rc, getLastRoundClusters(rc)).location;
                 //Pathfinding.combinedPathfinding(rc, lastSeenEnemy.getLocation());
                 if(nearbyFlagsAlly.length == 0 && rc.canFill(rc.getLocation().add(rc.getLocation().directionTo(target))))
                     rc.fill(rc.getLocation().add(rc.getLocation().directionTo(target)));
@@ -309,9 +311,8 @@ public class Soldier
                     }
                     Pathfinding.combinedPathfinding(rc, findCoordinatedBroadcastFlag(rc));
                 }
-            }
-            //          if(target == null) System.out.println(rc.getLocation() + " : lame");
-//            else System.out.println(rc.getLocation() + " reporting to " + target);
+            }*/
+            Macro.doMacro(rc);
         }
     }
 
@@ -329,7 +330,7 @@ public class Soldier
             }
             if(rc.getLocation().distanceSquaredTo(targetFlag.getLocation()) < 16) {
                 //Pathfinding.bellmanFord5x5(rc, targetFlag.getLocation());
-                BFSKernel.BFS(rc, targetFlag.getLocation());
+                BFSKernel7x7.BFS(rc, targetFlag.getLocation());
             }
             else if(rc.isActionReady()){
                 if(rc.canPickupFlag(targetFlag.getLocation())) {
@@ -776,14 +777,6 @@ public class Soldier
         else if(index5 == flagLocInt){
             rc.writeSharedArray(5, 0);
         }
-    }
-
-    //returns false if we dont know any flag locations, true otherwise
-    public static boolean knowFlag(RobotController rc) throws GameActionException {
-        int index3 = rc.readSharedArray(3);
-        int index4 = rc.readSharedArray(4);
-        int index5 = rc.readSharedArray(5);
-        return index3 != 0 || index4 != 0 || index5 != 0;
     }
 
     //findCoordinatedActualFlag - returns lowest index flag that we know location of

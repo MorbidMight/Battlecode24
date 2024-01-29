@@ -1,4 +1,4 @@
-package Version16;
+package Version16.Util;
 
 import battlecode.common.MapLocation;
 
