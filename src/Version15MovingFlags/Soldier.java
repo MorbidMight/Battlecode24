@@ -1,13 +1,9 @@
 package Version15MovingFlags;
 
 import battlecode.common.*;
-import battlecode.world.Trap;
-
-import java.nio.file.Path;
-import java.util.ArrayList;
-
-import static Version15MovingFlags.RobotPlayer.*;
 import static Version15MovingFlags.Utilities.*;
+import static Version15MovingFlags.RobotPlayer.*;
+
 
 enum states{
     defense, attack, heist, escort, flagCarrier
@@ -36,7 +32,6 @@ public class Soldier
 
 
     static states state;
-
     public static void runSoldier(RobotController rc) throws GameActionException {
         if (!rc.isSpawned()) {
             lastSeenEnemy = null;
@@ -55,29 +50,17 @@ public class Soldier
         }
         tryGetCrumbs(rc);
         updateInfo(rc);
+        determineRetreatHealth(rc);
         findCoordinatedActualFlag(rc);
         //used to update which flags we know are real or not
         for(FlagInfo flag : nearbyFlagsEnemy){
             checkRecordEnemyFlag(rc, flag);
         }
-        //createStunList();
-        //make sure we store the location of at least one enemy, so we know where one was if we need it next turn and can't see any
-        if(enemyRobots.length > 0)
-            lastSeenEnemy = enemyRobots[0];
-        //if we can see one of our flags in its home spot, try and build a trap on it just cause
-        else if (nearbyFlagsAlly.length != 0 && Utilities.isDefaultLocation(rc, nearbyFlagsAlly[0].getLocation())){
-            TrapType toBeBuilt = TrapType.WATER;
-            MapLocation target = nearbyFlagsAlly[0].getLocation();
-            if(!isTrapAdjacent(rc, rc.getLocation(), toBeBuilt) && rc.canBuild(toBeBuilt, target)){
-                rc.build(toBeBuilt, target);
+        for(FlagInfo flag : nearbyFlagsEnemy){
+            if(rc.canPickupFlag(flag.getLocation())){
+                rc.pickupFlag(flag.getLocation());
+                state = states.flagCarrier;
             }
-        }
-        else if(lastSeenEnemy != null && rc.canSenseRobotAtLocation(lastSeenEnemy.getLocation())){
-            lastSeenEnemy = null;
-        }
-        if(nearbyFlagsEnemy.length != 0 && rc.canPickupFlag(nearbyFlagsEnemy[0].getLocation())){
-            rc.pickupFlag(nearbyFlagsEnemy[0].getLocation());
-            state = states.flagCarrier;
         }
         state = trySwitchState(rc);
         rc.setIndicatorString(state.toString());
@@ -137,9 +120,8 @@ public class Soldier
                 if(rc.senseMapInfo(flag.getLocation()).getSpawnZoneTeamObject() != rc.getTeam() || flag.isPickedUp())
                     return states.defense;
         }
-
         for (FlagInfo flag : nearbyFlagsEnemy) {
-            if (flag.isPickedUp() && (enemyRobots.length > 0 ||rc.getLocation().distanceSquaredTo(findClosestSpawnLocation(rc)) >= 25)) {
+            if (flag.isPickedUp() && (enemyRobots.length > 0 ||rc.getLocation().distanceSquaredTo(findClosestSpawnLocation(rc)) >= 36)) {
                 escortee = rc.senseRobotAtLocation(flag.getLocation());
                 return states.escort;
             }
@@ -183,6 +165,10 @@ public class Soldier
         StolenFlag closestFlag = Utilities.getClosestFlag(rc);
         attemptAttack(rc);
         if(closestFlag != null){
+            if(rc.canSenseLocation(closestFlag.location) && nearbyFlagsAlly[0].isPickedUp() && enemyRobots.length == 1){
+                if(rc.canFill(rc.getLocation().add(rc.getLocation().directionTo(closestFlag.location))))
+                    rc.fill(rc.getLocation().add(rc.getLocation().directionTo(closestFlag.location)));
+            }
             if(rc.canSenseLocation(closestFlag.location)){
                 //Pathfinding.bellmanFord5x5(rc, closestFlag.location);
                 BFSKernel.BFS(rc, closestFlag.location);
@@ -239,7 +225,7 @@ public class Soldier
             else if(!isTrapAdjacent(rc, rc.getLocation(), toBeBuilt) && rc.canBuild(toBeBuilt, rc.getLocation())){
                 rc.build(toBeBuilt, rc.getLocation());
             }
-            if(rc.isActionReady() && rc.getCrumbs() > 2000 &&rc.getRoundNum()>300){
+            if(rc.isActionReady() && rc.getCrumbs() > 1500 && rc.getRoundNum()>300){
                 toBeBuilt = TrapType.EXPLOSIVE;
                 if(rc.canBuild(toBeBuilt, target)){
                     rc.build(toBeBuilt, target);
@@ -252,6 +238,7 @@ public class Soldier
         }
         if(rc.isActionReady()){
             attemptAttack(rc);
+            //if(potentialEnemiesAttackRange.length == 0) attemptHealConditional(rc, (int) RETREAT_HEALTH);
         }
         if(enemyRobots.length != 0){
             float healthRatio = (float) totalHealth(enemyRobots) / (totalHealth(allyRobots) + rc.getHealth());
@@ -315,7 +302,7 @@ public class Soldier
                 if(nearbyFlagsAlly.length == 0 && rc.canFill(rc.getLocation().add(rc.getLocation().directionTo(target))))
                     rc.fill(rc.getLocation().add(rc.getLocation().directionTo(target)));
                 //Pathfinding.bellmanFord5x5(rc, target);
-                BFSKernel.BFS(rc, target);
+                BFSKernel.BFS(rc,target);
                 return;
             }
             else{
@@ -448,7 +435,7 @@ public class Soldier
                 }
                 else if(square.enemiesAttackRangedX == 2){
                     if(square.potentialKill){
-                        score = 5000 + square.enemiesVisiondX + square.alliesVisiondX * -1 + square.alliesHealRangedX * 0.25f + square.potentialEnemiesAttackRangedX * -5.5f;
+                        score = 5000 + square.enemiesVisiondX + square.alliesVisiondX * -1 + square.alliesHealRangedX * 0.25f + square.potentialEnemiesAttackRangedX * -5.5f - (float)square.totalDPS;
                     }
                     else{
                         score = square.enemiesAttackRangedX * 2 * aggresionIndex + square.enemiesVisiondX + square.alliesVisiondX * -1 + square.alliesHealRangedX * 1.25f + square.potentialEnemiesAttackRangedX * -3.65f;
@@ -502,9 +489,6 @@ public class Soldier
                 }
             }
         }
-//        if(rc.getID() == 11350 && rc.getRoundNum() > 1882 && rc.getRoundNum() < 1990){
-//            System.out.println(best + " : " + best.enemiesAttackRangedX + " : " + best.potentialEnemiesAttackRangedX);
-//        }
         if(best != null) {
             if (best.enemiesAttackRangedX <= 0 && rc.canMove(rc.getLocation().directionTo(best.location))) {
                 rc.move(rc.getLocation().directionTo(best.location));
@@ -531,27 +515,6 @@ public class Soldier
             }
         }
     }
-    //for when we can't attack now, but we can next turn - try to avoid moving into enemy movement range, but also avoid losing sight of enemies
-    public static void runMicroPrepare(RobotController rc) throws GameActionException {
-        engagementMicroSquare[] options = new engagementMicroSquare[8];
-        populateMicroArray(rc, options);
-        engagementMicroSquare best = null;
-        float highScore = Integer.MIN_VALUE;
-        for(engagementMicroSquare square : options){
-            if(square.passable){
-                float score = square.enemiesAttackRangedX * -4 + square.enemiesVisiondX * 1.3f + square.alliesVisiondX * 1.0f + square.alliesHealRangedX * 0.25f + square.potentialEnemiesAttackRangedX * 2 + square.potentialEnemiesPrepareAttackdX * 1.0f;
-                if(score > highScore){
-                    highScore = score;
-                    best = square;
-                }
-            }
-        }
-        if(best != null) {
-            if (best.enemiesAttackRangedX <= 0 && rc.canMove(rc.getLocation().directionTo(best.location))) {
-                rc.move(rc.getLocation().directionTo(best.location));
-            }
-        }
-    }
     public static void populateMicroArray(RobotController rc, engagementMicroSquare[] options) throws GameActionException {
         int index = 0;
         MapLocation curLoc = rc.getLocation();
@@ -563,7 +526,7 @@ public class Soldier
         int newY = 0;
         for (int k = -1; k <= 1; k++) {
 //            if (-1 == 0 && k == 0)
-//                continue;
+//\\                continue;
             newX = curX + -1;
             newY = curY + k;
             if (newX < mapWidth && newX >= 0 && newY >= 0 && newY < mapHeight) {
@@ -583,10 +546,14 @@ public class Soldier
                     options[index].potentialKill = isKillable(rc, enemyRobotsAttackRangeNewLoc);
                     options[index].enemiesVisiondX = enemyRobotsNewLoc.length - enemyRobots.length;
                     options[index].enemiesAttackRangedX = enemyRobotsAttackRangeNewLoc.length - enemyRobotsAttackRange.length;
+                    if(options[index].enemiesAttackRangedX == 2){
+                        options[index].totalDPS = (DPSEnemy(enemyRobotsAttackRangeNewLoc[0]) + DPSEnemy(enemyRobotsAttackRangeNewLoc[1]));
+                    }
                     options[index].alliesVisiondX = allyRobotsNewLoc.length - allyRobots.length;
                     options[index].alliesHealRangedX = allyRobotsHealRangeNewLoc.length - allyRobotsHealRange.length;
                     options[index].potentialEnemiesAttackRangedX = (potentialEnemiesAttackRangeNewLoc.length - enemyRobotsAttackRangeNewLoc.length) - (potentialEnemiesAttackRange.length - enemyRobotsAttackRange.length);
                     options[index].potentialEnemiesPrepareAttackdX = (potentialEnemiesPrepareAttackNewLoc.length - potentialEnemiesAttackRangeNewLoc.length) - (potentialEnemiesPrepareAttack.length - potentialEnemiesAttackRange.length);
+                    //options[index].potentialDeath = potentialDeath(rc, potentialEnemiesAttackRangeNewLoc);
                     //options[index].totalHealthAlliesdX = totalHealth(allyRobotsNewLoc) - totalHealth(allyRobots);
                     //options[index].totalHealthEnemiesdX = totalHealth(enemyRobotsNewLoc) - totalHealth(enemyRobots);
                 }
@@ -617,10 +584,14 @@ public class Soldier
                     options[index].potentialKill = isKillable(rc, enemyRobotsAttackRangeNewLoc);
                     options[index].enemiesVisiondX = enemyRobotsNewLoc.length - enemyRobots.length;
                     options[index].enemiesAttackRangedX = enemyRobotsAttackRangeNewLoc.length - enemyRobotsAttackRange.length;
+                    if(options[index].enemiesAttackRangedX == 2){
+                        options[index].totalDPS = (DPSEnemy(enemyRobotsAttackRangeNewLoc[0]) + DPSEnemy(enemyRobotsAttackRangeNewLoc[1]));
+                    }
                     options[index].alliesVisiondX = allyRobotsNewLoc.length - allyRobots.length;
                     options[index].alliesHealRangedX = allyRobotsHealRangeNewLoc.length - allyRobotsHealRange.length;
                     options[index].potentialEnemiesAttackRangedX = (potentialEnemiesAttackRangeNewLoc.length - enemyRobotsAttackRangeNewLoc.length) - (potentialEnemiesAttackRange.length - enemyRobotsAttackRange.length);
                     options[index].potentialEnemiesPrepareAttackdX = (potentialEnemiesPrepareAttackNewLoc.length - potentialEnemiesAttackRangeNewLoc.length) - (potentialEnemiesPrepareAttack.length - potentialEnemiesAttackRange.length);
+                    //options[index].potentialDeath = potentialDeath(rc, potentialEnemiesAttackRangeNewLoc);
                     //options[index].totalHealthAlliesdX = totalHealth(allyRobotsNewLoc) - totalHealth(allyRobots);
                     //options[index].totalHealthEnemiesdX = totalHealth(enemyRobotsNewLoc) - totalHealth(enemyRobots);
                 }
@@ -651,10 +622,14 @@ public class Soldier
                     options[index].potentialKill = isKillable(rc, enemyRobotsAttackRangeNewLoc);
                     options[index].enemiesVisiondX = enemyRobotsNewLoc.length - enemyRobots.length;
                     options[index].enemiesAttackRangedX = enemyRobotsAttackRangeNewLoc.length - enemyRobotsAttackRange.length;
+                    if(options[index].enemiesAttackRangedX == 2){
+                        options[index].totalDPS = (DPSEnemy(enemyRobotsAttackRangeNewLoc[0]) + DPSEnemy(enemyRobotsAttackRangeNewLoc[1]));
+                    }
                     options[index].alliesVisiondX = allyRobotsNewLoc.length - allyRobots.length;
                     options[index].alliesHealRangedX = allyRobotsHealRangeNewLoc.length - allyRobotsHealRange.length;
                     options[index].potentialEnemiesAttackRangedX = (potentialEnemiesAttackRangeNewLoc.length - enemyRobotsAttackRangeNewLoc.length) - (potentialEnemiesAttackRange.length - enemyRobotsAttackRange.length);
                     options[index].potentialEnemiesPrepareAttackdX = (potentialEnemiesPrepareAttackNewLoc.length - potentialEnemiesAttackRangeNewLoc.length) - (potentialEnemiesPrepareAttack.length - potentialEnemiesAttackRange.length);
+                    //options[index].potentialDeath = potentialDeath(rc, potentialEnemiesAttackRangeNewLoc);
                     //options[index].totalHealthAlliesdX = totalHealth(allyRobotsNewLoc) - totalHealth(allyRobots);
                     //options[index].totalHealthEnemiesdX = totalHealth(enemyRobotsNewLoc) - totalHealth(enemyRobots);
                 }
@@ -671,6 +646,14 @@ public class Soldier
                 return true;
         }
         return false;
+    }
+    public static boolean potentialDeath(RobotController rc, RobotInfo[] enemies){
+        int i = rc.getHealth();
+        double totalDPS = 0;
+        for(RobotInfo r : enemies){
+            totalDPS += DPSEnemy(r);
+        }
+        return i <= totalDPS;
     }
 
     public static void attemptAttack(RobotController rc) throws GameActionException {
@@ -726,6 +709,8 @@ public class Soldier
     }
 
     public static void attemptHeal(RobotController rc) throws GameActionException{
+//        if(potentialEnemiesPrepareAttack.length != 0 && rc.getLevel(SkillType.HEAL) == 3 && rc.getLevel(SkillType.ATTACK) < 4)
+//            return;
         RobotInfo toHeal = bestHeal(rc, allyRobotsHealRange);
         if(toHeal != null && rc.canHeal(toHeal.getLocation()) && toHeal.health < (1000 - rc.getHealAmount()))
             rc.heal(toHeal.getLocation());
@@ -937,17 +922,80 @@ public class Soldier
         else
             return lowDist;
     }
-    public static void updateRetreatHealth(RobotController rc){
-        if(rc.getRoundNum() <= 905)
-            RETREAT_HEALTH += .03f;
-        if(!enemyAttackUpgrade) {
-            GlobalUpgrade[] upgrades = rc.getGlobalUpgrades(rc.getTeam().opponent());
-            for (GlobalUpgrade g : upgrades) {
-                if (g == GlobalUpgrade.ATTACK) {
+    //    public static void updateRetreatHealth(RobotController rc){
+//        if(rc.getRoundNum() <= 905)
+//            RETREAT_HEALTH += .03f;
+//        if(!enemyAttackUpgrade) {
+//            GlobalUpgrade[] upgrades = rc.getGlobalUpgrades(rc.getTeam().opponent());
+//            for (GlobalUpgrade g : upgrades) {
+//                if (g == GlobalUpgrade.ATTACK) {
+//                    enemyAttackUpgrade = true;
+//                    RETREAT_HEALTH += 60;
+//                }
+//            }
+//        }
+//    }
+    public static void determineRetreatHealth(RobotController rc){
+        if(!enemyAttackUpgrade){
+            GlobalUpgrade[] g = rc.getGlobalUpgrades(rc.getTeam().opponent());
+            for(GlobalUpgrade upgrade : g){
+                if(upgrade == GlobalUpgrade.ATTACK){
                     enemyAttackUpgrade = true;
-                    RETREAT_HEALTH += 60;
+                    break;
                 }
             }
+        }
+        int high = 0;
+        if(potentialEnemiesPrepareAttack.length != 0){
+            for(RobotInfo unit : potentialEnemiesPrepareAttack){
+                double dps = DPSEnemy(unit);
+                if(dps > high) high = (int) dps;
+            }
+            RETREAT_HEALTH = high;
+        }
+        else return;
+    }
+    public static double DPSAlly(RobotInfo unit, RobotController rc){
+        int base = (rc.getRoundNum() >= 600) ? 210 : 150;
+        switch(unit.attackLevel){
+            case 0:
+                return base;
+            case 1:
+                return base + base * 0.05;
+            case 2:
+                return base + base * 0.07;
+            case 3:
+                return base + base * 0.1;
+            case 4:
+                return base + base * 0.3;
+            case 5:
+                return base + base * 0.35;
+            case 6:
+                return base + base * 0.6;
+            default:
+                return base;
+        }
+    }
+
+    public static double DPSEnemy(RobotInfo unit){
+        int base = (Soldier.enemyAttackUpgrade) ? 210 : 150;
+        switch(unit.attackLevel){
+            case 0:
+                return base;
+            case 1:
+                return base + base * 0.05;
+            case 2:
+                return base + base * 0.07;
+            case 3:
+                return base + base * 0.1;
+            case 4:
+                return base + base * 0.3;
+            case 5:
+                return base + base * 0.35;
+            case 6:
+                return base + base * 0.6;
+            default:
+                return base;
         }
     }
 }
@@ -969,6 +1017,8 @@ class engagementMicroSquare {
     public Boolean potentialKill;
     public int totalHealthEnemiesdX;
     public int totalHealthAlliesdX;
+    public double totalDPS;
+    public Boolean potentialDeath;
 
     public engagementMicroSquare() {
 

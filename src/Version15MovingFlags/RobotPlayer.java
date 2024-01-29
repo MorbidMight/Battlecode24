@@ -101,9 +101,6 @@ static MapLocation builderBombCircleCenter = null;
     public static void run(RobotController rc) throws GameActionException {
         initialize(rc);
         while (true) {
-            if(role == roles.soldier){
-                Soldier.updateRetreatHealth(rc);
-            }
             Utilities.checkForRevivedRobots(rc,turnsWithKills);
             //changes explorers to soldiers at round 200
             if (rc.getRoundNum() >= GameConstants.SETUP_ROUNDS && role == roles.explorer) {
