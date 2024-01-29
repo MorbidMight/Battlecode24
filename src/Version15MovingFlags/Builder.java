@@ -112,8 +112,8 @@ public class Builder {
                         else if (rc.readSharedArray(42) == 0) {
                             rc.writeSharedArray(42, Utilities.convertLocationToInt(target));
                             dropped = target;
+                            //rc.resign();
                             //System.out.println(Utilities.convertIntToLocation(rc.readSharedArray(42)));
-
                         }
                         //role = roles.explorer;
                         role = roles.moat;
@@ -143,6 +143,7 @@ public class Builder {
                 else if (rc.readSharedArray(42) == 0) {
                     rc.writeSharedArray(42, Utilities.convertLocationToInt(rc.getLocation()));
                     dropped = rc.getLocation();
+                    //rc.resign();
                 }
                 role = roles.moat;
             } else {
@@ -418,6 +419,9 @@ public class Builder {
             if(rc.senseMapInfo(location.add(location.directionTo(centerOfMap).rotateRight())).isWall())
                 score+=100;
         }
+        if(Utilities.locationIsBehindWall(rc,centerOfMap, location, 2)){
+            score += 150;
+        }
         for (MapInfo M : rc.senseNearbyMapInfos(location, 8)) {
             MapLocation m = M.getMapLocation();
             if (m.isAdjacentTo(location)) {
@@ -476,10 +480,16 @@ public class Builder {
         return loc.x == 0 || loc.y == 0 || loc.x == width -1 || loc.y == height - 1;
     }
     public static void explore(RobotController rc) throws GameActionException {
+        if(rc.getRoundNum() <= 30){
+            MapLocation targetCorner = findClosestCorner(rc);
+            if(!rc.getLocation().equals(targetCorner)) {
+                Pathfinding.combinedPathfinding(rc, targetCorner);
+                return;
+            }
+        }
         //explore a new area
         if (turnsSinceLocGen == 20 || turnsSinceLocGen == 0 || rc.getLocation().equals(targetLoc) || (rc.canSenseLocation(targetLoc) && rc.senseMapInfo(targetLoc).getTeamTerritory() != rc.getTeam()) || (rc.canSenseLocation(targetLoc) && !rc.senseMapInfo(targetLoc).isPassable())) {
             targetLoc = generateTargetLoc(rc);
-            //Pathfinding.combinedPathfinding(rc, targetLoc);
             BFSKernel.BFS(rc, targetLoc);
             turnsSinceLocGen = 1;
         } else {
