@@ -21,7 +21,7 @@ public strictfp class RobotPlayer {
      * these variables are static, in Battlecode they aren't actually shared between your robots.
      */
 
-    static int[] turnsWithKills = new int[25]; //The turns when the robot preformed a kill, compares it to the the current turn count to figure out when a
+    public static int[] turnsWithKills = new int[25]; //The turns when the robot preformed a kill, compares it to the the current turn count to figure out when a
 
     //used to unlock spawn locs 20 turns after locking it, if no longer under attack - otherwise, reset count
     static int countSinceLocked = 0;
@@ -86,7 +86,7 @@ static MapLocation builderBombCircleCenter = null;
     };
 
     enum roles {
-        explorer, soldier, builder, healer, offensiveBuilder, defensiveBuilder, moat
+        explorer, soldier, builder, healer, offensiveBuilder, defensiveBuilder, moat, flagSitter
     }
 
 
@@ -123,6 +123,10 @@ static MapLocation builderBombCircleCenter = null;
 
             // Try/catch blocks stop unhandled exceptions, which cause your robot to explode.
             try {
+                if(role == roles.flagSitter && !rc.isSpawned()){
+                    if(countSinceLocked != 0)countSinceLocked++;
+                    countSinceSeenFlag++;
+                }
                 if(turnOrder == 0)
                 {
                     HeadquarterDuck.runHeadquarterDuck(rc);
@@ -153,7 +157,8 @@ static MapLocation builderBombCircleCenter = null;
                             //role = roles.explorer;
                         }
                     } else {
-                        if (SittingOnFlag) {
+                        if (role == roles.flagSitter) {
+                            //IMPLEMENT SOMETHING FOR FLAG SITTRES
                             if (rc.canSpawn(Utilities.convertIntToLocation(rc.readSharedArray(0)))) {
                                 rc.spawn(Utilities.convertIntToLocation(rc.readSharedArray(0)));
                             } else if (rc.canSpawn(Utilities.convertIntToLocation(rc.readSharedArray(1)))) {
@@ -163,7 +168,6 @@ static MapLocation builderBombCircleCenter = null;
                             }
                         } else {
                             if (!rc.isSpawned()) {
-
                                 //decide which place to spawn at based on last two bits of shared array
                                 //loop through spawn locations, try adjacent ones, then try non adjacent ones
                                 MapLocation targetSpawn = null;
@@ -234,6 +238,9 @@ static MapLocation builderBombCircleCenter = null;
                                 break;
                             case moat:
                                 Builder.buildMoat(rc);
+                                break;
+                            case flagSitter:
+                                FlagSitter.runFlagSitter(rc);
                                 break;
                         }
                     }

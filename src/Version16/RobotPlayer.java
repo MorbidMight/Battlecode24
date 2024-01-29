@@ -29,7 +29,7 @@ public strictfp class RobotPlayer {
     static int countSinceSeenFlag = 0;
     static int turnCount = 0;
     static MapLocation[] SpawnLocations = new MapLocation[27]; //All the spawn locations. low:close to center high:away from center
-    static roles role;
+    public static roles role;
 static MapLocation builderBombCircleCenter = null;
     static boolean SittingOnFlag = false; //for builders if they sit on the flag and spam explosion bombs
     static final int MoatRadius = 9; //Radius of the moat squared
@@ -84,7 +84,7 @@ static MapLocation builderBombCircleCenter = null;
             Direction.NORTHWEST,
     };
 
-    enum roles {
+    public enum roles {
         explorer, soldier, builder, healer, offensiveBuilder, defensiveBuilder, debug
     }
 

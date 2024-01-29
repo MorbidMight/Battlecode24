@@ -29,6 +29,7 @@ public class Builder {
     static int bestScore = -1;
     static int radius = 0;
     static MapLocation closestCorner;
+    static MapLocation dropped;
 
     static final int EXPLORE_PERIOD = 65;
     static final int PLACEMENT_PERIOD = 140;
@@ -44,8 +45,8 @@ public class Builder {
         }
         else
             rc.setIndicatorDot(rc.getLocation(), 0,0,100);
-        if (rc.getRoundNum() >= 201)
-            role = roles.soldier;
+        if (rc.getRoundNum() >= 201) role = roles.flagSitter;
+            //role = roles.soldier;
         //pick up flag if it is early game
         if (centerOfMap == null)
             centerOfMap = new MapLocation(rc.getMapWidth() / 2, rc.getMapHeight() / 2);
@@ -102,14 +103,17 @@ public class Builder {
                         rc.dropFlag(target);
                         if (rc.readSharedArray(40) == 0) {
                             rc.writeSharedArray(40, Utilities.convertLocationToInt(target));
+                            dropped = target;
                             //System.out.println(Utilities.convertIntToLocation(rc.readSharedArray(40)));
                         }
                         else if (rc.readSharedArray(41) == 0) {
                             rc.writeSharedArray(41, Utilities.convertLocationToInt(target));
+                            dropped = target;
                             //System.out.println(Utilities.convertIntToLocation(rc.readSharedArray(41)));
                         }
                         else if (rc.readSharedArray(42) == 0) {
                             rc.writeSharedArray(42, Utilities.convertLocationToInt(target));
+                            dropped = target;
                             //System.out.println(Utilities.convertIntToLocation(rc.readSharedArray(42)));
 
                         }
@@ -131,13 +135,17 @@ public class Builder {
             //System.out.println(rc.getLocation());
             if (rc.senseLegalStartingFlagPlacement(rc.getLocation()) && rc.canDropFlag(rc.getLocation())) {
                 rc.dropFlag(rc.getLocation());
-                if (rc.readSharedArray(40) == 0)
+                if (rc.readSharedArray(40) == 0) {
                     rc.writeSharedArray(40, Utilities.convertLocationToInt(rc.getLocation()));
-                else if (rc.readSharedArray(41) == 0)
+                    dropped = rc.getLocation();
+                }
+                else if (rc.readSharedArray(41) == 0) {
                     rc.writeSharedArray(41, Utilities.convertLocationToInt(rc.getLocation()));
+                    dropped = rc.getLocation();
+                }
                 else if (rc.readSharedArray(42) == 0) {
                     rc.writeSharedArray(42, Utilities.convertLocationToInt(rc.getLocation()));
-                    
+                    dropped = rc.getLocation();
                 }
                 role = roles.moat;
             } else {
@@ -162,7 +170,10 @@ public class Builder {
     public static void buildMoat (RobotController rc) throws GameActionException {
         if(rc.getRoundNum() > 215)
         {
-           role = roles.explorer;
+           //role = roles.explorer;
+            role = roles.flagSitter;
+            FlagSitter.home = dropped;
+
         }
         MapLocation centerOfMap = new MapLocation(rc.getMapWidth() / 2, rc.getMapHeight() / 2);
         FlagInfo[] flags = rc.senseNearbyFlags(-1);
@@ -172,7 +183,9 @@ public class Builder {
             rc.setIndicatorDot(rc.getLocation(), 100,100,0);
         //move away from flag
         if(flags.length == 0){
-            role = roles.explorer;
+            //role = roles.explorer;
+            role = roles.flagSitter;
+            FlagSitter.home = dropped;
             return;
         }
         if(rc.getLocation().distanceSquaredTo(flags[0].getLocation()) < 9)
@@ -252,12 +265,12 @@ public class Builder {
             TrapType toBeBuilt = TrapType.STUN;
             if (rc.getCrumbs() > 3500)
                 toBeBuilt = TrapType.EXPLOSIVE;
-            if (!adjacentSpawnTrap(rc, t.getMapLocation()) && rc.canBuild(toBeBuilt, t.getMapLocation())) {
+            if (!adjacentTrap(rc, t.getMapLocation()) && rc.canBuild(toBeBuilt, t.getMapLocation())) {
                 rc.build(toBeBuilt, t.getMapLocation());
             }
         }
     }
-    public static boolean adjacentSpawnTrap(RobotController rc, MapLocation location) throws GameActionException {
+    public static boolean adjacentTrap(RobotController rc, MapLocation location) throws GameActionException {
         int x = location.x;
         int y = location.y;
         int width = rc.getMapWidth();
@@ -268,7 +281,7 @@ public class Builder {
                     continue;
                 MapLocation temp = new MapLocation(x + dx, y + dy);
                 MapInfo tempInfo = rc.senseMapInfo(temp);
-                if(tempInfo.isSpawnZone() && tempInfo.getTrapType() != TrapType.NONE)
+                if(tempInfo.getTrapType() != TrapType.NONE && tempInfo.getTrapType() != TrapType.WATER)
                     return true;
             }
         }
