@@ -33,6 +33,7 @@ public class Builder {
 
     static final int EXPLORE_PERIOD = 65;
     static final int PLACEMENT_PERIOD = 140;
+    static MapLocation originalFlagLocation;
 
 
     public static void runBuilder(RobotController rc) throws GameActionException {
@@ -55,6 +56,7 @@ public class Builder {
         }
         if (rc.getRoundNum() < 10 && !rc.hasFlag() && rc.canPickupFlag(rc.getLocation())) {
             rc.pickupFlag(rc.getLocation());
+            originalFlagLocation = rc.getLocation();
         }
         if (rc.hasFlag() && rc.getRoundNum() < EXPLORE_PERIOD) {
             MapInfo[] nearbyLocs = rc.senseNearbyMapInfos(GameConstants.INTERACT_RADIUS_SQUARED);
@@ -489,9 +491,9 @@ public class Builder {
         }
     }
     public static MapLocation generateTargetLoc(RobotController rc) {
-        int x = rng.nextInt(rc.getMapWidth());
-        int y = rng.nextInt(rc.getMapHeight());
-        return new MapLocation(x, y);
+       double t = rng.nextDouble()*2*Math.PI;
+
+        return new MapLocation((int)(5*Math.cos(t)+ originalFlagLocation.x),(int)(5*Math.sin(t)+ originalFlagLocation.y));
     }
     public static MapLocation findClosestCorner(RobotController rc){
         int x = rc.getLocation().x;
