@@ -140,9 +140,9 @@ public class FlagSitter {
         if(target.equals(Utilities.convertIntToLocation(0))) {
             Utilities.editBitSharedArray(rc, 1022, false);
             Utilities.editBitSharedArray(rc, 1023, false);
-        } else if (target.equals(Version16.Utilities.convertIntToLocation(rc.readSharedArray(1)))) {
-            Version16.Utilities.editBitSharedArray(rc, 1022, false);
-            Version16.Utilities.editBitSharedArray(rc, 1023, true);
+        } else if (target.equals(Utilities.convertIntToLocation(rc.readSharedArray(1)))) {
+            Utilities.editBitSharedArray(rc, 1022, false);
+            Utilities.editBitSharedArray(rc, 1023, true);
         } else {
             Utilities.editBitSharedArray(rc, 1022, true);
             Utilities.editBitSharedArray(rc, 1023, false);

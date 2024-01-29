@@ -91,7 +91,7 @@ public class Pathfinding
         switch (pathfindingState)
         {
             case BFS:
-                BFSKernel7x7.BFS(rc, destination);
+                BFSKernel9x9.BFS(rc, destination);
                 updateAlreadyBeen(rc);
                 if(alreadyBeen.get(rc.getLocation()) > 2)
                 {

@@ -167,7 +167,7 @@ public class Soldier
         if(closestFlag != null){
             if(rc.canSenseLocation(closestFlag.location)){
                 //Pathfinding.bellmanFord5x5(rc, closestFlag.location);
-                BFSKernel7x7.BFS(rc, closestFlag.location);
+                BFSKernel9x9.BFS(rc, closestFlag.location);
                 if(rc.isActionReady())
                 {
                     updateInfo(rc);
@@ -254,7 +254,7 @@ public class Soldier
             }
             else if(healthRatio < 0.25f && (allyRobots.length > enemyRobots.length + 1) || healthRatio < 0.125f){
                 //Pathfinding.bellmanFord5x5(rc, lowestHealth(enemyRobots));
-                BFSKernel7x7.BFS(rc, lowestHealth(enemyRobots));
+                BFSKernel9x9.BFS(rc, lowestHealth(enemyRobots));
                 updateInfo(rc);
                 attemptAttack(rc);
                 attemptHeal(rc);
@@ -330,7 +330,7 @@ public class Soldier
             }
             if(rc.getLocation().distanceSquaredTo(targetFlag.getLocation()) < 16) {
                 //Pathfinding.bellmanFord5x5(rc, targetFlag.getLocation());
-                BFSKernel7x7.BFS(rc, targetFlag.getLocation());
+                BFSKernel9x9.BFS(rc, targetFlag.getLocation());
             }
             else if(rc.isActionReady()){
                 if(rc.canPickupFlag(targetFlag.getLocation())) {

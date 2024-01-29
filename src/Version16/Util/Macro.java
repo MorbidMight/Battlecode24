@@ -67,12 +67,12 @@ public class Macro
             }
             else
             {
-                BFSKernel7x7.BFS(rc, getLowestHealthAllyCluster(rc));
+                BFSKernel9x9.BFS(rc, getLowestHealthAllyCluster(rc));
             }
         }
         else
         {
-            BFSKernel7x7.BFS(rc, closestPossibleMoveLocation);
+            BFSKernel9x9.BFS(rc, closestPossibleMoveLocation);
         }
     }
 
