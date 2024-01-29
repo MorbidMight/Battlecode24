@@ -95,10 +95,6 @@ public class Builder {
                 BFSKernel.BFS(rc, target);
             //Pathfinding.combinedPathfinding(rc, target);
             if (rc.canSenseLocation(target) && rc.senseLegalStartingFlagPlacement(target)) {
-                if(rc.canBuild(TrapType.WATER, target))
-                    rc.build(TrapType.WATER, target);
-                if(rc.senseMapInfo(target).getTrapType() == TrapType.WATER)
-                {
                     if (rc.canDropFlag(target)) {
                         rc.dropFlag(target);
                         if (rc.readSharedArray(40) == 0) {
@@ -120,7 +116,6 @@ public class Builder {
                         //role = roles.explorer;
                         role = roles.moat;
                     }
-                }
             } else {
                 while (rc.canSenseLocation(target) && !rc.senseLegalStartingFlagPlacement(target)) {
                     //scoredLocations.removeFirst();
@@ -168,6 +163,7 @@ public class Builder {
         }
     }
     public static void buildMoat (RobotController rc) throws GameActionException {
+
         if(rc.getRoundNum() > 215)
         {
            //role = roles.explorer;
@@ -177,6 +173,8 @@ public class Builder {
         }
         MapLocation centerOfMap = new MapLocation(rc.getMapWidth() / 2, rc.getMapHeight() / 2);
         FlagInfo[] flags = rc.senseNearbyFlags(-1);
+        if(rc.canBuild(TrapType.WATER, flags[0].getLocation()))
+            rc.build(TrapType.WATER, flags[0].getLocation());
         if(rc.getLocation().equals(flags[0].getLocation()))
             if(rc.canBuild(TrapType.WATER, rc.getLocation()))
                rc.build(TrapType.WATER, rc.getLocation());
