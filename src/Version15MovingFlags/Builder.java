@@ -263,8 +263,7 @@ public class Builder {
         MapInfo[] mapInfos = rc.senseNearbyMapInfos(GameConstants.INTERACT_RADIUS_SQUARED);
         for (MapInfo t : mapInfos) {
             TrapType toBeBuilt = TrapType.STUN;
-            //IMPROVE LOOK SCRIM NOT WORK
-            if (!adjacentSpawnTrap(rc, t.getMapLocation()) && rc.canBuild(toBeBuilt, t.getMapLocation())) {
+            if (!Soldier.isTrapAdjacentSpawn(rc, t.getMapLocation(), TrapType.STUN) && rc.canBuild(toBeBuilt, t.getMapLocation())) {
                 rc.build(toBeBuilt, t.getMapLocation());
             }
             if(rc.getCrumbs() > 3000 && !Soldier.isTrapAdjacent(rc, t.getMapLocation(), TrapType.EXPLOSIVE) && rc.canBuild(TrapType.EXPLOSIVE, t.getMapLocation())){

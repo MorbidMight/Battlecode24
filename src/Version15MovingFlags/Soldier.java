@@ -866,6 +866,15 @@ public class Soldier
         }
         return false;
     }
+    public static boolean isTrapAdjacentSpawn(RobotController rc, MapLocation location, TrapType t) throws GameActionException {
+        MapInfo[] adjacents = rc.senseNearbyMapInfos(location, 2);
+        for(MapInfo square : adjacents){
+            if(square.getMapLocation().equals(rc.getLocation())) continue;
+            if(square.getTrapType() == t)
+                return true;
+        }
+        return false;
+    }
     public static int closestEnemyDistance(RobotController rc, RobotInfo[] enemyRobots, RobotInfo[] enemyRobotsAttackRange){
         if(enemyRobots.length == 0)
             return -1;
