@@ -29,9 +29,11 @@ public class Builder {
     static int bestScore = -1;
     static int radius = 0;
     static MapLocation closestCorner;
+    static MapLocation dropped;
 
     static final int EXPLORE_PERIOD = 65;
     static final int PLACEMENT_PERIOD = 140;
+    static MapLocation originalFlagLocation;
 
 
     public static void runBuilder(RobotController rc) throws GameActionException {
@@ -44,8 +46,8 @@ public class Builder {
         }
         else
             rc.setIndicatorDot(rc.getLocation(), 0,0,100);
-        if (rc.getRoundNum() >= 201)
-            role = roles.soldier;
+        if (rc.getRoundNum() >= 201) role = roles.flagSitter;
+            //role = roles.soldier;
         //pick up flag if it is early game
         if (centerOfMap == null)
             centerOfMap = new MapLocation(rc.getMapWidth() / 2, rc.getMapHeight() / 2);
@@ -54,6 +56,7 @@ public class Builder {
         }
         if (rc.getRoundNum() < 10 && !rc.hasFlag() && rc.canPickupFlag(rc.getLocation())) {
             rc.pickupFlag(rc.getLocation());
+            originalFlagLocation = rc.getLocation();
         }
         if (rc.hasFlag() && rc.getRoundNum() < EXPLORE_PERIOD) {
             MapInfo[] nearbyLocs = rc.senseNearbyMapInfos(GameConstants.INTERACT_RADIUS_SQUARED);
@@ -94,29 +97,27 @@ public class Builder {
                 BFSKernel.BFS(rc, target);
             //Pathfinding.combinedPathfinding(rc, target);
             if (rc.canSenseLocation(target) && rc.senseLegalStartingFlagPlacement(target)) {
-                if(rc.canBuild(TrapType.WATER, target))
-                    rc.build(TrapType.WATER, target);
-                if(rc.senseMapInfo(target).getTrapType() == TrapType.WATER)
-                {
                     if (rc.canDropFlag(target)) {
                         rc.dropFlag(target);
                         if (rc.readSharedArray(40) == 0) {
                             rc.writeSharedArray(40, Utilities.convertLocationToInt(target));
+                            dropped = target;
                             //System.out.println(Utilities.convertIntToLocation(rc.readSharedArray(40)));
                         }
                         else if (rc.readSharedArray(41) == 0) {
                             rc.writeSharedArray(41, Utilities.convertLocationToInt(target));
+                            dropped = target;
                             //System.out.println(Utilities.convertIntToLocation(rc.readSharedArray(41)));
                         }
                         else if (rc.readSharedArray(42) == 0) {
                             rc.writeSharedArray(42, Utilities.convertLocationToInt(target));
+                            dropped = target;
+                            //rc.resign();
                             //System.out.println(Utilities.convertIntToLocation(rc.readSharedArray(42)));
-
                         }
                         //role = roles.explorer;
                         role = roles.moat;
                     }
-                }
             } else {
                 while (rc.canSenseLocation(target) && !rc.senseLegalStartingFlagPlacement(target)) {
                     //scoredLocations.removeFirst();
@@ -131,13 +132,18 @@ public class Builder {
             //System.out.println(rc.getLocation());
             if (rc.senseLegalStartingFlagPlacement(rc.getLocation()) && rc.canDropFlag(rc.getLocation())) {
                 rc.dropFlag(rc.getLocation());
-                if (rc.readSharedArray(40) == 0)
+                if (rc.readSharedArray(40) == 0) {
                     rc.writeSharedArray(40, Utilities.convertLocationToInt(rc.getLocation()));
-                else if (rc.readSharedArray(41) == 0)
+                    dropped = rc.getLocation();
+                }
+                else if (rc.readSharedArray(41) == 0) {
                     rc.writeSharedArray(41, Utilities.convertLocationToInt(rc.getLocation()));
+                    dropped = rc.getLocation();
+                }
                 else if (rc.readSharedArray(42) == 0) {
                     rc.writeSharedArray(42, Utilities.convertLocationToInt(rc.getLocation()));
-                    
+                    dropped = rc.getLocation();
+                    //rc.resign();
                 }
                 role = roles.moat;
             } else {
@@ -160,19 +166,27 @@ public class Builder {
         }
     }
     public static void buildMoat (RobotController rc) throws GameActionException {
+
         if(rc.getRoundNum() > 215)
         {
-           role = roles.explorer;
+           //role = roles.explorer;
+            role = roles.flagSitter;
+            FlagSitter.home = dropped;
+
         }
         MapLocation centerOfMap = new MapLocation(rc.getMapWidth() / 2, rc.getMapHeight() / 2);
         FlagInfo[] flags = rc.senseNearbyFlags(-1);
+        if(rc.canBuild(TrapType.WATER, flags[0].getLocation()))
+            rc.build(TrapType.WATER, flags[0].getLocation());
         if(rc.getLocation().equals(flags[0].getLocation()))
             if(rc.canBuild(TrapType.WATER, rc.getLocation()))
                rc.build(TrapType.WATER, rc.getLocation());
             rc.setIndicatorDot(rc.getLocation(), 100,100,0);
         //move away from flag
         if(flags.length == 0){
-            role = roles.explorer;
+            //role = roles.explorer;
+            role = roles.flagSitter;
+            FlagSitter.home = dropped;
             return;
         }
         if(rc.getLocation().distanceSquaredTo(flags[0].getLocation()) < 9)
@@ -250,10 +264,11 @@ public class Builder {
         MapInfo[] mapInfos = rc.senseNearbyMapInfos(GameConstants.INTERACT_RADIUS_SQUARED);
         for (MapInfo t : mapInfos) {
             TrapType toBeBuilt = TrapType.STUN;
-            if (rc.getCrumbs() > 3500)
-                toBeBuilt = TrapType.EXPLOSIVE;
-            if (!adjacentSpawnTrap(rc, t.getMapLocation()) && rc.canBuild(toBeBuilt, t.getMapLocation())) {
+            if (!Soldier.isTrapAdjacentSpawn(rc, t.getMapLocation(), TrapType.STUN) && rc.canBuild(toBeBuilt, t.getMapLocation())) {
                 rc.build(toBeBuilt, t.getMapLocation());
+            }
+            if(rc.getCrumbs() > 3000 && !Soldier.isTrapAdjacent(rc, t.getMapLocation(), TrapType.EXPLOSIVE) && rc.canBuild(TrapType.EXPLOSIVE, t.getMapLocation())){
+                rc.build(TrapType.EXPLOSIVE, t.getMapLocation());
             }
         }
     }
@@ -268,7 +283,7 @@ public class Builder {
                     continue;
                 MapLocation temp = new MapLocation(x + dx, y + dy);
                 MapInfo tempInfo = rc.senseMapInfo(temp);
-                if(tempInfo.isSpawnZone() && tempInfo.getTrapType() != TrapType.NONE)
+                if(tempInfo.getTrapType() != TrapType.NONE && !rc.getLocation().equals(temp))
                     return true;
             }
         }
@@ -372,7 +387,7 @@ public class Builder {
             }
         }*/
         //decrease to score if close to map
-        score += ((location.distanceSquaredTo(centerOfMap) * 1.5) / (Math.sqrt(Math.pow(height, 2) + Math.pow(width, 2)))) * 250;
+        score += ((location.distanceSquaredTo(centerOfMap) * 1.5) / (Math.sqrt(Math.pow(height, 1.5) + Math.pow(width, 1.5)))) * 250;
 
         if (!rc.senseLegalStartingFlagPlacement(location)) {
             return -1000;
@@ -403,6 +418,9 @@ public class Builder {
                 score+=100;
             if(rc.senseMapInfo(location.add(location.directionTo(centerOfMap).rotateRight())).isWall())
                 score+=100;
+        }
+        if(Utilities.locationIsBehindWall(rc,centerOfMap, location, 2)){
+            score += 150;
         }
         for (MapInfo M : rc.senseNearbyMapInfos(location, 8)) {
             MapLocation m = M.getMapLocation();
@@ -462,10 +480,16 @@ public class Builder {
         return loc.x == 0 || loc.y == 0 || loc.x == width -1 || loc.y == height - 1;
     }
     public static void explore(RobotController rc) throws GameActionException {
+        if(rc.getRoundNum() <= 30){
+            MapLocation targetCorner = findClosestCorner(rc);
+            if(!rc.getLocation().equals(targetCorner)) {
+                Pathfinding.combinedPathfinding(rc, targetCorner);
+                return;
+            }
+        }
         //explore a new area
         if (turnsSinceLocGen == 20 || turnsSinceLocGen == 0 || rc.getLocation().equals(targetLoc) || (rc.canSenseLocation(targetLoc) && rc.senseMapInfo(targetLoc).getTeamTerritory() != rc.getTeam()) || (rc.canSenseLocation(targetLoc) && !rc.senseMapInfo(targetLoc).isPassable())) {
             targetLoc = generateTargetLoc(rc);
-            //Pathfinding.combinedPathfinding(rc, targetLoc);
             BFSKernel.BFS(rc, targetLoc);
             turnsSinceLocGen = 1;
         } else {
@@ -475,9 +499,9 @@ public class Builder {
         }
     }
     public static MapLocation generateTargetLoc(RobotController rc) {
-        int x = rng.nextInt(rc.getMapWidth());
-        int y = rng.nextInt(rc.getMapHeight());
-        return new MapLocation(x, y);
+       double t = rng.nextDouble()*2*Math.PI;
+
+        return new MapLocation((int)(5*Math.cos(t)+ originalFlagLocation.x),(int)(5*Math.sin(t)+ originalFlagLocation.y));
     }
     public static MapLocation findClosestCorner(RobotController rc){
         int x = rc.getLocation().x;
