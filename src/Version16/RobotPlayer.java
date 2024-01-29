@@ -85,7 +85,7 @@ static MapLocation builderBombCircleCenter = null;
     };
 
     enum roles {
-        explorer, soldier, builder, healer, offensiveBuilder, defensiveBuilder
+        explorer, soldier, builder, healer, offensiveBuilder, defensiveBuilder, debug
     }
 
 
