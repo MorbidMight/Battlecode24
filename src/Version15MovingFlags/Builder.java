@@ -263,14 +263,16 @@ public class Builder {
         MapInfo[] mapInfos = rc.senseNearbyMapInfos(GameConstants.INTERACT_RADIUS_SQUARED);
         for (MapInfo t : mapInfos) {
             TrapType toBeBuilt = TrapType.STUN;
-            if (rc.getCrumbs() > 3500)
-                toBeBuilt = TrapType.EXPLOSIVE;
-            if (!adjacentTrap(rc, t.getMapLocation()) && rc.canBuild(toBeBuilt, t.getMapLocation())) {
+            //IMPROVE LOOK SCRIM NOT WORK
+            if (!adjacentSpawnTrap(rc, t.getMapLocation()) && rc.canBuild(toBeBuilt, t.getMapLocation())) {
                 rc.build(toBeBuilt, t.getMapLocation());
+            }
+            if(rc.getCrumbs() > 3000 && !Soldier.isTrapAdjacent(rc, t.getMapLocation(), TrapType.EXPLOSIVE) && rc.canBuild(TrapType.EXPLOSIVE, t.getMapLocation())){
+                rc.build(TrapType.EXPLOSIVE, t.getMapLocation());
             }
         }
     }
-    public static boolean adjacentTrap(RobotController rc, MapLocation location) throws GameActionException {
+    public static boolean adjacentSpawnTrap(RobotController rc, MapLocation location) throws GameActionException {
         int x = location.x;
         int y = location.y;
         int width = rc.getMapWidth();
@@ -281,7 +283,7 @@ public class Builder {
                     continue;
                 MapLocation temp = new MapLocation(x + dx, y + dy);
                 MapInfo tempInfo = rc.senseMapInfo(temp);
-                if(tempInfo.getTrapType() != TrapType.NONE && tempInfo.getTrapType() != TrapType.WATER)
+                if(tempInfo.getTrapType() != TrapType.NONE && !rc.getLocation().equals(temp))
                     return true;
             }
         }

@@ -37,6 +37,7 @@ static MapLocation builderBombCircleCenter = null;
     static HashMap<MapLocation, MapInfo> seenLocations = new HashMap<MapLocation, MapInfo>();
 
     static HashMap<MapLocation, Integer> alreadyBeen = new HashMap<MapLocation, Integer>();
+    static boolean movedFlags = false;
 
 
     static final int BombFrequency = 5; //number of turns between defensive builders trying to place a mine
@@ -148,7 +149,12 @@ static MapLocation builderBombCircleCenter = null;
                         if(rc.canSpawn(SpawnLocations[spawnIndex])){
                             rc.spawn(SpawnLocations[spawnIndex]);
                             if(rc.senseNearbyFlags(-1,rc.getTeam())[0].getLocation().equals(rc.getLocation())){
-                                role = roles.builder;
+                                if(movedFlags)
+                                    role = roles.builder;
+                                else{
+                                    role = roles.flagSitter;
+                                    FlagSitter.home = rc.getLocation();
+                                }
                                 //SittingOnFlag = true;
                             }
                             else{
@@ -158,13 +164,20 @@ static MapLocation builderBombCircleCenter = null;
                         }
                     } else {
                         if (role == roles.flagSitter) {
-                            //IMPLEMENT SOMETHING FOR FLAG SITTRES
-                            if (rc.canSpawn(Utilities.convertIntToLocation(rc.readSharedArray(0)))) {
-                                rc.spawn(Utilities.convertIntToLocation(rc.readSharedArray(0)));
-                            } else if (rc.canSpawn(Utilities.convertIntToLocation(rc.readSharedArray(1)))) {
-                                rc.spawn(Utilities.convertIntToLocation(rc.readSharedArray(1)));
-                            } else if (rc.canSpawn(Utilities.convertIntToLocation(rc.readSharedArray(2)))) {
-                                rc.spawn(Utilities.convertIntToLocation(rc.readSharedArray(2)));
+                            if(!movedFlags) {
+                                //IMPLEMENT SOMETHING FOR FLAG SITTRES
+                                if (rc.canSpawn(Utilities.convertIntToLocation(rc.readSharedArray(0)))) {
+                                    rc.spawn(Utilities.convertIntToLocation(rc.readSharedArray(0)));
+                                } else if (rc.canSpawn(Utilities.convertIntToLocation(rc.readSharedArray(1)))) {
+                                    rc.spawn(Utilities.convertIntToLocation(rc.readSharedArray(1)));
+                                } else if (rc.canSpawn(Utilities.convertIntToLocation(rc.readSharedArray(2)))) {
+                                    rc.spawn(Utilities.convertIntToLocation(rc.readSharedArray(2)));
+                                }
+                            }
+                            else{
+                                MapLocation target = findClosestSpawnLocation(rc, FlagSitter.home);
+                                if(rc.canSpawn(target))
+                                    rc.spawn(target);
                             }
                         } else {
                             if (!rc.isSpawned()) {
@@ -313,6 +326,9 @@ static MapLocation builderBombCircleCenter = null;
         rc.writeSharedArray(62,turnOrder + 1);
         MAX_MAP_DIST_SQUARED = rc.getMapHeight() * rc.getMapHeight() + rc.getMapWidth() * rc.getMapWidth();
         rc.setIndicatorString(turnOrder + "");
+        if((rc.getMapHeight() * rc.getMapWidth() > 1600)){
+            movedFlags = true;
+        }
     }
 
     //Perform tasks every round
@@ -361,6 +377,23 @@ static MapLocation builderBombCircleCenter = null;
         int distance_1 = rc.getLocation().distanceSquaredTo(Utilities.convertIntToLocation(rc.readSharedArray(0)));
         int distance_2 = rc.getLocation().distanceSquaredTo(Utilities.convertIntToLocation(rc.readSharedArray(1)));
         int distance_3 = rc.getLocation().distanceSquaredTo(Utilities.convertIntToLocation(rc.readSharedArray(2)));
+        if(distance_1 <= distance_2 && distance_1 <= distance_3){
+            targetLoc = Utilities.convertIntToLocation(rc.readSharedArray(0));
+        }
+        else if(distance_2 <= distance_1 && distance_2 <= distance_3){
+            targetLoc = Utilities.convertIntToLocation(rc.readSharedArray(1));
+        }
+        else{
+            targetLoc = Utilities.convertIntToLocation(rc.readSharedArray(2));
+        }
+
+        return targetLoc;
+    }
+    public static MapLocation findClosestSpawnLocation(RobotController rc, MapLocation m) throws GameActionException {
+        MapLocation targetLoc = null;
+        int distance_1 = m.distanceSquaredTo(Utilities.convertIntToLocation(rc.readSharedArray(0)));
+        int distance_2 = m.distanceSquaredTo(Utilities.convertIntToLocation(rc.readSharedArray(1)));
+        int distance_3 = m.distanceSquaredTo(Utilities.convertIntToLocation(rc.readSharedArray(2)));
         if(distance_1 <= distance_2 && distance_1 <= distance_3){
             targetLoc = Utilities.convertIntToLocation(rc.readSharedArray(0));
         }
