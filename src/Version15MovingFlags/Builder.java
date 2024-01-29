@@ -387,7 +387,7 @@ public class Builder {
             }
         }*/
         //decrease to score if close to map
-        score += ((location.distanceSquaredTo(centerOfMap) * 1.5) / (Math.sqrt(Math.pow(height, 2) + Math.pow(width, 2)))) * 250;
+        score += ((location.distanceSquaredTo(centerOfMap) * 1.5) / (Math.sqrt(Math.pow(height, 1.5) + Math.pow(width, 1.5)))) * 250;
 
         if (!rc.senseLegalStartingFlagPlacement(location)) {
             return -1000;

@@ -116,9 +116,8 @@ public class Soldier
             return states.flagCarrier;
         }
         for (FlagInfo flag : nearbyFlagsAlly) {
-            if (flag.isPickedUp() || (rc.canSenseLocation(flag.getLocation()) && (!Utilities.isDefaultLocation(rc, flag.getLocation()))))
-                if(rc.senseMapInfo(flag.getLocation()).getSpawnZoneTeamObject() != rc.getTeam() || flag.isPickedUp())
-                    return states.defense;
+            if (flag.isPickedUp() || (rc.canSenseLocation(flag.getLocation()) && rc.senseMapInfo(flag.getLocation()).getSpawnZoneTeamObject() != rc.getTeam()))
+                return states.defense;
         }
         for (FlagInfo flag : nearbyFlagsEnemy) {
             if (flag.isPickedUp() && (enemyRobots.length > 0 ||rc.getLocation().distanceSquaredTo(findClosestSpawnLocation(rc)) >= 36)) {
@@ -165,10 +164,6 @@ public class Soldier
         StolenFlag closestFlag = Utilities.getClosestFlag(rc);
         attemptAttack(rc);
         if(closestFlag != null){
-            if(rc.canSenseLocation(closestFlag.location) && nearbyFlagsAlly[0].isPickedUp() && enemyRobots.length == 1){
-                if(rc.canFill(rc.getLocation().add(rc.getLocation().directionTo(closestFlag.location))))
-                    rc.fill(rc.getLocation().add(rc.getLocation().directionTo(closestFlag.location)));
-            }
             if(rc.canSenseLocation(closestFlag.location)){
                 //Pathfinding.bellmanFord5x5(rc, closestFlag.location);
                 BFSKernel.BFS(rc, closestFlag.location);
@@ -861,15 +856,6 @@ public class Soldier
     public static boolean isTrapAdjacent(RobotController rc, MapLocation location, TrapType t) throws GameActionException {
         MapInfo[] adjacents = rc.senseNearbyMapInfos(location, 2);
         for(MapInfo square : adjacents){
-            if(square.getTrapType() == t)
-                return true;
-        }
-        return false;
-    }
-    public static boolean isTrapAdjacentSpawn(RobotController rc, MapLocation location, TrapType t) throws GameActionException {
-        MapInfo[] adjacents = rc.senseNearbyMapInfos(location, 2);
-        for(MapInfo square : adjacents){
-            if(square.getMapLocation().equals(rc.getLocation())) continue;
             if(square.getTrapType() == t)
                 return true;
         }
