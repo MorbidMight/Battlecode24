@@ -259,7 +259,7 @@ public class Soldier
                 attemptHeal(rc);
             }
             //try and move into attack range of any nearby enemies
-            else if (((rc.isActionReady() || aggresionIndex > 10) /*|| ((allyRobots.length - enemyRobots.length > 6) && enemyRobotsAttackRange.length == 0)) */&& rc.getHealth() >= RETREAT_HEALTH)){
+            else if (((rc.isActionReady() || aggresionIndex > 10)&& rc.getHealth() >= RETREAT_HEALTH)){
                 runMicroAttack(rc);
                 updateInfo(rc);
                 attemptAttack(rc);
@@ -313,6 +313,7 @@ public class Soldier
             }
             //          if(target == null) System.out.println(rc.getLocation() + " : lame");
 //            else System.out.println(rc.getLocation() + " reporting to " + target);
+            attemptHeal(rc);
         }
     }
 

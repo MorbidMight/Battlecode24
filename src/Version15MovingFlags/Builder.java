@@ -110,7 +110,7 @@ public class Builder {
                         else if (rc.readSharedArray(42) == 0) {
                             rc.writeSharedArray(42, Utilities.convertLocationToInt(target));
                             dropped = target;
-                            rc.resign();
+                            //rc.resign();
                             //System.out.println(Utilities.convertIntToLocation(rc.readSharedArray(42)));
                         }
                         //role = roles.explorer;
@@ -141,7 +141,7 @@ public class Builder {
                 else if (rc.readSharedArray(42) == 0) {
                     rc.writeSharedArray(42, Utilities.convertLocationToInt(rc.getLocation()));
                     dropped = rc.getLocation();
-                    rc.resign();
+                    //rc.resign();
                 }
                 role = roles.moat;
             } else {
