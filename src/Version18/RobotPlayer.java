@@ -353,6 +353,7 @@ public strictfp class RobotPlayer {
         //Utilities.clearObsoleteEnemies(rc);
         Utilities.verifyFlagLocations(rc);
         Utilities.writeFlagLocations(rc);
+        //Utilities.updateAllyCluster(rc, rc.getLocation());
     }
 
 

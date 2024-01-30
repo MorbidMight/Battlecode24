@@ -237,11 +237,10 @@ public class Builder {
                 rc.build(TrapType.EXPLOSIVE, rc.getLocation());
             rc.setIndicatorString("moving away from flag");
             if(rc.canMove(rc.getLocation().directionTo(flags[0].getLocation()).opposite())) {
-                rc.move(rc.getLocation().directionTo(flags[0].getLocation()).opposite());
+                    rc.move(rc.getLocation().directionTo(flags[0].getLocation()).opposite());
             }
             else if(rc.canMove(rc.getLocation().directionTo(centerOfMap))) {
-                rc.move(rc.getLocation().directionTo(centerOfMap));
-
+                    rc.move(rc.getLocation().directionTo(centerOfMap));
             }
         }
         //move around flag
@@ -275,7 +274,7 @@ public class Builder {
                 }
             }
             if(rc.canMove(rc.getLocation().directionTo(bestLoc))) {
-                rc.move(rc.getLocation().directionTo(bestLoc));
+                    rc.move(rc.getLocation().directionTo(bestLoc));
             }
             updateAlreadyBeen(rc);
         }

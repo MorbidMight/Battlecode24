@@ -13,8 +13,14 @@ public class FlagSitter {
     static int countSinceSeenFlag = 0;
     static boolean isActive = true;
     static int countSinceLocked;
+    static MapLocation refill = null;
 
     public static void runFlagSitter(RobotController rc) throws GameActionException {
+        if(rc.getRoundNum() == 250) rc.resign();
+        if(refill != null && rc.canDig(refill)){
+            rc.dig(refill);
+            refill = null;
+        }
         if (home == null && tempHome == null) {
             System.out.println("Something is wrong");
             findHome(rc);
@@ -23,7 +29,9 @@ public class FlagSitter {
             Pathfinding.combinedPathfinding(rc, tempHome);
         }
         if (!rc.getLocation().equals(home)) {
-            Pathfinding.combinedPathfinding(rc, home);
+            clearWayHome(rc);
+            if(refill == null || rc.getLocation().equals(refill))
+                Pathfinding.combinedPathfinding(rc, home);
         } else {
             //update where we want soldiers to spawn
             if (!Utilities.readBitSharedArray(rc, 1021)) {
@@ -182,6 +190,25 @@ public class FlagSitter {
         }
         else if(!rc.canSenseLocation(spawnLoc3)){
             tempHome = spawnLoc3;
+        }
+    }
+
+    public static void clearWayHome(RobotController rc) throws GameActionException {
+        Direction d = rc.getLocation().directionTo(home);
+        if (!rc.senseMapInfo(rc.getLocation().add(d)).isPassable() && !rc.senseMapInfo(rc.getLocation().add(d.rotateLeft())).isPassable() && !rc.senseMapInfo(rc.getLocation().add(d.rotateRight())).isPassable()) {
+            if (rc.canFill(rc.getLocation().add(d))) {
+                rc.fill(rc.getLocation().add(d));
+                refill = rc.getLocation().add(d);
+                if (rc.canMove(d)) rc.move(d);
+            } else if (rc.canFill(rc.getLocation().add(d.rotateLeft()))) {
+                rc.fill(rc.getLocation().add(d.rotateLeft()));
+                refill = rc.getLocation().add(d.rotateLeft());
+                if (rc.canMove(d.rotateLeft())) rc.move(d.rotateLeft());
+            } else if (rc.canFill(rc.getLocation().add(d.rotateRight()))) {
+                rc.fill(rc.getLocation().add(d.rotateRight()));
+                refill = rc.getLocation().add(d.rotateRight());
+                if (rc.canMove(d.rotateRight())) rc.move(d.rotateRight());
+            }
         }
     }
 }
