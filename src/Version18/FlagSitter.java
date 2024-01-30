@@ -124,10 +124,21 @@ public class FlagSitter {
                     Utilities.editBitSharedArray(rc, 684, false);
             }
             //check if nearby enemies are coming to attack, call for robots to prioritize spawning at ur flag
+
+
             if (isActive && rc.senseNearbyRobots(GameConstants.VISION_RADIUS_SQUARED, rc.getTeam().opponent()).length > rc.senseNearbyRobots(GameConstants.VISION_RADIUS_SQUARED, rc.getTeam()).length) {
                 lockSpawnNearestLocation(rc);
 
                 countSinceLocked++;
+            }
+            if(isActive && rc.senseNearbyRobots(-1,rc.getTeam().opponent()).length==1){
+                for(RobotInfo t: rc.senseNearbyRobots(-1,rc.getTeam().opponent())){
+                    if(t.hasFlag){
+                        if(rc.canAttack(t.location))
+                            rc.attack(t.location);
+                        Pathfinding.combinedPathfinding(rc,t.getLocation());
+                    }
+                }
             }
         }
     }
