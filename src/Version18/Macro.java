@@ -24,10 +24,12 @@ public class Macro
     public static void doMacro(RobotController rc) throws GameActionException
     {
         MapLocation[] possibleMoveLocations = new MapLocation[6];
+        int[] possibleMoveScores = new int[6];
         int i = 0;
         for(MapLocation ml : distressedFlags)
         {
             possibleMoveLocations[i] = ml;
+            possibleMoveScores[i] = ml.distanceSquaredTo(rc.getLocation());
             i++;
         }
         if(knownFlags.length > 0)
@@ -35,6 +37,7 @@ public class Macro
             for(MapLocation ml : knownFlags)
             {
                 possibleMoveLocations[i] = ml;
+                possibleMoveScores[i] = ml.distanceSquaredTo(rc.getLocation());
                 i++;
             }
         }
@@ -43,12 +46,14 @@ public class Macro
             if(broadcastFlags.length == 0)
             {
                 possibleMoveLocations[i] = getClosestCluster(rc).location;
+                possibleMoveScores[i] = rc.getLocation().distanceSquaredTo(getClosestCluster(rc).location);
                 i++;
             }
             //we need to activate scouting
             for(int k = 0; k < currentRandLocWithinBroadcast.size(); k++)
             {
                 possibleMoveLocations[i] = currentRandLocWithinBroadcast.get(k);
+                possibleMoveScores[i] = rc.getLocation().distanceSquaredTo(currentRandLocWithinBroadcast.get(k));
                 i++;
             }
 
@@ -57,14 +62,14 @@ public class Macro
 
         MapLocation closestPossibleMoveLocation = null;
         int closestDistance = Integer.MAX_VALUE;
-        for (MapLocation ml : possibleMoveLocations)
+        for (int j = 0; i < possibleMoveScores.length; i++)
         {
-            if(ml == null || ml.equals(NULL_MAP_LOCATION)) continue;
-            int tempDistance = ml.distanceSquaredTo(rc.getLocation());
-            if (tempDistance < closestDistance)
+            if(possibleMoveLocations[j] == null || possibleMoveLocations[j].equals(NULL_MAP_LOCATION)) continue;
+            int tempScore = possibleMoveScores[j];
+            if (possibleMoveScores[j] < closestDistance)
             {
-                closestDistance = tempDistance;
-                closestPossibleMoveLocation = ml;
+                closestDistance = tempScore;
+                closestPossibleMoveLocation = possibleMoveLocations[j];
             }
         }
 
@@ -129,7 +134,7 @@ public class Macro
     public static MapLocation[] getDistressedFlags(RobotController rc) throws GameActionException
     {
         ArrayList<MapLocation> distressedFlags = new ArrayList<>();
-        for(int i = 0; i < 2; i++)
+        for(int i = 40; i < 43; i++)
         {
             if(Utilities.readBitSharedArray(rc, 12 + i * 16))
             {

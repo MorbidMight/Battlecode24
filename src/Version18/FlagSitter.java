@@ -16,7 +16,14 @@ public class FlagSitter {
     static MapLocation refill = null;
 
     public static void runFlagSitter(RobotController rc) throws GameActionException {
-        //if(rc.getRoundNum() == 250) rc.resign();
+        if(rc.getRoundNum() > 220 && (home != null && !rc.getLocation().equals(home))){
+            if (home.equals(Utilities.convertIntToLocation(rc.readSharedArray(40))))
+                Utilities.editBitSharedArray(rc, 652, false);
+            else if (home.equals(Utilities.convertIntToLocation(rc.readSharedArray(41))))
+                Utilities.editBitSharedArray(rc, 668, false);
+            else if (home.equals(Utilities.convertIntToLocation(rc.readSharedArray(42))))
+                Utilities.editBitSharedArray(rc, 684, false);
+        }
         if(refill != null && rc.canDig(refill)){
             rc.dig(refill);
             refill = null;
@@ -36,10 +43,10 @@ public class FlagSitter {
             //update where we want soldiers to spawn
             if (!Utilities.readBitSharedArray(rc, 1021)) {
                 int x;
-                if (Soldier.knowFlag(rc))
-                    x = RobotPlayer.findClosestSpawnLocationToCoordinatedTarget(rc);
-                else if (Utilities.getClosestCluster(rc) != null) {
+                if (Utilities.getClosestCluster(rc) != null)
                     x = RobotPlayer.findClosestSpawnLocationToCluster(rc);
+                else if (Soldier.knowFlag(rc)) {
+                    x = RobotPlayer.findClosestSpawnLocationToCoordinatedTarget(rc);
                 } else {
                     x = RobotPlayer.findClosestSpawnLocationToCoordinatedBroadcast(rc);
                 }
@@ -206,20 +213,10 @@ public class FlagSitter {
 
     public static void clearWayHome(RobotController rc) throws GameActionException {
         Direction d = rc.getLocation().directionTo(home);
-        if (!rc.senseMapInfo(rc.getLocation().add(d)).isPassable() && !rc.senseMapInfo(rc.getLocation().add(d.rotateLeft())).isPassable() && !rc.senseMapInfo(rc.getLocation().add(d.rotateRight())).isPassable()) {
-            if (rc.canFill(rc.getLocation().add(d))) {
-                rc.fill(rc.getLocation().add(d));
-                refill = rc.getLocation().add(d);
-                if (rc.canMove(d)) rc.move(d);
-            } else if (rc.canFill(rc.getLocation().add(d.rotateLeft()))) {
-                rc.fill(rc.getLocation().add(d.rotateLeft()));
-                refill = rc.getLocation().add(d.rotateLeft());
-                if (rc.canMove(d.rotateLeft())) rc.move(d.rotateLeft());
-            } else if (rc.canFill(rc.getLocation().add(d.rotateRight()))) {
-                rc.fill(rc.getLocation().add(d.rotateRight()));
-                refill = rc.getLocation().add(d.rotateRight());
-                if (rc.canMove(d.rotateRight())) rc.move(d.rotateRight());
-            }
+        if(rc.canFill(rc.getLocation().add(d))){
+            rc.fill(rc.getLocation().add(d));
+            if(rc.canMove(d)) rc.move(d);
+            refill = rc.getLocation().add(d);
         }
     }
 }
