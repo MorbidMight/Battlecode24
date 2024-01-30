@@ -206,6 +206,16 @@ public class Explorer {
         int score = 0;
         int height = rc.getMapHeight();
         int width = rc.getMapWidth();
+        if (Builder.isMapEdge(rc, location)) {
+            score += 300;
+        }
+        for(Direction dir: Direction.allDirections())
+        {
+            if(Builder.isMapEdge(rc, location.add( dir)))
+            {
+                score += 200;
+            }
+        }
 
         //decrease to score if close to map
         score += ((location.distanceSquaredTo(centerOfMap) * 1.5) / (Math.sqrt(Math.pow(height, 2) + Math.pow(width, 2)))) * 150;
