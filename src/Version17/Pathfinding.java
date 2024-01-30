@@ -13,11 +13,10 @@ import static Version17.RobotPlayer.*;
 public class Pathfinding
 {
 
-    enum PathfindingState{bugNav2, BFS}
+    enum PathfindingState{bugNav0, BFS}
     static PathfindingState pathfindingState = PathfindingState.BFS;
-
     static int bug0State = 0;
-    static boolean bugNav0FollowingWall = false;
+    static boolean bugNav0FollowingWall;
     public static final int BUG_NAV_TURNS = 50;
     public static int turnsUsingBugNav = 0;
     public static final int MAX_BYTECODE_USAGE = 10000;
@@ -100,11 +99,13 @@ public class Pathfinding
                 if(alreadyBeen.get(rc.getLocation()) > 2)
                 {
                     alreadyBeen.clear();
-                    pathfindingState = PathfindingState.bugNav2;
+                    pathfindingState = PathfindingState.bugNav0;
+                    bug0State = 0;
+                    bugNav0FollowingWall = false;
                 }
                 break;
-            case bugNav2:
-                bugNav2(rc, destination);
+            case bugNav0:
+                bugNav0(rc, destination);
                 turnsUsingBugNav++;
                 if(turnsUsingBugNav >= BUG_NAV_TURNS)
                 {
@@ -555,12 +556,23 @@ public class Pathfinding
 
     public static void bugNav0(RobotController rc, MapLocation destination) throws GameActionException
     {
+        rc.setIndicatorString("" + bug0State  + " " + bugNav0FollowingWall);
+        //set the bugState
         Direction dirTo = rc.getLocation().directionTo(destination);
         Direction dirToCenter = rc.getLocation().directionTo(new MapLocation(rc.getMapWidth()/2, rc.getMapHeight()/2));
-        if(!bugNav0FollowingWall)
+
+        if(!bugNav0FollowingWall && !rc.canMove(dirTo))
         {
             int distToRight = getDegreesSeparationFromDirection(dirTo.rotateRight(), dirToCenter);
             int distToLeft = getDegreesSeparationFromDirection(dirTo.rotateLeft(), dirToCenter);
+            if(distToRight < distToLeft)
+            {
+                if(rng.nextDouble() > 0.75) distToLeft = 0;
+            }
+            else
+            {
+                if(rng.nextDouble() > 0.75) distToRight = 0;
+            }
             if(distToRight < distToLeft)
             {
                 bug0State = 1; //Rotate Right
@@ -571,49 +583,45 @@ public class Pathfinding
             }
             bugNav0FollowingWall = true;
         }
-        else
-        {
-
-            if (bug0State == 1)
-            {
-                Direction tempDir = dirTo.rotateRight();
-                for (int i = 0; i < 8; i++)
-                {
-                    if(rc.canMove(tempDir))
-                    {
-                        rc.move(tempDir);
-                        break;
-                    }
-                    else
-                    {
-                        tempDir = tempDir.rotateRight();
-                    }
-                }
-            }else
-            {
-                Direction tempDir = dirTo.rotateLeft();
-                for (int i = 0; i < 8; i++)
-                {
-                    if(rc.canMove(tempDir))
-                    {
-                        rc.move(tempDir);
-                        break;
-                    }
-                    else
-                    {
-                        tempDir = tempDir.rotateLeft();
-                    }
-                }
-            }
-        }
-        //set the bugState
 
         if(rc.canMove(dirTo))
         {
             rc.move(dirTo);
+            bug0State = 0;
             bugNav0FollowingWall = false; //flag new direction needed
         }
 
+        if (bugNav0FollowingWall && bug0State == 1)
+        {
+            Direction tempDir = dirTo.rotateRight();
+            for (int i = 0; i < 8; i++)
+            {
+                if(rc.canMove(tempDir))
+                {
+                    rc.move(tempDir);
+                    break;
+                }
+                else
+                {
+                    tempDir = tempDir.rotateRight();
+                }
+            }
+        }else if (bugNav0FollowingWall && bug0State == 2)
+        {
+            Direction tempDir = dirTo.rotateLeft();
+            for (int i = 0; i < 8; i++)
+            {
+                if(rc.canMove(tempDir))
+                {
+                    rc.move(tempDir);
+                    break;
+                }
+                else
+                {
+                    tempDir = tempDir.rotateLeft();
+                }
+            }
+        }
 
         //if following wall follow wall
 

@@ -102,8 +102,8 @@ public strictfp class RobotPlayer {
     @SuppressWarnings("unused")
     public static void run(RobotController rc) throws GameActionException {
         initialize(rc);
-
-        while (true) {
+        while (true)
+        {
             Utilities.checkForRevivedRobots(rc,turnsWithKills);
             //changes explorers to soldiers at round 200
             if (rc.getRoundNum() >= GameConstants.SETUP_ROUNDS && role == roles.explorer) {
