@@ -92,10 +92,8 @@ public class Builder {
             //MapLocation target = scoredLocations.getFirst();
             assert scoredLocationsV2.peek() != null;
             MapLocation target = scoredLocationsV2.peek().location;
-            //System.out.println(target);
             if (!rc.getLocation().equals(target))
                 BFSKernel.BFS(rc, target);
-            //Pathfinding.combinedPathfinding(rc, target);
             if (rc.canSenseLocation(target) && rc.senseLegalStartingFlagPlacement(target)) {
                     if (rc.canDropFlag(target)) {
                         rc.dropFlag(target);
@@ -387,13 +385,13 @@ public class Builder {
             }
         }*/
         //decrease to score if close to map
-        score += ((location.distanceSquaredTo(centerOfMap) * 1.5) / (Math.sqrt(Math.pow(height, 1.5) + Math.pow(width, 1.5)))) * 250;
+        score += ((location.distanceSquaredTo(centerOfMap) * 1.5) / (Math.sqrt(Math.pow(height, 2) + Math.pow(width, 2)))) * 50;
 
         if (!rc.senseLegalStartingFlagPlacement(location)) {
             return -1000;
         }
         if (isMapEdge(rc, location)) {
-            score += 100;
+            score += 150;
         }
         //decrease score if on or near spawn
         for(MapLocation curr: SpawnLocations)
@@ -426,7 +424,7 @@ public class Builder {
             MapLocation m = M.getMapLocation();
             if (m.isAdjacentTo(location)) {
                 if(M.isWall())
-                    score+= 100;
+                    score+= 125;
                 if(M.isWater())
                     score+= 10;
                 if(M.isDam())
