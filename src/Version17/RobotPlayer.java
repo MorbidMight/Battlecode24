@@ -180,7 +180,7 @@ public strictfp class RobotPlayer {
                                 }
                             }
                             else{
-                                System.out.println(FlagSitter.home);
+                                //System.out.println(FlagSitter.home);
                                 MapLocation target = findClosestSpawnLocation(rc, FlagSitter.home);
                                 if(rc.canSpawn(target))
                                     rc.spawn(target);

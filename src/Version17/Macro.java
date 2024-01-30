@@ -1,9 +1,6 @@
 package Version17;
 
-import battlecode.common.FlagInfo;
-import battlecode.common.GameActionException;
-import battlecode.common.MapLocation;
-import battlecode.common.RobotController;
+import battlecode.common.*;
 
 import java.util.ArrayList;
 
@@ -21,6 +18,7 @@ public class Macro
     static MapLocation myLocation;
 
     static MapLocation[] currentRandLocWithinBroadcast;
+    static Flag[] seenFlags;
 
     public static void doMacro(RobotController rc) throws GameActionException
     {
@@ -45,13 +43,8 @@ public class Macro
             //we need to activate scouting
             for(int j = 0; j < broadcastFlags.length; j++)
             {
-                if(currentRandLocWithinBroadcast[j] == null || RobotPlayer.turnCount % 5 == 0)
-                {
-                    currentRandLocWithinBroadcast[j] =
-                            generateRandomLocationWithinDistanceSquared(rc, broadcastFlags[j], 100);
-                    possibleMoveLocations[i] = currentRandLocWithinBroadcast[j];
-                    i++;
-                }
+                possibleMoveLocations[i] = broadcastFlags[j];
+                i++;
             }
         }
 
@@ -237,6 +230,13 @@ public class Macro
         return null;
     }
 
+    public void checkForEnemyFlags()
+    {
+        for(FlagInfo flag : nearbyFlags)
+        {
+        }
+    }
+
     public static void initializeMacroVariables(RobotController rc) throws GameActionException
     {
         numJailedAllies = rc.readSharedArray(6);
@@ -248,5 +248,18 @@ public class Macro
         broadcastFlags = rc.senseBroadcastFlagLocations();
         myLocation = rc.getLocation();
         currentRandLocWithinBroadcast = new MapLocation[3];
+        seenFlags = new Flag[]{new Flag(NULL_MAP_LOCATION, 0), new Flag(NULL_MAP_LOCATION, 0), new Flag(NULL_MAP_LOCATION, 0)};
+    }
+
+    static class Flag
+    {
+       public MapLocation location;
+       public int stableRounds;
+
+        public Flag(MapLocation location, int stableRounds)
+        {
+            this.location = location;
+            this.stableRounds = stableRounds;
+        }
     }
 }

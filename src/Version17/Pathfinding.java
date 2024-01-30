@@ -556,7 +556,6 @@ public class Pathfinding
 
     public static void bugNav0(RobotController rc, MapLocation destination) throws GameActionException
     {
-        rc.setIndicatorString("" + bug0State  + " " + bugNav0FollowingWall);
         //set the bugState
         Direction dirTo = rc.getLocation().directionTo(destination);
         Direction dirToCenter = rc.getLocation().directionTo(new MapLocation(rc.getMapWidth()/2, rc.getMapHeight()/2));
