@@ -1,4 +1,4 @@
-package Version16;
+package Version16.Util;
 
 public class BitIndices {
     public static final int soldier_flag_3 = 1023;

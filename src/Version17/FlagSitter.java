@@ -1,11 +1,11 @@
-package Version15MovingFlags;
+package Version17;
 
 import battlecode.common.*;
 import battlecode.common.RobotController;
-import Version15MovingFlags.RobotPlayer.*;
+import Version17.RobotPlayer.*;
 
-import static Version15MovingFlags.RobotPlayer.findClosestSpawnLocation;
-import static Version15MovingFlags.RobotPlayer.turnsWithKills;
+import static Version17.RobotPlayer.findClosestSpawnLocation;
+import static Version17.RobotPlayer.turnsWithKills;
 
 public class FlagSitter {
     static MapLocation home = null;

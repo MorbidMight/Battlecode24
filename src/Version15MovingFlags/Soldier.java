@@ -116,8 +116,9 @@ public class Soldier
             return states.flagCarrier;
         }
         for (FlagInfo flag : nearbyFlagsAlly) {
-            if (flag.isPickedUp() || (rc.canSenseLocation(flag.getLocation()) && rc.senseMapInfo(flag.getLocation()).getSpawnZoneTeamObject() != rc.getTeam()))
-                return states.defense;
+            if (flag.isPickedUp() || (rc.canSenseLocation(flag.getLocation()) && (!Utilities.isDefaultLocation(rc, flag.getLocation()))))
+                if(rc.senseMapInfo(flag.getLocation()).getSpawnZoneTeamObject() != rc.getTeam() || flag.isPickedUp())
+                    return states.defense;
         }
         for (FlagInfo flag : nearbyFlagsEnemy) {
             if (flag.isPickedUp() && (enemyRobots.length > 0 ||rc.getLocation().distanceSquaredTo(findClosestSpawnLocation(rc)) >= 36)) {
@@ -258,7 +259,7 @@ public class Soldier
                 attemptHeal(rc);
             }
             //try and move into attack range of any nearby enemies
-            else if (((rc.isActionReady() || aggresionIndex > 10) /*|| ((allyRobots.length - enemyRobots.length > 6) && enemyRobotsAttackRange.length == 0)) */&& rc.getHealth() >= RETREAT_HEALTH)){
+            else if (((rc.isActionReady() || aggresionIndex > 10)&& rc.getHealth() >= RETREAT_HEALTH)){
                 runMicroAttack(rc);
                 updateInfo(rc);
                 attemptAttack(rc);
@@ -312,6 +313,7 @@ public class Soldier
             }
             //          if(target == null) System.out.println(rc.getLocation() + " : lame");
 //            else System.out.println(rc.getLocation() + " reporting to " + target);
+            attemptHeal(rc);
         }
     }
 

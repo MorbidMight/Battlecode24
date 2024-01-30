@@ -1,7 +1,8 @@
-package Version16;
+package Version17;
 
-import Version16.Util.Pathfinding;
-import Version16.Util.Utilities;
+import Version17.Pathfinding;
+import Version17.RobotPlayer;
+import Version17.Utilities;
 import battlecode.common.*;
 
 import java.util.HashSet;

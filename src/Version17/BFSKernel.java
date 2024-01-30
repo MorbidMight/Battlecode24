@@ -1,5 +1,10 @@
-package Version16;
-import battlecode.common.*;
+package Version17;
+
+import battlecode.common.Direction;
+import battlecode.common.GameActionException;
+import battlecode.common.MapLocation;
+import battlecode.common.RobotController;
+
 public class BFSKernel
 {
     static Direction[][] lookup;

@@ -16,52 +16,52 @@ public class GenerateAdjMatrix
    };
    public static void main(String[] args) throws IOException
    {
-      writeToFile(listNeighborsToStringArray(matrixToArrayOfNeighbors(createMatrix())), "neighbors7x7.txt");
+      writeToFile(listNeighborsToStringArray(matrixToArrayOfNeighbors(createMatrix())), "neighbors11x11.txt");
    }
 
    public static int[][] createMatrix ()
    {
-      GridPoint center = new GridPoint(4, 4);
-      int[][] adjacencyMatrix = new int[49][49];
+      GridPoint center = new GridPoint(6, 6);
+      int[][] adjacencyMatrix = new int[121][121];
       int count = 0;
       
-      for (int i = center.y + 3; i >= center.y - 3; i--) {
-         for (int j = center.x - 3; j <= center.x + 3; j++) {
+      for (int i = center.y + 5; i >= center.y - 5; i--) {
+         for (int j = center.x - 5; j <= center.x + 5; j++) {
             System.out.println(new GridPoint(i, j));
             for (int k = 0; k < 8; k++) {
                GridPoint tempLocation = (new GridPoint(j, i)).add(directions[k]);
-               if(tempLocation.x > 7 || tempLocation.x < 1) continue;
-               if(tempLocation.y > 7 || tempLocation.y < 1) continue;
+               if(tempLocation.x > 11 || tempLocation.x < 1) continue;
+               if(tempLocation.y > 11 || tempLocation.y < 1) continue;
                try {
                   int squareToCheck = -1;
                   switch (k) {
                      case 0:
-                        squareToCheck = count - 7;
+                        squareToCheck = count - 11;
                         break;
                      case 1:
                         if(count == 4) System.out.println("here");
-                        squareToCheck = count - 6;
+                        squareToCheck = count - 10;
                         break;
                      case 2:
                         squareToCheck = count + 1;
                         break;
                      case 3:
-                        squareToCheck = count + 8;
+                        squareToCheck = count + 12;
                         break;
                      case 4:
-                        squareToCheck = count + 7;
+                        squareToCheck = count + 11;
                         break;
                      case 5:
-                        squareToCheck = count + 6;
+                        squareToCheck = count + 10;
                         break;
                      case 6:
                         squareToCheck = count - 1;
                         break;
                      case 7:
-                        squareToCheck = count - 8;
+                        squareToCheck = count - 12;
                         break;
                   }
-                  if (squareToCheck < 0 || squareToCheck > 48)
+                  if (squareToCheck < 0 || squareToCheck > 120)
                      continue;
                   adjacencyMatrix[count][squareToCheck] = 1;
                } catch (Exception e) {
@@ -127,7 +127,7 @@ public class GenerateAdjMatrix
 
    public static String[] listNeighborsToStringArray(ArrayList<ArrayList<Integer>> matrix)
    {
-      String[] array = new String[51];
+      String[] array = new String[123];
       array[0] = "neighbors = ";
       array[1] = "[";
       for(int i = 0; i < matrix.size(); i++)
@@ -145,7 +145,7 @@ public class GenerateAdjMatrix
          else
             array[i + 2] += "]";
       }
-      array[50] += "];";
+      array[122] += "];";
       return array;
    }
 

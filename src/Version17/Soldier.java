@@ -1,10 +1,8 @@
-package Version16;
+package Version17;
 
-import Version16.Util.*;
-import Version16.Util.BFSKernel9x9;
 import battlecode.common.*;
-import static Version16.Util.Utilities.*;
-import static Version16.RobotPlayer.*;
+import static Version17.Utilities.*;
+import static Version17.RobotPlayer.*;
 
 
 enum states{
@@ -118,8 +116,9 @@ public class Soldier
             return states.flagCarrier;
         }
         for (FlagInfo flag : nearbyFlagsAlly) {
-            if (flag.isPickedUp() || (rc.canSenseLocation(flag.getLocation()) && rc.senseMapInfo(flag.getLocation()).getSpawnZoneTeamObject() != rc.getTeam()))
-                return states.defense;
+            if (flag.isPickedUp() || (rc.canSenseLocation(flag.getLocation()) && (!Utilities.isDefaultLocation(rc, flag.getLocation()))))
+                if(rc.senseMapInfo(flag.getLocation()).getSpawnZoneTeamObject() != rc.getTeam() || flag.isPickedUp())
+                    return states.defense;
         }
         for (FlagInfo flag : nearbyFlagsEnemy) {
             if (flag.isPickedUp() && (enemyRobots.length > 0 ||rc.getLocation().distanceSquaredTo(findClosestSpawnLocation(rc)) >= 36)) {
@@ -169,12 +168,7 @@ public class Soldier
             if(rc.canSenseLocation(closestFlag.location)){
                 //Pathfinding.bellmanFord5x5(rc, closestFlag.location);
                 BFSKernel9x9.BFS(rc, closestFlag.location);
-                if(rc.isActionReady())
-                {
-                    updateInfo(rc);
-                    attemptAttack(rc);
-                    attemptHeal(rc);
-                }
+
 //                if (rc.isActionReady()){
 //                    runMicroAttack(rc);
 //                    updateInfo(rc);
@@ -235,7 +229,7 @@ public class Soldier
             }
         }
         if(rc.isActionReady()){
-             attemptAttack(rc);
+            attemptAttack(rc);
             //if(potentialEnemiesAttackRange.length == 0) attemptHealConditional(rc, (int) RETREAT_HEALTH);
         }
         if(enemyRobots.length != 0){
@@ -284,7 +278,7 @@ public class Soldier
         }
         //if we cant see any enemies, run macro not micro - move towards known flags, and if not possible, move towards broadcast flags
         else{
-           /*MapLocation target;
+            /*MapLocation target;
             if(knowFlag(rc)){
                 target = findClosestActualFlag(rc);
                 if(target != null){
@@ -295,12 +289,12 @@ public class Soldier
                 }
             }
             else if(getClosestCluster(rc) != null){
-                target = Macro.getMostOverwhelmedCluster(rc, getLastRoundClusters(rc)).location;
+                target = getClosestCluster(rc);
                 //Pathfinding.combinedPathfinding(rc, lastSeenEnemy.getLocation());
                 if(nearbyFlagsAlly.length == 0 && rc.canFill(rc.getLocation().add(rc.getLocation().directionTo(target))))
                     rc.fill(rc.getLocation().add(rc.getLocation().directionTo(target)));
                 //Pathfinding.bellmanFord5x5(rc, target);
-                BFSKernel.BFS(rc,target);
+                BFSKernel9x9.BFS(rc,target);
                 return;
             }
             else{
@@ -312,8 +306,11 @@ public class Soldier
                     }
                     Pathfinding.combinedPathfinding(rc, findCoordinatedBroadcastFlag(rc));
                 }
-            }*/
+            }
+            //          if(target == null) System.out.println(rc.getLocation() + " : lame");
+//            else System.out.println(rc.getLocation() + " reporting to " + target);*/
             Macro.doMacro(rc);
+            attemptHeal(rc);
         }
     }
 
@@ -780,6 +777,14 @@ public class Soldier
         }
     }
 
+    //returns false if we dont know any flag locations, true otherwise
+    public static boolean knowFlag(RobotController rc) throws GameActionException {
+        int index3 = rc.readSharedArray(3);
+        int index4 = rc.readSharedArray(4);
+        int index5 = rc.readSharedArray(5);
+        return index3 != 0 || index4 != 0 || index5 != 0;
+    }
+
     //findCoordinatedActualFlag - returns lowest index flag that we know location of
     public static MapLocation findCoordinatedActualFlag(RobotController rc) throws GameActionException {
         int index3 = rc.readSharedArray(3);
@@ -855,6 +860,15 @@ public class Soldier
         }
         return false;
     }
+    public static boolean isTrapAdjacentSpawn(RobotController rc, MapLocation location, TrapType t) throws GameActionException {
+        MapInfo[] adjacents = rc.senseNearbyMapInfos(location, 2);
+        for(MapInfo square : adjacents){
+            if(square.getMapLocation().equals(rc.getLocation())) continue;
+            if(square.getTrapType() == t)
+                return true;
+        }
+        return false;
+    }
     public static int closestEnemyDistance(RobotController rc, RobotInfo[] enemyRobots, RobotInfo[] enemyRobotsAttackRange){
         if(enemyRobots.length == 0)
             return -1;
@@ -911,7 +925,7 @@ public class Soldier
         else
             return lowDist;
     }
-//    public static void updateRetreatHealth(RobotController rc){
+    //    public static void updateRetreatHealth(RobotController rc){
 //        if(rc.getRoundNum() <= 905)
 //            RETREAT_HEALTH += .03f;
 //        if(!enemyAttackUpgrade) {

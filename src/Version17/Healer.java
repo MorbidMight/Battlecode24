@@ -1,10 +1,8 @@
-package Version16;
+package Version17;
 
-import Version16.Util.Pathfinding;
-import Version16.Util.Utilities;
 import battlecode.common.*;
 
-import static Version16.RobotPlayer.findClosestBroadcastFlags;
+import static Version17.RobotPlayer.findClosestBroadcastFlags;
 
 public class Healer
 {

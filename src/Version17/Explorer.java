@@ -1,22 +1,20 @@
-package Version16;
+package Version17;
 
-import Version16.Util.BFSKernel9x9;
-import Version16.Util.Pathfinding;
 import battlecode.common.*;
 
-import static Version16.RobotPlayer.*;
+import static Version17.RobotPlayer.*;
+import static Version17.Utilities.averageRobotLocation;
 
 public class Explorer {
     static MapLocation dam;
-
     public static void runExplorer(RobotController rc) throws GameActionException {
         if (!rc.isSpawned()) {
             return;
         }
-        if (dam == null)
-            dam = canSeeDam(rc);
         breakFree(rc);
 
+        if(dam == null)
+            dam = canSeeDam(rc);
         //condense on dam for when it breaks
         MapLocation centerOfMap = new MapLocation(rc.getMapWidth() / 2, rc.getMapHeight() / 2);
         //MapLocation nearestEnemyFlag = findClosestBroadcastFlags(rc);
@@ -41,8 +39,7 @@ public class Explorer {
                 if (!targetLoc.isPassable() && rc.canFill(targetCrumb)) {
                     rc.fill(targetCrumb);
                 }
-                //Pathfinding.bellmanFord5x5(rc, targetCrumb);
-                BFSKernel9x9.BFS(rc, targetCrumb);
+                Pathfinding.bellmanFord5x5(rc, targetCrumb);
             }
             if (rc.canFill(rc.adjacentLocation(rc.getLocation().directionTo(centerOfMap)))) {
                 rc.fill(rc.adjacentLocation(rc.getLocation().directionTo(centerOfMap)));
@@ -53,16 +50,16 @@ public class Explorer {
                 attemptBuild(rc);
                 //Builder.UpdateExplosionBorder2(rc);
             }
-            if (!isAdjacent) {
-                if (dam != null) {
-                    //Pathfinding.bellmanFord5x5(rc, dam);
-                    BFSKernel9x9.BFS(rc, dam);
-                } else {
-                    //Pathfinding.bellmanFord5x5(rc, centerOfMap);
-                    BFSKernel9x9.BFS(rc, centerOfMap);
+            if(!isAdjacent) {
+                if(dam != null){
+                    Pathfinding.bellmanFord5x5(rc, dam);
+                }
+                else {
+                    Pathfinding.bellmanFord5x5(rc, centerOfMap);
                 }
             }
         } else {
+            FlagInfo[] nearbyFlags = rc.senseNearbyFlags(-1, rc.getTeam());
             //tries to get neary crumbs
             MapLocation[] nearbyCrumbs = rc.senseNearbyCrumbs(-1);
             MapLocation targetCrumb = null;
@@ -77,17 +74,25 @@ public class Explorer {
                 if (!targetLoc.isPassable() && rc.canFill(targetCrumb)) {
                     rc.fill(targetCrumb);
                 }
-                //Pathfinding.bellmanFord5x5(rc, targetCrumb);
-                BFSKernel9x9.BFS(rc, targetCrumb);
+                Pathfinding.bellmanFord5x5(rc, targetCrumb);
             }
             //explore a new area
             else if (turnsSinceLocGen == 20 || turnsSinceLocGen == 0 || rc.getLocation().equals(targetLoc) || (rc.canSenseLocation(targetLoc) && !rc.senseMapInfo(targetLoc).isPassable())) {
                 targetLoc = generateTargetLoc(rc);
-                //Pathfinding.bugNav2(rc, targetLoc);
-                BFSKernel9x9.BFS(rc, targetLoc);
+                if(rc.getRoundNum() > 70 && nearbyFlags.length > 0 && rc.senseNearbyFlags(-1, rc.getTeam())[0].isPickedUp()){
+                    Pathfinding.bellmanFordFlag(rc, targetLoc, new StolenFlag(rc.senseNearbyFlags(-1, rc.getTeam())[0].getLocation(), true));
+                }
+                else
+                    BFSKernel9x9.BFS(rc, targetLoc);
+                    //Pathfinding.combinedPathfinding(rc, targetLoc);
                 turnsSinceLocGen = 1;
             } else {
-                Pathfinding.combinedPathfinding(rc, targetLoc);
+                if(rc.getRoundNum() > 70 && nearbyFlags.length > 0 && rc.senseNearbyFlags(-1, rc.getTeam())[0].isPickedUp()){
+                    Pathfinding.bellmanFordFlag(rc, targetLoc, new StolenFlag(rc.senseNearbyFlags(-1, rc.getTeam())[0].getLocation(), true));
+                }
+                else
+                    BFSKernel9x9.BFS(rc, targetLoc);
+                    //Pathfinding.combinedPathfinding(rc, targetLoc);
                 turnsSinceLocGen++;
             }
         }
@@ -118,29 +123,25 @@ public class Explorer {
         }
         return false;
     }
-
     //returns a spot on the dam if can see dam, otherwise returns null
-    public static MapLocation canSeeDam(RobotController rc) throws GameActionException {
+    public static MapLocation canSeeDam(RobotController rc) throws GameActionException{
         MapInfo[] spaces = rc.senseNearbyMapInfos(GameConstants.VISION_RADIUS_SQUARED);
-        for (MapInfo space : spaces) {
-            if (space.isDam())
+        for(MapInfo space : spaces){
+            if(space.isDam())
                 return space.getMapLocation();
         }
         return null;
     }
-
     public static void attemptBuild(RobotController rc) throws GameActionException {
         RobotInfo[] enemyRobots = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
-        if (enemyRobots.length >= 1) {
+        if (enemyRobots.length >= 1){
             for (MapInfo t : rc.senseNearbyMapInfos(GameConstants.INTERACT_RADIUS_SQUARED)) {
-                if (!Soldier.isTrapAdjacent(rc, t.getMapLocation()) && rc.canBuild(TrapType.STUN, t.getMapLocation())) {
+                if (!Soldier.isTrapAdjacent(rc, t.getMapLocation()) && rc.canBuild(TrapType.STUN, t.getMapLocation()) && rc.getCrumbs() > 100) {
                     rc.build(TrapType.STUN, t.getMapLocation());
                 }
             }
         }
     }
-
-    //if we are stuck, then break out
     public static void breakFree(RobotController rc) throws GameActionException {
         if(isStuck(rc)){
             for(Direction d : Direction.allDirections()){

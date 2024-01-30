@@ -1,4 +1,4 @@
-package Version15MovingFlags;
+package Version17;
 
 import battlecode.common.*;
 import battlecode.world.Flag;
@@ -11,7 +11,7 @@ import java.awt.*;
 import java.util.Map;
 import java.util.PriorityQueue;
 
-import static Version15MovingFlags.RobotPlayer.*;
+import static Version17.RobotPlayer.*;
 
 
 //Current Builder strategy
@@ -92,11 +92,14 @@ public class Builder {
             //MapLocation target = scoredLocations.getFirst();
             assert scoredLocationsV2.peek() != null;
             MapLocation target = scoredLocationsV2.peek().location;
+            //System.out.println(target);
             if (!rc.getLocation().equals(target))
-                BFSKernel.BFS(rc, target);
+                BFSKernel9x9.BFS(rc, target);
+            //Pathfinding.combinedPathfinding(rc, target);
             if (rc.canSenseLocation(target) && rc.senseLegalStartingFlagPlacement(target)) {
                     if (rc.canDropFlag(target)) {
                         rc.dropFlag(target);
+                        FlagSitter.home = target;
                         if (rc.readSharedArray(40) == 0) {
                             rc.writeSharedArray(40, Utilities.convertLocationToInt(target));
                             dropped = target;
@@ -130,6 +133,7 @@ public class Builder {
             //System.out.println(rc.getLocation());
             if (rc.senseLegalStartingFlagPlacement(rc.getLocation()) && rc.canDropFlag(rc.getLocation())) {
                 rc.dropFlag(rc.getLocation());
+                FlagSitter.home = rc.getLocation();
                 if (rc.readSharedArray(40) == 0) {
                     rc.writeSharedArray(40, Utilities.convertLocationToInt(rc.getLocation()));
                     dropped = rc.getLocation();
@@ -155,7 +159,7 @@ public class Builder {
 //                }
                 //explore(rc);
                 rc.setIndicatorDot(rc.getLocation(), 0, 100, 0);
-                BFSKernel.BFS(rc, SpawnLocations[0]);//rc.getLocation().add(rc.getLocation().directionTo(rc.senseNearbyFlags(-1, rc.getTeam())[0].getLocation()).opposite()));
+                BFSKernel9x9.BFS(rc, SpawnLocations[0]);//rc.getLocation().add(rc.getLocation().directionTo(rc.senseNearbyFlags(-1, rc.getTeam())[0].getLocation()).opposite()));
                 /*if(rc.canMove(rc.getLocation().directionTo(rc.senseNearbyFlags(-1, rc.getTeam())[0].getLocation()).opposite()))
                 {
                     rc.move(rc.getLocation().directionTo(rc.senseNearbyFlags(-1, rc.getTeam())[0].getLocation()).opposite());
@@ -239,13 +243,10 @@ public class Builder {
         for(Direction dir: Direction.allDirections())
         {
             //dig within a certain radius of the flag
-            if(Pathfinding.InBounds(rc, rc.getLocation().add(dir)))
+            if( rc.getLocation().add(dir).distanceSquaredTo(flags[0].getLocation()) < 10 && rc.getLocation().add(dir).distanceSquaredTo(flags[0].getLocation()) > 3)
             {
-                if( rc.getLocation().add(dir).distanceSquaredTo(flags[0].getLocation()) < 10 && rc.getLocation().add(dir).distanceSquaredTo(flags[0].getLocation()) > 3)
-                {
-                    if(rc.canDig(rc.getLocation().add(dir)))
-                        rc.dig(rc.getLocation().add(dir));
-                }
+                if(rc.canDig(rc.getLocation().add(dir)))
+                    rc.dig(rc.getLocation().add(dir));
             }
         }
     }
@@ -388,13 +389,13 @@ public class Builder {
             }
         }*/
         //decrease to score if close to map
-        score += ((location.distanceSquaredTo(centerOfMap) * 1.5) / (Math.sqrt(Math.pow(height, 2) + Math.pow(width, 2)))) * 50;
+        score += ((location.distanceSquaredTo(centerOfMap) * 1.5) / (Math.sqrt(Math.pow(height, 1.5) + Math.pow(width, 1.5)))) * 250;
 
         if (!rc.senseLegalStartingFlagPlacement(location)) {
             return -1000;
         }
         if (isMapEdge(rc, location)) {
-            score += 150;
+            score += 100;
         }
         //decrease score if on or near spawn
         for(MapLocation curr: SpawnLocations)
@@ -427,7 +428,7 @@ public class Builder {
             MapLocation m = M.getMapLocation();
             if (m.isAdjacentTo(location)) {
                 if(M.isWall())
-                    score+= 125;
+                    score+= 100;
                 if(M.isWater())
                     score+= 10;
                 if(M.isDam())
@@ -491,11 +492,11 @@ public class Builder {
         //explore a new area
         if (turnsSinceLocGen == 20 || turnsSinceLocGen == 0 || rc.getLocation().equals(targetLoc) || (rc.canSenseLocation(targetLoc) && rc.senseMapInfo(targetLoc).getTeamTerritory() != rc.getTeam()) || (rc.canSenseLocation(targetLoc) && !rc.senseMapInfo(targetLoc).isPassable())) {
             targetLoc = generateTargetLoc(rc);
-            BFSKernel.BFS(rc, targetLoc);
+            BFSKernel9x9.BFS(rc, targetLoc);
             turnsSinceLocGen = 1;
         } else {
             //Pathfinding.combinedPathfinding(rc, targetLoc);
-            BFSKernel.BFS(rc, targetLoc);
+            BFSKernel9x9.BFS(rc, targetLoc);
             turnsSinceLocGen++;
         }
     }
