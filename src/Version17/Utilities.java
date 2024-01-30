@@ -670,4 +670,7 @@ public class Utilities
         }
         return closest;
     }
+    public static boolean isDefaultLocation(RobotController rc, MapLocation location) throws GameActionException {
+        return location.equals(convertIntToLocation(rc.readSharedArray(40))) || location.equals(convertIntToLocation(rc.readSharedArray(41))) || location.equals(convertIntToLocation(rc.readSharedArray(42)));
+    }
 }

@@ -38,6 +38,7 @@ public strictfp class RobotPlayer {
 
     static HashMap<MapLocation, Integer> alreadyBeen = new HashMap<MapLocation, Integer>();
     static boolean movedFlags = false;
+    static int spawnOrigin = -1;
 
 
     static final int BombFrequency = 5; //number of turns between defensive builders trying to place a mine
@@ -125,6 +126,9 @@ public strictfp class RobotPlayer {
 
             // Try/catch blocks stop unhandled exceptions, which cause your robot to explode.
             try {
+                if(turnCount >= 3 && spawnOrigin == -1 && rc.isSpawned()){
+                    determineOrigin(rc);
+                }
                 if(role == roles.flagSitter && !rc.isSpawned()){
                     if(countSinceLocked != 0)countSinceLocked++;
                     countSinceSeenFlag++;
@@ -702,5 +706,14 @@ public strictfp class RobotPlayer {
             alreadyBeen.put(location, alreadyBeen.get(location) + 1);
         else
             alreadyBeen.put(location, 1);
+    }
+    public static void determineOrigin(RobotController rc) throws GameActionException {
+        MapLocation target = findClosestSpawnLocation(rc);
+        MapLocation spawn1 = Utilities.convertIntToLocation(rc.readSharedArray(0));
+        MapLocation spawn2 = Utilities.convertIntToLocation(rc.readSharedArray(1));
+        MapLocation spawn3 = Utilities.convertIntToLocation(rc.readSharedArray(2));
+        if(target.equals(spawn1)) spawnOrigin = 0;
+        else if(target.equals(spawn2)) spawnOrigin = 1;
+        else if(target.equals(spawn3)) spawnOrigin = 2;
     }
 }
