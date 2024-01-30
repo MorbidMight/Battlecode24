@@ -1,11 +1,9 @@
 package Version18;
 
-import battlecode.common.FlagInfo;
-import battlecode.common.GameActionException;
-import battlecode.common.MapLocation;
-import battlecode.common.RobotController;
+import battlecode.common.*;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import static Version18.Utilities.*;
 
@@ -19,12 +17,12 @@ public class Macro
     static MapLocation[] broadcastFlags;
     static MapLocation[] knownFlags;
     static MapLocation myLocation;
-
-    static MapLocation[] currentRandLocWithinBroadcast;
+    static final Flag NULL_FLAG = new Macro.Flag(NULL_MAP_LOCATION, 0, -1000);
+    public static ArrayList<MapLocation> currentRandLocWithinBroadcast;
+    public static Flag[] seenFlags;
 
     public static void doMacro(RobotController rc) throws GameActionException
     {
-        initializeMacroVariables(rc);
         MapLocation[] possibleMoveLocations = new MapLocation[6];
         int i = 0;
         for(MapLocation ml : distressedFlags)
@@ -34,25 +32,27 @@ public class Macro
         }
         if(knownFlags.length > 0)
         {
-           for(MapLocation ml : knownFlags)
-           {
-               possibleMoveLocations[i] = ml;
-               i++;
-           }
+            for(MapLocation ml : knownFlags)
+            {
+                possibleMoveLocations[i] = ml;
+                i++;
+            }
         }
         else
         {
-            //we need to activate scouting
-            for(int j = 0; j < broadcastFlags.length; j++)
+            if(broadcastFlags.length == 0)
             {
-                if(currentRandLocWithinBroadcast[j] == null || RobotPlayer.turnCount % 5 == 0)
-                {
-                    currentRandLocWithinBroadcast[j] =
-                            generateRandomLocationWithinDistanceSquared(rc, broadcastFlags[j], 100);
-                    possibleMoveLocations[i] = currentRandLocWithinBroadcast[j];
-                    i++;
-                }
+                possibleMoveLocations[i] = getClosestCluster(rc).location;
+                i++;
             }
+            //we need to activate scouting
+            for(int k = 0; k < currentRandLocWithinBroadcast.size(); k++)
+            {
+                possibleMoveLocations[i] = currentRandLocWithinBroadcast.get(k);
+                i++;
+            }
+
+
         }
 
         MapLocation closestPossibleMoveLocation = null;
@@ -68,6 +68,8 @@ public class Macro
             }
         }
 
+         rc.setIndicatorString(String.valueOf(currentRandLocWithinBroadcast));
+
         //we have the last flag
         if(closestPossibleMoveLocation == null)
         {
@@ -81,10 +83,10 @@ public class Macro
             }
             else
             {
-                if(getLowestHealthAllyCluster(rc) != null) {
+                if(getClosestCluster(rc).location != null) {
                     if (Soldier.nearbyFlagsAlly.length == 0 && rc.canFill(rc.getLocation().add(rc.getLocation().directionTo(getLowestHealthAllyCluster(rc)))))
                         rc.fill(rc.getLocation().add(rc.getLocation().directionTo(getLowestHealthAllyCluster(rc))));
-                    BFSKernel9x9.BFS(rc, getLowestHealthAllyCluster(rc));
+                    BFSKernel9x9.BFS(rc, getClosestCluster(rc).location);
                 }
             }
         }
@@ -94,6 +96,18 @@ public class Macro
                 rc.fill(rc.getLocation().add(rc.getLocation().directionTo(closestPossibleMoveLocation)));
             BFSKernel9x9.BFS(rc, closestPossibleMoveLocation);
         }
+
+        //rc.setIndicatorString("" + closestPossibleMoveLocation + broadcastFlags.length);
+    }
+
+    public static void updateRandomLocList(RobotController rc)
+    {
+        ArrayList<MapLocation> locs = new ArrayList<>();
+        for(int i = 0; i < broadcastFlags.length; i++)
+        {
+            locs.add(generateRandomLocationWithinDistanceSquared(rc, broadcastFlags[i], 100));
+        }
+        currentRandLocWithinBroadcast = locs;
     }
 
     private static MapLocation generateRandomLocationWithinDistanceSquared(RobotController rc, MapLocation broadcastFlag, int distSquared)
@@ -102,10 +116,10 @@ public class Macro
         int x = broadcastFlag.x;
         int y = broadcastFlag.y;
 
-        while(rc.onTheMap(randomLocation) && randomLocation.equals(broadcastFlag) && randomLocation.distanceSquaredTo(broadcastFlag) < 100)
+        while(!rc.onTheMap(randomLocation) || randomLocation.equals(broadcastFlag) || randomLocation.distanceSquaredTo(broadcastFlag) > 100)
         {
-            int randX = x + (int) Math.sqrt((RobotPlayer.rng.nextInt(200) - 100));
-            int randY = y + (int) Math.sqrt((RobotPlayer.rng.nextInt(200) - 100));
+            int randX = x + RobotPlayer.rng.nextInt(20) - 10;
+            int randY = y + RobotPlayer.rng.nextInt(20) - 10;
             randomLocation = new MapLocation(randX, randY);
         }
 
@@ -117,12 +131,12 @@ public class Macro
         ArrayList<MapLocation> distressedFlags = new ArrayList<>();
         for(int i = 0; i < 2; i++)
         {
-            if(Version18.Utilities.readBitSharedArray(rc, 12 + i * 16))
+            if(Utilities.readBitSharedArray(rc, 12 + i * 16))
             {
-                distressedFlags.add(Version18.Utilities.convertIntToLocation(rc.readSharedArray(i)));
+                distressedFlags.add(Utilities.convertIntToLocation(rc.readSharedArray(i)));
             }
         }
-         return distressedFlags.toArray(new MapLocation[0]);
+        return distressedFlags.toArray(new MapLocation[0]);
     }
 
     public static MapLocation getBestFlagLocation(RobotController rc) throws GameActionException
@@ -131,12 +145,12 @@ public class Macro
         ArrayList<MapLocation> locations = new ArrayList<>();
         for(int i = 3; i < 6; i++){
             if(rc.readSharedArray(i) != 0){
-                locations.add(Version18.Utilities.convertIntToLocation(rc.readSharedArray(i)));
+                locations.add(Utilities.convertIntToLocation(rc.readSharedArray(i)));
             }
         }
         if(broadcastFlags.length == 0)
         {
-            return Version18.Utilities.getClosestCluster(rc).location;
+            return Utilities.getClosestCluster(rc).location;
         }
         else if(!locations.isEmpty())
         {
@@ -198,7 +212,7 @@ public class Macro
             }
         }
 
-        if(numZeroEnemyClusters == enemyClusters.length) return Version18.Utilities.getClosestCluster(rc);
+        if(numZeroEnemyClusters == enemyClusters.length) return Utilities.getClosestCluster(rc);
         int overwhelmFactor = 0;
         int mostOverwhelmedIndex = -1;
         for(int i = 0; i < enemyClusters.length; i++)
@@ -214,7 +228,7 @@ public class Macro
 
     public static MapLocation getLowestHealthAllyCluster(RobotController rc) throws GameActionException
     {
-        int[] allyClusterHealth = Version18.Utilities.getLastRoundAllyHealth(rc);
+        int[] allyClusterHealth = Utilities.getLastRoundAllyHealth(rc);
         int lowest = Integer.MAX_VALUE;
         int lowestIndex = 0;
         for(int i = 0; i < allyClusterHealth.length; i++)
@@ -228,25 +242,133 @@ public class Macro
         switch(lowestIndex)
         {
             case 0:
-                return Version18.Utilities.convertIntToLocation(rc.readSharedArray(Version18.Utilities.LAST_ROUND_ALLY_LOCATION_1));
+                return Utilities.convertIntToLocation(rc.readSharedArray(Utilities.LAST_ROUND_ALLY_LOCATION_1));
             case 1:
-                return Version18.Utilities.convertIntToLocation(rc.readSharedArray(Version18.Utilities.LAST_ROUND_ALLY_LOCATION_2));
+                return Utilities.convertIntToLocation(rc.readSharedArray(Utilities.LAST_ROUND_ALLY_LOCATION_2));
             case 2:
-                return Version18.Utilities.convertIntToLocation(rc.readSharedArray(Version18.Utilities.LAST_ROUND_ALLY_LOCATION_3));
+                return Utilities.convertIntToLocation(rc.readSharedArray(Utilities.LAST_ROUND_ALLY_LOCATION_3));
         }
         return null;
     }
 
+    public static void tryWriteFlagToArray(RobotController rc, MapLocation flagLoc) throws GameActionException
+    {
+        for(int i = 3; i < 6; i++)
+        {
+           MapLocation tempLoc = convertIntToLocation(rc.readSharedArray(i));
+           if(tempLoc.equals(NULL_MAP_LOCATION))
+           {
+               rc.writeSharedArray(i, convertLocationToInt(flagLoc));
+           }
+        }
+    }
+
+    public static void checkForEnemyFlags(RobotController rc) throws GameActionException
+    {
+        for(FlagInfo flag : nearbyFlags)
+        {
+            int currentFlagIndex = -1;
+            for(int i = 0; i < seenFlags.length; i++)
+            {
+                if(seenFlags[i].location.equals(flag.getLocation()))
+                {
+                    currentFlagIndex = i;
+                }
+            }
+            if(currentFlagIndex != -1)
+            {
+                seenFlags[currentFlagIndex] =
+                        new Flag(seenFlags[currentFlagIndex].location,
+                                seenFlags[currentFlagIndex].stableRounds + 1,
+                                RobotPlayer.turnCount);
+                if(seenFlags[currentFlagIndex].stableRounds > 2)
+                {
+                    tryWriteFlagToArray(rc, seenFlags[currentFlagIndex].location);
+                }
+            }
+            else
+            {
+                for(int i = 0; i < seenFlags.length; i++)
+                {
+                    if(seenFlags[i].turnLastSeen == -1000)
+                    {
+                       seenFlags[i] = new Flag(flag.getLocation(), 0, RobotPlayer.turnCount);
+                    }
+                }
+            }
+        }
+    }
+
+    public static void clearEnemyFlagsGlobal(RobotController rc) throws GameActionException
+    {
+        for(int i = 3; i < 6; i++)
+        {
+            MapLocation tempLoc = convertIntToLocation(rc.readSharedArray(i));
+            if(!tempLoc.equals(NULL_MAP_LOCATION) && rc.canSenseLocation(tempLoc))
+            {
+                boolean canSeeFlagAtTempLoc = false;
+                for(FlagInfo flag : nearbyFlags)
+                {
+                    if(flag.getLocation().equals(tempLoc))
+                    {
+                        canSeeFlagAtTempLoc = true;
+                    }
+                }
+
+                if(!canSeeFlagAtTempLoc)
+                {
+                    rc.writeSharedArray(i, 0);
+                }
+            }
+        }
+    }
+
+    public static void printEnemyFlags(RobotController rc) throws GameActionException
+    {
+        String str = "";
+        for(int i = 3; i < 6; i++)
+        {
+            str += "" + Utilities.convertIntToLocation(rc.readSharedArray(i)) + " ";
+        }
+        //System.out.println(str);
+    }
+
+    public static void clearEnemyFlagsLocal(RobotController rc)
+    {
+        for(FlagInfo flag : nearbyFlags)
+        {
+            for(int i = 0; i < seenFlags.length; i++)
+            {
+                if(seenFlags[i].location.equals(flag.getLocation()) && RobotPlayer.turnCount - seenFlags[i].turnLastSeen > 6)
+                {
+                    seenFlags[i] = Macro.NULL_FLAG;
+                }
+            }
+        }
+    }
     public static void initializeMacroVariables(RobotController rc) throws GameActionException
     {
         numJailedAllies = rc.readSharedArray(6);
         numJailedEnemies = rc.readSharedArray(8);
         enemyClusters = Utilities.getLastRoundClusters(rc);
-        nearbyFlags = rc.senseNearbyFlags(-1, rc.getTeam().opponent());
+        nearbyFlags = rc.senseNearbyFlags(GameConstants.VISION_RADIUS_SQUARED, rc.getTeam().opponent());
         distressedFlags = getDistressedFlags(rc);
         knownFlags = getKnownFlags(rc);
         broadcastFlags = rc.senseBroadcastFlagLocations();
         myLocation = rc.getLocation();
-        currentRandLocWithinBroadcast = new MapLocation[3];
+    }
+
+    public static class Flag
+    {
+        public MapLocation location;
+        public int stableRounds;
+        public int turnLastSeen;
+
+        public Flag(MapLocation location, int stableRounds, int turnLastSeen)
+        {
+            this.location = location;
+            this.stableRounds = stableRounds;
+            this.turnLastSeen = turnLastSeen;
+        }
     }
 }

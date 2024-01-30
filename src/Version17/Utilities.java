@@ -299,7 +299,7 @@ public class Utilities
         int yTotal = rc.readSharedArray(yIndex);
         int numEnemies = rc.readSharedArray(numEnemiesIndex);
         if(RobotPlayer.turnOrder == 0)
-            System.out.println(xIndex);
+            //System.out.println(xIndex);
         rc.writeSharedArray(xIndex, xTotal + location.x);
         rc.writeSharedArray(yIndex, yTotal + location.y);
         rc.writeSharedArray(numEnemiesIndex, numEnemies + 1);

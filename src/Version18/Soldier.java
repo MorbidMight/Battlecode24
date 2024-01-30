@@ -51,11 +51,7 @@ public class Soldier
         tryGetCrumbs(rc);
         updateInfo(rc);
         determineRetreatHealth(rc);
-        findCoordinatedActualFlag(rc);
         //used to update which flags we know are real or not
-        for(FlagInfo flag : nearbyFlagsEnemy){
-            checkRecordEnemyFlag(rc, flag);
-        }
         for(FlagInfo flag : nearbyFlagsEnemy){
             if(rc.canPickupFlag(flag.getLocation())){
                 rc.pickupFlag(flag.getLocation());
@@ -63,7 +59,6 @@ public class Soldier
             }
         }
         state = trySwitchState(rc);
-        rc.setIndicatorString(state.toString());
         switch (state)
         {
             case defense:
@@ -766,22 +761,6 @@ public class Soldier
     }
 
     //erase an enemy flag from the array if we see the location and it isnt there
-    public static void eraseEnemyFlag(RobotController rc, MapLocation m) throws GameActionException {
-        int flagLocInt = Utilities.convertLocationToInt(m);
-        int index3 = rc.readSharedArray(3);
-        int index4 = rc.readSharedArray(4);
-        int index5 = rc.readSharedArray(5);
-        if(index3 == flagLocInt){
-            rc.writeSharedArray(3, 0);
-        }
-        else if(index4 == flagLocInt){
-            rc.writeSharedArray(4, 0);
-        }
-        else if(index5 == flagLocInt){
-            rc.writeSharedArray(5, 0);
-        }
-    }
-
     //returns false if we dont know any flag locations, true otherwise
     public static boolean knowFlag(RobotController rc) throws GameActionException {
         int index3 = rc.readSharedArray(3);
@@ -802,32 +781,17 @@ public class Soldier
         MapLocation toReturn = null;
         if(index3 != 0){
             //we can see it, but couldnt sense any flags earlier... its been removed
-            if(rc.canSenseLocation(enemyFlag1) && !seesFlag(enemyFlag1)) {
-                eraseEnemyFlag(rc, enemyFlag1);
-            }
-            else{
                 toReturn = enemyFlag1;
-            }
+
         }
         if(index4 != 0){
-            //we can see it, but couldnt sense any flags earlier... its been removed
-            if(rc.canSenseLocation(enemyFlag2) && !seesFlag(enemyFlag2)) {
-                eraseEnemyFlag(rc, enemyFlag2);
-            }
-            else{
-                if(toReturn == null)
-                    toReturn = enemyFlag2;
-            }
+            if(toReturn == null)
+                toReturn = enemyFlag2;
         }
         if(index5 != 0){
             //we can see it, but couldnt sense any flags earlier... its been removed
-            if(rc.canSenseLocation(enemyFlag3) && !seesFlag(enemyFlag3)) {
-                eraseEnemyFlag(rc, enemyFlag3);
-            }
-            else{
-                if(toReturn == null)
-                    toReturn = enemyFlag3;
-            }
+            if(toReturn == null)
+                toReturn = enemyFlag3;
         }
         return toReturn;
     }

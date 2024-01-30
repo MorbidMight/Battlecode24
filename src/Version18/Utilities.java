@@ -287,10 +287,11 @@ public class Utilities
 
         if(closestClusterIndex == -1) closestClusterIndex = numClusters;
 
-        if(shortestDistance > RobotPlayer.MAX_MAP_DIST_SQUARED / 20)
+        if(shortestDistance > RobotPlayer.MAX_MAP_DIST_SQUARED / 20 && numClusters < 3)
         {
             closestClusterIndex = numClusters;
         }
+
 
         int xIndex = CURRENT_ROUND_X_1_INDEX + 4 * closestClusterIndex;
         int yIndex = CURRENT_ROUND_Y_1_INDEX + 4 * closestClusterIndex;
@@ -298,8 +299,6 @@ public class Utilities
         int xTotal = rc.readSharedArray(xIndex);
         int yTotal = rc.readSharedArray(yIndex);
         int numEnemies = rc.readSharedArray(numEnemiesIndex);
-        if(RobotPlayer.turnOrder == 0)
-            System.out.println(xIndex);
         rc.writeSharedArray(xIndex, xTotal + location.x);
         rc.writeSharedArray(yIndex, yTotal + location.y);
         rc.writeSharedArray(numEnemiesIndex, numEnemies + 1);
@@ -513,7 +512,7 @@ public class Utilities
         Cluster[] clusters = Utilities.getLastRoundClusters(rc);
         MapLocation location = rc.getLocation();
         int closestDist = Integer.MAX_VALUE;
-        int closestIndex = 0;
+        int closestIndex = -1;
         for(int i = 0; i < clusters.length; i++)
         {
             int tempDistance = location.distanceSquaredTo(clusters[i].location);
@@ -523,6 +522,7 @@ public class Utilities
                 closestIndex = i;
             }
         }
+        if(closestIndex == -1) return new Cluster(rc.senseBroadcastFlagLocations()[0], 0);
         return clusters[closestIndex];
     }
     public static Cluster getClosestCluster(RobotController rc, MapLocation origin) throws GameActionException
