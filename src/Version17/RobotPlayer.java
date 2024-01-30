@@ -145,7 +145,7 @@ public strictfp class RobotPlayer {
                 if (!rc.isSpawned()) {
                     rc.writeSharedArray(7, rc.readSharedArray(7) + 1);
                     //get our robots out onto the map
-                    if (turnCount <= 10) {
+                    if (role == null) {
                         MapLocation[] spawnLocs = rc.getAllySpawnLocations();
                         int spawnIndex = 0;
                         while (spawnIndex < 26 && !rc.canSpawn(spawnLocs[spawnIndex])) {
@@ -332,7 +332,7 @@ public strictfp class RobotPlayer {
         }
         MAX_MAP_DIST_SQUARED = rc.getMapHeight() * rc.getMapHeight() + rc.getMapWidth() * rc.getMapWidth();
         rc.setIndicatorString(turnOrder + "");
-        if((rc.getMapHeight() * rc.getMapWidth() > 1600)){
+        if((rc.getMapHeight() * rc.getMapWidth() > 1225)){
             movedFlags = true;
         }
     }

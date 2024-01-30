@@ -2,15 +2,20 @@ package Version17;
 
 import battlecode.common.*;
 
+import java.util.HashSet;
+
 import static Version17.RobotPlayer.*;
 import static Version17.Utilities.averageRobotLocation;
 
 public class Explorer {
+    static HashSet<MapLocation> scored = new HashSet<>();
     static MapLocation dam;
+    static MapLocation centerOfMap = null;
     public static void runExplorer(RobotController rc) throws GameActionException {
         if (!rc.isSpawned()) {
             return;
         }
+        if(centerOfMap == null) centerOfMap = new MapLocation(rc.getMapWidth()/ 2, rc.getMapHeight() / 2);
         breakFree(rc);
 
         if(dam == null)
@@ -25,6 +30,44 @@ public class Explorer {
 //                }
 //            }
 //        }
+        if(rc.getRoundNum() < 65){
+            MapInfo[] toScore = rc.senseNearbyMapInfos(GameConstants.INTERACT_RADIUS_SQUARED);
+            int highScore = Integer.MIN_VALUE;
+            int highIndex = 0;
+            for (int i = 0; i < toScore.length; i++) {
+                MapInfo m = toScore[i];
+                if(!scored.contains(m.getMapLocation())) {
+                    int score = evaluateFlagLocation(m.getMapLocation(), rc);
+                    scored.add(m.getMapLocation());
+                    if (score > highScore) {
+                        highIndex = i;
+                        highScore = score;
+                    }
+                }
+            }
+            switch(spawnOrigin){
+                case -1:
+                    break;
+                case 0:
+                    if(highScore > rc.readSharedArray(44)){
+                        rc.writeSharedArray(43, Utilities.convertLocationToInt(toScore[highIndex].getMapLocation()));
+                        rc.writeSharedArray(44, highScore);
+                    }
+                    break;
+                case 1:
+                    if(highScore > rc.readSharedArray(46)){
+                        rc.writeSharedArray(45, Utilities.convertLocationToInt(toScore[highIndex].getMapLocation()));
+                        rc.writeSharedArray(46, highScore);
+                    }
+                    break;
+                case 2:
+                    if(highScore > rc.readSharedArray(48)){
+                        rc.writeSharedArray(47, Utilities.convertLocationToInt(toScore[highIndex].getMapLocation()));
+                        rc.writeSharedArray(48, highScore);
+                    }
+                    break;
+            }
+        }
         if (rc.getRoundNum() > 130) {
             MapLocation[] nearbyCrumbs = rc.senseNearbyCrumbs(-1);
             MapLocation targetCrumb = null;
@@ -158,5 +201,66 @@ public class Explorer {
             }
         }
         return true;
+    }
+    public static int evaluateFlagLocation(MapLocation location, RobotController rc) throws GameActionException {
+        int score = 0;
+        int height = rc.getMapHeight();
+        int width = rc.getMapWidth();
+
+        //decrease to score if close to map
+        score += ((location.distanceSquaredTo(centerOfMap) * 1.5) / (Math.sqrt(Math.pow(height, 2) + Math.pow(width, 2)))) * 150;
+
+        if (!rc.senseLegalStartingFlagPlacement(location)) {
+            return -1000;
+        }
+        if (Builder.isMapEdge(rc, location)) {
+            score += 100;
+        }
+        //decrease score if on or near spawn
+        for(MapLocation curr: SpawnLocations)
+        {
+            if (location.equals(curr))
+                score -= 600;
+            else if(location.isAdjacentTo(curr))
+                score -= 300;
+        }
+        //increase score if near dam
+        MapInfo[] nearbyMapInfo = rc.senseNearbyMapInfos();
+        for(MapInfo x: nearbyMapInfo)
+        {
+            if(x.isDam())
+                score -= 100;
+        }
+
+        //Covered by wall
+        if(rc.senseMapInfo(location.add(location.directionTo(centerOfMap))).isWall()) {
+            score += 125;
+            if(rc.senseMapInfo(location.add(location.directionTo(centerOfMap).rotateLeft())).isWall())
+                score+=100;
+            if(rc.senseMapInfo(location.add(location.directionTo(centerOfMap).rotateRight())).isWall())
+                score+=100;
+        }
+        if(Utilities.locationIsBehindWall(rc,centerOfMap, location, 2)){
+            score += 150;
+        }
+        for (MapInfo M : rc.senseNearbyMapInfos(location, 8)) {
+            MapLocation m = M.getMapLocation();
+            if (m.isAdjacentTo(location)) {
+                if(M.isWall())
+                    score+= 100;
+                if(M.isWater())
+                    score+= 10;
+                if(M.isDam())
+                    score-= 700;
+            } else {
+                if (M.isWall())
+                    score += 15;
+                if (M.isWater())
+                    score += 3;
+                if (M.isDam())
+                    score -= 190;
+            }
+        }
+        return score;
     }
 }
