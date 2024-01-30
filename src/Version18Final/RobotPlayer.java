@@ -1,11 +1,14 @@
-package Version18;
+package Version18Final;
 
-import Version18.Macro.*;
+import Version18Final.Macro.*;
 import battlecode.common.*;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Random;
 
-import static Version18.Utilities.NULL_MAP_LOCATION;
+import static Version18Final.Utilities.NULL_MAP_LOCATION;
 
 /**
  * RobotPlayer is the class that describes your main robot strategy.
@@ -346,7 +349,6 @@ public strictfp class RobotPlayer {
         //WRITE THIS METHOD
         Macro.clearEnemyFlagsGlobal(rc);
         Macro.checkForEnemyFlags(rc);
-        updateDistressSignals(rc);
         //if(closestCluster != null)
           //  rc.setIndicatorLine(rc.getLocation(), closestCluster, 0, 255, 0);
         UnrolledScan.updateSeenLocations(rc.senseNearbyMapInfos());
@@ -719,57 +721,5 @@ public strictfp class RobotPlayer {
         if(target.equals(spawn1)) spawnOrigin = 0;
         else if(target.equals(spawn2)) spawnOrigin = 1;
         else if(target.equals(spawn3)) spawnOrigin = 2;
-    }
-
-    public static void resetSignals(RobotController rc) throws GameActionException
-    {
-        Utilities.editBitSharedArray(rc, 652, false);
-        Utilities.editBitSharedArray(rc, 668, false);
-        Utilities.editBitSharedArray(rc, 684, false);
-    }
-
-    public static void updateDistressSignals(RobotController rc) throws GameActionException
-    {
-        for(FlagInfo flag : Macro.nearbyFlags)
-        {
-            for(int i = 40; i < 43; i++)
-            {
-                MapLocation tempLocation = Utilities.convertIntToLocation(rc.readSharedArray(i));
-                if(flag.getLocation().equals(tempLocation))
-                {
-                    MapLocation closestCluster = Utilities.getClosestCluster(rc, flag.getLocation()).location;
-                    if(closestCluster.isWithinDistanceSquared(flag.getLocation(), 100))
-                    {
-                        switch(i)
-                        {
-                            case 40:
-                                Utilities.editBitSharedArray(rc, 652, true);
-                                break;
-                            case 41:
-                                Utilities.editBitSharedArray(rc, 668, true);
-                                break;
-                            case 42:
-                                Utilities.editBitSharedArray(rc, 684, true);
-                                break;
-                        }
-                    }
-                    else
-                    {
-                        switch(i)
-                        {
-                            case 40:
-                                Utilities.editBitSharedArray(rc, 652, true);
-                                break;
-                            case 41:
-                                Utilities.editBitSharedArray(rc, 668, true);
-                                break;
-                            case 42:
-                                Utilities.editBitSharedArray(rc, 684, true);
-                                break;
-                        }
-                    }
-                }
-            }
-        }
     }
 }

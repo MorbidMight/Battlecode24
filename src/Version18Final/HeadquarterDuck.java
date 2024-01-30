@@ -1,4 +1,4 @@
-package Version18;
+package Version18Final;
 
 import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;
@@ -13,11 +13,8 @@ public class HeadquarterDuck
         Utilities.resetAvgAllyLoc(rc);
         rc.writeSharedArray(6, rc.readSharedArray(7));
         rc.writeSharedArray(7, 0);
-        if(rc.getRoundNum() % 5 == 0)
-        {
-            RobotPlayer.resetSignals(rc);
-        }
         spawningStuff(rc);
+
     }
     public static void spawningStuff(RobotController rc) throws GameActionException {
         if(Utilities.readBitSharedArray(rc, 1021)){

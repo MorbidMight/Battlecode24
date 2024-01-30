@@ -1,11 +1,11 @@
-package Version18;
+package Version18Final;
 
 import battlecode.common.*;
 import battlecode.common.RobotController;
-import Version18.RobotPlayer.*;
+import Version18Final.RobotPlayer.*;
 
-import static Version18.RobotPlayer.findClosestSpawnLocation;
-import static Version18.RobotPlayer.turnsWithKills;
+import static Version18Final.RobotPlayer.findClosestSpawnLocation;
+import static Version18Final.RobotPlayer.turnsWithKills;
 
 public class FlagSitter {
     static MapLocation home = null;
@@ -13,22 +13,8 @@ public class FlagSitter {
     static int countSinceSeenFlag = 0;
     static boolean isActive = true;
     static int countSinceLocked;
-    static MapLocation refill = null;
 
     public static void runFlagSitter(RobotController rc) throws GameActionException {
-        if(rc.getRoundNum() > 220 && (home != null && !rc.getLocation().equals(home))){
-            if (home.equals(Utilities.convertIntToLocation(rc.readSharedArray(40))))
-                Utilities.editBitSharedArray(rc, 652, false);
-            else if (home.equals(Utilities.convertIntToLocation(rc.readSharedArray(41))))
-                Utilities.editBitSharedArray(rc, 668, false);
-            else if (home.equals(Utilities.convertIntToLocation(rc.readSharedArray(42))))
-                Utilities.editBitSharedArray(rc, 684, false);
-        }
-        if (rc.getRoundNum() > 245) rc.resign();
-        if(refill != null && rc.canDig(refill)){
-            rc.dig(refill);
-            refill = null;
-        }
         if (home == null && tempHome == null) {
             System.out.println("Something is wrong");
             findHome(rc);
@@ -37,17 +23,15 @@ public class FlagSitter {
             Pathfinding.combinedPathfinding(rc, tempHome);
         }
         if (!rc.getLocation().equals(home)) {
-            clearWayHome(rc);
-            if(refill == null || rc.getLocation().equals(refill))
-                Pathfinding.combinedPathfinding(rc, home);
+            Pathfinding.combinedPathfinding(rc, home);
         } else {
             //update where we want soldiers to spawn
             if (!Utilities.readBitSharedArray(rc, 1021)) {
                 int x;
-                if (Utilities.getClosestCluster(rc) != null)
-                    x = RobotPlayer.findClosestSpawnLocationToCluster(rc);
-                else if (Soldier.knowFlag(rc)) {
+                if (Soldier.knowFlag(rc))
                     x = RobotPlayer.findClosestSpawnLocationToCoordinatedTarget(rc);
+                else if (Utilities.getClosestCluster(rc) != null) {
+                    x = RobotPlayer.findClosestSpawnLocationToCluster(rc);
                 } else {
                     x = RobotPlayer.findClosestSpawnLocationToCoordinatedBroadcast(rc);
                 }
@@ -132,23 +116,18 @@ public class FlagSitter {
             if (countSinceLocked >= 30) {
                 countSinceLocked = 0;
                 Utilities.editBitSharedArray(rc, 1021, false);
+                if (rc.getLocation().equals(Utilities.convertIntToLocation(rc.readSharedArray(40))))
+                    Utilities.editBitSharedArray(rc, 652, false);
+                else if (rc.getLocation().equals(Utilities.convertIntToLocation(rc.readSharedArray(41))))
+                    Utilities.editBitSharedArray(rc, 668, false);
+                else if (rc.getLocation().equals(Utilities.convertIntToLocation(rc.readSharedArray(42))))
+                    Utilities.editBitSharedArray(rc, 684, false);
             }
             //check if nearby enemies are coming to attack, call for robots to prioritize spawning at ur flag
-
-
             if (isActive && rc.senseNearbyRobots(GameConstants.VISION_RADIUS_SQUARED, rc.getTeam().opponent()).length > rc.senseNearbyRobots(GameConstants.VISION_RADIUS_SQUARED, rc.getTeam()).length) {
                 lockSpawnNearestLocation(rc);
 
                 countSinceLocked++;
-            }
-            if(isActive && rc.senseNearbyRobots(-1,rc.getTeam().opponent()).length==1){
-                for(RobotInfo t: rc.senseNearbyRobots(-1,rc.getTeam().opponent())){
-                    if(t.hasFlag){
-                        if(rc.canAttack(t.location))
-                            rc.attack(t.location);
-                        Pathfinding.combinedPathfinding(rc,t.getLocation());
-                    }
-                }
             }
         }
     }
@@ -203,15 +182,6 @@ public class FlagSitter {
         }
         else if(!rc.canSenseLocation(spawnLoc3)){
             tempHome = spawnLoc3;
-        }
-    }
-
-    public static void clearWayHome(RobotController rc) throws GameActionException {
-        Direction d = rc.getLocation().directionTo(home);
-        if(rc.canFill(rc.getLocation().add(d))){
-            rc.fill(rc.getLocation().add(d));
-            refill = rc.getLocation().add(d);
-            if(rc.canMove(d)) rc.move(d);
         }
     }
 }
