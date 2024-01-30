@@ -218,11 +218,14 @@ public class Builder {
         }
         MapLocation centerOfMap = new MapLocation(rc.getMapWidth() / 2, rc.getMapHeight() / 2);
         FlagInfo[] flags = rc.senseNearbyFlags(-1);
-        if(rc.canBuild(TrapType.WATER, flags[0].getLocation()))
-            rc.build(TrapType.WATER, flags[0].getLocation());
-        if(rc.getLocation().equals(flags[0].getLocation()))
-            if(rc.canBuild(TrapType.WATER, rc.getLocation()))
-               rc.build(TrapType.WATER, rc.getLocation());
+        if (flags.length > 0)
+        {
+            if(rc.canBuild(TrapType.WATER, flags[0].getLocation()))
+                rc.build(TrapType.WATER, flags[0].getLocation());
+            if(rc.getLocation().equals(flags[0].getLocation()))
+                if(rc.canBuild(TrapType.WATER, rc.getLocation()))
+                    rc.build(TrapType.WATER, rc.getLocation());
+        }
             rc.setIndicatorDot(rc.getLocation(), 100,100,0);
         //move away from flag
         if(flags.length == 0){
@@ -252,26 +255,30 @@ public class Builder {
             for(Direction dir: Direction.allDirections())
             {
                 //moving in this direction is within a certain radius of flag
-                if(rc.getLocation().add(dir).distanceSquaredTo(flags[0].getLocation()) > 9 && rc.getLocation().add(dir).distanceSquaredTo(flags[0].getLocation()) < 25)
+                if(Pathfinding.InBounds(rc, rc.getLocation().add(dir)))
                 {
-                    if(rc.canMove(dir))
+                    if(rc.getLocation().add(dir).distanceSquaredTo(flags[0].getLocation()) > 9 && rc.getLocation().add(dir).distanceSquaredTo(flags[0].getLocation()) < 25)
                     {
-                        //best location is where it hasn't been
-                        if(!alreadyBeen.containsKey(rc.getLocation().add(dir)))
+                        if(rc.canMove(dir))
                         {
-                           bestLoc = rc.getLocation().add(dir);
-                           break;
-                        }
-                        //best location is replaced if there is a location visited less frequently
-                        else
-                        {
-                            if(alreadyBeen.get(rc.getLocation().add(dir)) < score)
+                            //best location is where it hasn't been
+                            if(!alreadyBeen.containsKey(rc.getLocation().add(dir)))
                             {
-                                score = alreadyBeen.get(rc.getLocation().add(dir));
                                 bestLoc = rc.getLocation().add(dir);
+                                break;
+                            }
+                            //best location is replaced if there is a location visited less frequently
+                            else
+                            {
+                                if(alreadyBeen.get(rc.getLocation().add(dir)) < score)
+                                {
+                                    score = alreadyBeen.get(rc.getLocation().add(dir));
+                                    bestLoc = rc.getLocation().add(dir);
+                                }
                             }
                         }
                     }
+
                 }
             }
             if(rc.canMove(rc.getLocation().directionTo(bestLoc))) {
@@ -283,10 +290,13 @@ public class Builder {
         for(Direction dir: Direction.allDirections())
         {
             //dig within a certain radius of the flag
-            if( rc.getLocation().add(dir).distanceSquaredTo(flags[0].getLocation()) < 10 && rc.getLocation().add(dir).distanceSquaredTo(flags[0].getLocation()) > 3)
+            if(Pathfinding.InBounds(rc, rc.getLocation().add(dir)))
             {
-                if(rc.canDig(rc.getLocation().add(dir)))
-                    rc.dig(rc.getLocation().add(dir));
+                if( rc.getLocation().add(dir).distanceSquaredTo(flags[0].getLocation()) < 10 && rc.getLocation().add(dir).distanceSquaredTo(flags[0].getLocation()) > 3)
+                {
+                    if(rc.canDig(rc.getLocation().add(dir)))
+                        rc.dig(rc.getLocation().add(dir));
+                }
             }
         }
     }

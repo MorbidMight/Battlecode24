@@ -17,6 +17,9 @@ public class Carrier {
         if (rc.canFill(rc.getLocation().add(d))) {
             rc.fill(rc.getLocation().add(d));
         }
+        if(rc.senseNearbyRobots(-1,rc.getTeam().opponent()).length>0){
+            Soldier.retreat(rc);
+        }
         Pathfinding.combinedPathfinding(rc,closestSpawnLoc);
         //if(rc.getLocation().distanceSquaredTo(closestSpawnLoc) <= 25) BFSKernel.BFS(rc, closestSpawnLoc);
         //else Pathfinding.combinedPathfinding(rc, findClosestSpawnLocation(rc));

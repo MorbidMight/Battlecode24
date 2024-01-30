@@ -1,12 +1,14 @@
 package Version18;
 
-import Version6.Flag;
+import Version18.Macro.*;
 import battlecode.common.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Random;
+
+import static Version18.Utilities.NULL_MAP_LOCATION;
 
 /**
  * RobotPlayer is the class that describes your main robot strategy.
@@ -104,6 +106,10 @@ public strictfp class RobotPlayer {
         initialize(rc);
         while (true)
         {
+            if(rc.getRoundNum() == 2001)
+            {
+                rc.resign();
+            }
             Utilities.checkForRevivedRobots(rc,turnsWithKills);
             //changes explorers to soldiers at round 200
             if (rc.getRoundNum() >= GameConstants.SETUP_ROUNDS && role == roles.explorer) {
@@ -180,7 +186,6 @@ public strictfp class RobotPlayer {
                                 }
                             }
                             else{
-                                System.out.println(FlagSitter.home);
                                 MapLocation target = findClosestSpawnLocation(rc, FlagSitter.home);
                                 if(rc.canSpawn(target))
                                     rc.spawn(target);
@@ -223,28 +228,22 @@ public strictfp class RobotPlayer {
                         int toPush = Utilities.convertLocationToInt(rc.getLocation());
                         if (rc.readSharedArray(0) == 0) {
                             rc.writeSharedArray(0, toPush);
-                            rc.setIndicatorString("look at me!!");
                         } else if (rc.readSharedArray(1) == 0 && rc.readSharedArray(0) != toPush) {
                             rc.writeSharedArray(1, toPush);
-                            rc.setIndicatorString("look at me!!");
                         } else if (rc.readSharedArray(2) == 0 && rc.readSharedArray(1) != toPush) {
                             rc.writeSharedArray(2, toPush);
-                            rc.setIndicatorString("look at me!!");
                         }
                     }
                     if (rc.isSpawned()) {
                         switch (role) {
                             case builder:
                                 Builder.runBuilder(rc);
-                                rc.setIndicatorString("builder");
                                 break;
                             case explorer:
                                 Explorer.runExplorer(rc);
-                                rc.setIndicatorString("explorer");
                                 break;
                             case healer:
                                 Healer.runHealer(rc);
-                                rc.setIndicatorString("healer");
                                 break;
                             case soldier:
                                 Soldier.runSoldier(rc);
@@ -323,6 +322,7 @@ public strictfp class RobotPlayer {
         turnOrder = rc.readSharedArray(62);
         rc.writeSharedArray(62,turnOrder + 1);
         seenLocations = new MapInfo[rc.getMapHeight()][rc.getMapWidth()];
+        Macro.seenFlags = new Macro.Flag[]{Macro.NULL_FLAG, Macro.NULL_FLAG, Macro.NULL_FLAG};
         for(int i = 0; i < seenLocations.length; i++)
         {
             for(int j = 0; j < seenLocations[0].length; j++)
@@ -340,20 +340,25 @@ public strictfp class RobotPlayer {
     //Perform tasks every round
     public static void doRoutineTurnTasks(RobotController rc) throws GameActionException
     {
-        MapLocation closestCluster = Utilities.getClosestCluster(rc).location;
+        Macro.initializeMacroVariables(rc);
+        if(Macro.currentRandLocWithinBroadcast == null || turnCount % 5 == 0)
+        {
+            Macro.updateRandomLocList(rc);
+        }
+        Macro.clearEnemyFlagsLocal(rc);
+        //WRITE THIS METHOD
+        Macro.clearEnemyFlagsGlobal(rc);
+        Macro.checkForEnemyFlags(rc);
         //if(closestCluster != null)
           //  rc.setIndicatorLine(rc.getLocation(), closestCluster, 0, 255, 0);
         UnrolledScan.updateSeenLocations(rc.senseNearbyMapInfos());
-        /*RobotInfo[] enemyRobots = rc.senseNearbyRobots(GameConstants.VISION_RADIUS_SQUARED, rc.getTeam().opponent());
+        RobotInfo[] enemyRobots = rc.senseNearbyRobots(GameConstants.VISION_RADIUS_SQUARED, rc.getTeam().opponent());
         for (RobotInfo robot : enemyRobots)
         {
             Utilities.updateEnemyCluster(rc, robot.location);
-        }*/
+        }
         //Utilities.recordEnemies(rc, enemyRobots);
         //Utilities.clearObsoleteEnemies(rc);
-        Utilities.verifyFlagLocations(rc);
-        Utilities.writeFlagLocations(rc);
-        //Utilities.updateAllyCluster(rc, rc.getLocation());
     }
 
 
@@ -475,7 +480,7 @@ public strictfp class RobotPlayer {
 
 
     public static void updateEnemyRobots(RobotController rc) throws GameActionException {
-        // Sensing methods can be passed in a radius of -1 to automatically 
+        // Sensing methods can be passed in a radius of -1 to automatically
         // use the largest possible value.
         RobotInfo[] enemyRobots = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
         if (enemyRobots.length != 0) {

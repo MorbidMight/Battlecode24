@@ -231,7 +231,7 @@ public class Builder {
             FlagSitter.home = dropped;
             return;
         }
-        if(rc.getLocation().distanceSquaredTo(flags[0].getLocation()) < 9)
+        if(rc.getLocation().distanceSquaredTo(flags[0].getLocation()) < 4)
         {
             if(rc.canBuild(TrapType.EXPLOSIVE, rc.getLocation()))
                 rc.build(TrapType.EXPLOSIVE, rc.getLocation());
@@ -251,26 +251,30 @@ public class Builder {
             for(Direction dir: Direction.allDirections())
             {
                 //moving in this direction is within a certain radius of flag
-                if(rc.getLocation().add(dir).distanceSquaredTo(flags[0].getLocation()) > 9 && rc.getLocation().add(dir).distanceSquaredTo(flags[0].getLocation()) < 25)
+                if(Pathfinding.InBounds(rc, rc.getLocation().add(dir)))
                 {
-                    if(rc.canMove(dir))
+                    if(rc.getLocation().add(dir).distanceSquaredTo(flags[0].getLocation()) >= 4 && rc.getLocation().add(dir).distanceSquaredTo(flags[0].getLocation()) <= 16)
                     {
-                        //best location is where it hasn't been
-                        if(!alreadyBeen.containsKey(rc.getLocation().add(dir)))
+                        if(rc.canMove(dir))
                         {
-                           bestLoc = rc.getLocation().add(dir);
-                           break;
-                        }
-                        //best location is replaced if there is a location visited less frequently
-                        else
-                        {
-                            if(alreadyBeen.get(rc.getLocation().add(dir)) < score)
+                            //best location is where it hasn't been
+                            if(!alreadyBeen.containsKey(rc.getLocation().add(dir)))
                             {
-                                score = alreadyBeen.get(rc.getLocation().add(dir));
                                 bestLoc = rc.getLocation().add(dir);
+                                break;
+                            }
+                            //best location is replaced if there is a location visited less frequently
+                            else
+                            {
+                                if(alreadyBeen.get(rc.getLocation().add(dir)) < score)
+                                {
+                                    score = alreadyBeen.get(rc.getLocation().add(dir));
+                                    bestLoc = rc.getLocation().add(dir);
+                                }
                             }
                         }
                     }
+
                 }
             }
             if(rc.canMove(rc.getLocation().directionTo(bestLoc))) {
