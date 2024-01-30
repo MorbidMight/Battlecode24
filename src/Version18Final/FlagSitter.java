@@ -13,8 +13,14 @@ public class FlagSitter {
     static int countSinceSeenFlag = 0;
     static boolean isActive = true;
     static int countSinceLocked;
+    static MapLocation refill = null;
+
 
     public static void runFlagSitter(RobotController rc) throws GameActionException {
+        if(refill != null && rc.canDig(refill)){
+            rc.dig(refill);
+            refill = null;
+        }
         if (home == null && tempHome == null) {
             System.out.println("Something is wrong");
             findHome(rc);
@@ -23,6 +29,9 @@ public class FlagSitter {
             Pathfinding.combinedPathfinding(rc, tempHome);
         }
         if (!rc.getLocation().equals(home)) {
+            clearWayHome(rc);
+            if(refill == null || rc.getLocation().equals(refill))
+                Pathfinding.combinedPathfinding(rc, home);
             Pathfinding.combinedPathfinding(rc, home);
         } else {
             //update where we want soldiers to spawn
@@ -182,6 +191,14 @@ public class FlagSitter {
         }
         else if(!rc.canSenseLocation(spawnLoc3)){
             tempHome = spawnLoc3;
+        }
+    }
+    public static void clearWayHome(RobotController rc) throws GameActionException {
+        Direction d = rc.getLocation().directionTo(home);
+        if(rc.canFill(rc.getLocation().add(d))){
+            rc.fill(rc.getLocation().add(d));
+            refill = rc.getLocation().add(d);
+            if(rc.canMove(d)) rc.move(d);
         }
     }
 }

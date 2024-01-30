@@ -24,7 +24,7 @@ public class FlagSitter {
             else if (home.equals(Utilities.convertIntToLocation(rc.readSharedArray(42))))
                 Utilities.editBitSharedArray(rc, 684, false);
         }
-        if (rc.getRoundNum() > 245) rc.resign();
+        //if (rc.getRoundNum() > 245) rc.resign();
         if(refill != null && rc.canDig(refill)){
             rc.dig(refill);
             refill = null;
