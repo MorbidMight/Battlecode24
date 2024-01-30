@@ -24,6 +24,7 @@ public class FlagSitter {
             else if (home.equals(Utilities.convertIntToLocation(rc.readSharedArray(42))))
                 Utilities.editBitSharedArray(rc, 684, false);
         }
+        if (rc.getRoundNum() > 245) rc.resign();
         if(refill != null && rc.canDig(refill)){
             rc.dig(refill);
             refill = null;
@@ -215,8 +216,8 @@ public class FlagSitter {
         Direction d = rc.getLocation().directionTo(home);
         if(rc.canFill(rc.getLocation().add(d))){
             rc.fill(rc.getLocation().add(d));
-            if(rc.canMove(d)) rc.move(d);
             refill = rc.getLocation().add(d);
+            if(rc.canMove(d)) rc.move(d);
         }
     }
 }
