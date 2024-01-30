@@ -16,7 +16,7 @@ public class FlagSitter {
     static MapLocation refill = null;
 
     public static void runFlagSitter(RobotController rc) throws GameActionException {
-        if(rc.getRoundNum() == 250) rc.resign();
+        //if(rc.getRoundNum() == 250) rc.resign();
         if(refill != null && rc.canDig(refill)){
             rc.dig(refill);
             refill = null;
