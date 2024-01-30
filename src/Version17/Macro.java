@@ -62,19 +62,27 @@ public class Macro
         //we have the last flag
         if(closestPossibleMoveLocation == null)
         {
-            MapLocation stolenFlag = Version17.Utilities.convertIntToLocation(rc.readSharedArray(58));
+            MapLocation stolenFlag = Utilities.convertIntToLocation(rc.readSharedArray(58));
             if(!stolenFlag.equals(NULL_MAP_LOCATION))
             {
-                Version17.StolenFlag temp = new StolenFlag(stolenFlag, false);
+                StolenFlag temp = new StolenFlag(stolenFlag, false);
+                if(Soldier.nearbyFlagsAlly.length == 0 && rc.canFill(rc.getLocation().add(rc.getLocation().directionTo(temp.location))))
+                    rc.fill(rc.getLocation().add(rc.getLocation().directionTo(temp.location)));
                 Pathfinding.bellmanFordFlag(rc, temp.location, temp);
             }
             else
             {
-                BFSKernel9x9.BFS(rc, getLowestHealthAllyCluster(rc));
+                if(getLowestHealthAllyCluster(rc) != null) {
+                    if (Soldier.nearbyFlagsAlly.length == 0 && rc.canFill(rc.getLocation().add(rc.getLocation().directionTo(getLowestHealthAllyCluster(rc)))))
+                        rc.fill(rc.getLocation().add(rc.getLocation().directionTo(getLowestHealthAllyCluster(rc))));
+                    BFSKernel9x9.BFS(rc, getLowestHealthAllyCluster(rc));
+                }
             }
         }
         else
         {
+            if(Soldier.nearbyFlagsAlly.length == 0 && rc.canFill(rc.getLocation().add(rc.getLocation().directionTo(closestPossibleMoveLocation))))
+                rc.fill(rc.getLocation().add(rc.getLocation().directionTo(closestPossibleMoveLocation)));
             BFSKernel9x9.BFS(rc, closestPossibleMoveLocation);
         }
     }
