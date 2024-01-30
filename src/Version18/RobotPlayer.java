@@ -1,4 +1,4 @@
-package Version17;
+package Version18;
 
 import Version6.Flag;
 import battlecode.common.*;

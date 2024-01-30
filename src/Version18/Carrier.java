@@ -1,4 +1,4 @@
-package Version17;
+package Version18;
 
 import Version15MovingFlags.BFSKernel;
 import battlecode.common.Direction;
@@ -6,7 +6,7 @@ import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
 
-import static Version17.RobotPlayer.findClosestSpawnLocation;
+import static Version18.RobotPlayer.findClosestSpawnLocation;
 public class Carrier {
     public static void runCarrier(RobotController rc) throws GameActionException {
         MapLocation closestSpawnLoc = findClosestSpawnLocation(rc);

@@ -1,4 +1,4 @@
-package Version17;
+package Version18;
 
 import battlecode.common.FlagInfo;
 import battlecode.common.GameActionException;
@@ -7,7 +7,7 @@ import battlecode.common.RobotController;
 
 import java.util.ArrayList;
 
-import static Version17.Utilities.*;
+import static Version18.Utilities.*;
 
 public class Macro
 {
@@ -117,9 +117,9 @@ public class Macro
         ArrayList<MapLocation> distressedFlags = new ArrayList<>();
         for(int i = 0; i < 2; i++)
         {
-            if(Version17.Utilities.readBitSharedArray(rc, 12 + i * 16))
+            if(Version18.Utilities.readBitSharedArray(rc, 12 + i * 16))
             {
-                distressedFlags.add(Version17.Utilities.convertIntToLocation(rc.readSharedArray(i)));
+                distressedFlags.add(Version18.Utilities.convertIntToLocation(rc.readSharedArray(i)));
             }
         }
          return distressedFlags.toArray(new MapLocation[0]);
@@ -131,12 +131,12 @@ public class Macro
         ArrayList<MapLocation> locations = new ArrayList<>();
         for(int i = 3; i < 6; i++){
             if(rc.readSharedArray(i) != 0){
-                locations.add(Version17.Utilities.convertIntToLocation(rc.readSharedArray(i)));
+                locations.add(Version18.Utilities.convertIntToLocation(rc.readSharedArray(i)));
             }
         }
         if(broadcastFlags.length == 0)
         {
-            return Version17.Utilities.getClosestCluster(rc).location;
+            return Version18.Utilities.getClosestCluster(rc).location;
         }
         else if(!locations.isEmpty())
         {
@@ -198,7 +198,7 @@ public class Macro
             }
         }
 
-        if(numZeroEnemyClusters == enemyClusters.length) return Version17.Utilities.getClosestCluster(rc);
+        if(numZeroEnemyClusters == enemyClusters.length) return Version18.Utilities.getClosestCluster(rc);
         int overwhelmFactor = 0;
         int mostOverwhelmedIndex = -1;
         for(int i = 0; i < enemyClusters.length; i++)
@@ -214,7 +214,7 @@ public class Macro
 
     public static MapLocation getLowestHealthAllyCluster(RobotController rc) throws GameActionException
     {
-        int[] allyClusterHealth = Version17.Utilities.getLastRoundAllyHealth(rc);
+        int[] allyClusterHealth = Version18.Utilities.getLastRoundAllyHealth(rc);
         int lowest = Integer.MAX_VALUE;
         int lowestIndex = 0;
         for(int i = 0; i < allyClusterHealth.length; i++)
@@ -228,11 +228,11 @@ public class Macro
         switch(lowestIndex)
         {
             case 0:
-                return Version17.Utilities.convertIntToLocation(rc.readSharedArray(Version17.Utilities.LAST_ROUND_ALLY_LOCATION_1));
+                return Version18.Utilities.convertIntToLocation(rc.readSharedArray(Version18.Utilities.LAST_ROUND_ALLY_LOCATION_1));
             case 1:
-                return Version17.Utilities.convertIntToLocation(rc.readSharedArray(Version17.Utilities.LAST_ROUND_ALLY_LOCATION_2));
+                return Version18.Utilities.convertIntToLocation(rc.readSharedArray(Version18.Utilities.LAST_ROUND_ALLY_LOCATION_2));
             case 2:
-                return Version17.Utilities.convertIntToLocation(rc.readSharedArray(Version17.Utilities.LAST_ROUND_ALLY_LOCATION_3));
+                return Version18.Utilities.convertIntToLocation(rc.readSharedArray(Version18.Utilities.LAST_ROUND_ALLY_LOCATION_3));
         }
         return null;
     }
