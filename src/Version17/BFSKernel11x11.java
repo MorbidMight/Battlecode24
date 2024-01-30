@@ -1,6 +1,6 @@
-package Version16.Util;
+package Version17;
 import battlecode.common.*;
-import static Version16.RobotPlayer.*;
+import static Version17.RobotPlayer.*;
 public class BFSKernel11x11
 {
     static Direction[][] lookup;

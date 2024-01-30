@@ -1,9 +1,6 @@
-package Version16.Util;
-
+package Version17;
 import battlecode.common.*;
-
-import static Version16.RobotPlayer.seenLocations;
-
+import static Version17.RobotPlayer.*;
 public class BFSKernel9x9
 {
     static int closestDistance;

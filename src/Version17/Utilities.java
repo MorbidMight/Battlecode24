@@ -1,7 +1,7 @@
-package Version16.Util;
+package Version17;
 
-import Version16.RobotPlayer;
-import Version16.Util.Cluster;
+import Version17.RobotPlayer;
+import Version17.Cluster;
 import battlecode.common.*;
 
 import java.util.ArrayList;
@@ -398,7 +398,7 @@ public class Utilities
     {
         Cluster[] clusters = new Cluster[3];
         clusters[0] = new Cluster(Utilities.convertIntToLocation(rc.readSharedArray(LAST_ROUND_LOCATION_1_INDEX)),
-        getEnemyCountFromCluster(rc.readSharedArray(LAST_ROUND_LOCATION_1_INDEX)));
+                getEnemyCountFromCluster(rc.readSharedArray(LAST_ROUND_LOCATION_1_INDEX)));
         clusters[1] = new Cluster(Utilities.convertIntToLocation(rc.readSharedArray(LAST_ROUND_LOCATION_2_INDEX)),
                 getEnemyCountFromCluster(rc.readSharedArray(LAST_ROUND_LOCATION_2_INDEX)));
         clusters[2] = new Cluster(Utilities.convertIntToLocation(rc.readSharedArray(LAST_ROUND_LOCATION_3_INDEX)),
@@ -563,26 +563,72 @@ public class Utilities
 
     }
 
+    public static boolean angleIsGreaterThan90(Direction a, Direction b){
+        while(a!=Direction.SOUTH){
+            a = a.rotateLeft();
+            b = b.rotateLeft();
+        }
+        return b==Direction.NORTH || b==Direction.NORTHEAST || b==Direction.NORTHWEST;
+
+    }
     public static boolean locationIsBehindWall(RobotController rc, MapLocation L){
-        double m  = (rc.getLocation().y-L.y+0.0)/(rc.getLocation().x-L.x);
+        return locationIsBehindWall(rc,L,rc.getLocation());
+    }
+    public static boolean locationIsBehindWall(RobotController rc, MapLocation L, MapLocation R){
+        double m  = (R.y-L.y+0.0)/(R.x-L.x);
         double c = (m*L.x-L.y);
         for(MapInfo T: rc.senseNearbyMapInfos()){
             MapLocation t = T.getMapLocation();
-            double d = (m*t.x*-1+t.y+c)/(Math.sqrt(1+m*m));
-            if(d<=1&&T.isWall()&&!isLocationBehind(t,rc.getLocation(),rc.getLocation().directionTo(L))){
+            if(!angleIsGreaterThan90(t.directionTo(L),t.directionTo(R))){
+                /*If the directions point in the same way that means that t
+                is not inbetween L and R. If it was inbetween the the
+                angle would be obtuse
+                 */
+                continue;
+            }
+            double d1 = Math.pow(t.y-m*t.x+c,2);
+            /*
+            this comparison is kinda weird but basically it uses the distance from a point
+            to a line formula* and compares it to 1. However since division and sqrt are expensive,
+            I've done some algebra to get rid of them
+
+            * given aX + bY + C = 0 and (P,Q)
+            distance = (aP + bQ + c)/sqrt(A^2+B^2)
+             */
+
+            if(T.isWall()&&1+m*m>=d1){
                 return true;
             }
         }
         return false;
     }
+    public static boolean locationIsBehindWall(RobotController rc, MapLocation L, MapLocation R, int radius) throws GameActionException {
+        double m  = (R.y-L.y+0.0)/(R.x-L.x);
+        double c = (m*L.x-L.y);
+        for(MapInfo T: rc.senseNearbyMapInfos(radius)){
+            MapLocation t = T.getMapLocation();
+            if(!angleIsGreaterThan90(t.directionTo(L),t.directionTo(R))){
+                /*If the directions point in the same way that means that t
+                is not inbetween L and R. If it was inbetween the the
+                angle would be obtuse
+                 */
+                continue;
+            }
+            double d1 = Math.pow(t.y-m*t.x+c,2);
+            /*
+            this comparison is kinda weird but basically it uses the distance from a point
+            to a line formula* and compares it to 1. However since division and sqrt are expensive,
+            I've done some algebra to get rid of them
 
-    private static boolean isLocationBehind(MapLocation toTest, MapLocation center,Direction dir){
-        Direction test = center.directionTo(toTest);
-        while(dir != Direction.SOUTH){
-            test = test.rotateLeft();
-            dir = dir.rotateLeft();
+            * given aX + bY + C = 0 and (P,Q)
+            distance = (aP + bQ + c)/sqrt(A^2+B^2)
+             */
+
+            if(T.isWall()&&1+m*m>=d1){
+                return true;
+            }
         }
-        return(test ==Direction.NORTH || test == Direction.NORTHWEST||test == Direction.NORTHEAST);
+        return false;
     }
 
     //returns false if we dont know any flag locations, true otherwise
@@ -603,5 +649,25 @@ public class Utilities
         int index5 = rc.readSharedArray(5);
         if(index5 != 0) knownFlags.add(convertIntToLocation(index5));
         return knownFlags.toArray(new MapLocation[0]);
+    }
+
+    public static StolenFlag getClosestFlag(RobotController rc, MapLocation loc) throws GameActionException
+    {
+        StolenFlag closest = null;
+        int closestDistance = Integer.MAX_VALUE;
+        for(int i = 58; i <= 60; i++)
+        {
+            if(rc.readSharedArray(i) != 0)
+            {
+                StolenFlag tempFlag = Utilities.readFlag(rc, i);
+                int tempDistance = loc.distanceSquaredTo(tempFlag.location);
+                if(tempDistance < closestDistance)
+                {
+                    closest = tempFlag;
+                    closestDistance = tempDistance;
+                }
+            }
+        }
+        return closest;
     }
 }

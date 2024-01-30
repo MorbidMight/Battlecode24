@@ -1,20 +1,18 @@
-package Version16.Util;
+package Version17;
 
-import Version16.RobotPlayer;
-import Version16.Util.BFSKernel9x9;
 import battlecode.common.*;
 
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.PriorityQueue;
 
-import static Version16.RobotPlayer.*;
+import static Version17.RobotPlayer.*;
 
 public class Pathfinding
 {
 
-    enum PathfindingState{bugNav2, BFS}
-    static PathfindingState pathfindingState = PathfindingState.BFS;
+    enum PathfindingState{bugNav2, bellmanFord}
+    static PathfindingState pathfindingState = PathfindingState.bellmanFord;
     public static final int BUG_NAV_TURNS = 50;
     public static int turnsUsingBugNav = 0;
     public static final int MAX_BYTECODE_USAGE = 10000;
@@ -25,13 +23,6 @@ public class Pathfinding
     private static int bugState = 0;
     private static int turnDirection = -1;
     private static Direction bugDirection;
-    private static Direction lastDirection;
-    static Boolean goLeft = null;
-    static bugNavStates state;
-
-    enum bugNavStates {
-        movingTowardsDestination, followingWall
-    }
 
     public static final int[][] adjacencyMatrix5x5 = new int[][]{
             {0,1,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
@@ -91,8 +82,8 @@ public class Pathfinding
     public static void combinedPathfinding(RobotController rc, MapLocation destination) throws GameActionException {
         switch (pathfindingState)
         {
-            case BFS:
-                BFSKernel9x9.BFS(rc, destination);
+            case bellmanFord:
+                bellmanFord5x5(rc, destination);
                 updateAlreadyBeen(rc);
                 if(alreadyBeen.get(rc.getLocation()) > 2)
                 {
@@ -106,7 +97,7 @@ public class Pathfinding
                 if(turnsUsingBugNav >= BUG_NAV_TURNS)
                 {
                     turnsUsingBugNav = 0;
-                    pathfindingState = PathfindingState.BFS;
+                    pathfindingState = PathfindingState.bellmanFord;
                 }
                 break;
         }
@@ -551,82 +542,25 @@ public class Pathfinding
     }
 
     public static void bugNav0(RobotController rc, MapLocation destination) throws GameActionException {
-        if(rc.getLocation().equals(destination)) return;
-        if(state == null){
-            state = bugNavStates.movingTowardsDestination;
+        Direction bugDir = rc.getLocation().directionTo(destination);
+        if(rc.canMove(bugDir))
+        {
+            rc.move(bugDir);
         }
-        Direction d = rc.getLocation().directionTo(destination);
-        if(lastDirection == null) lastDirection = d.opposite();
-        switch(state){
-            case movingTowardsDestination:
-                if(rc.canMove(d))
-                    rc.move(d);
+        else
+        {
+            for(int i = 0; i < 8; i++)
+            {
+                if(rc.canMove(bugDir))
+                {
+                    rc.move(bugDir);
+                }
                 else
-                    state = bugNavStates.followingWall;
-                break;
-            case followingWall:
-                if(rc.canMove(d) && d != lastDirection.opposite()){
-                    rc.move(d);
-                    state = bugNavStates.movingTowardsDestination;
-                    goLeft = null;
-                    return;
+                {
+                    bugDir = bugDir.rotateLeft();
                 }
-                d = lastDirection;
-                if(goLeft == null){
-                    goLeft = false;
-                    Direction temp = rc.getLocation().directionTo(new MapLocation(rc.getMapWidth() /2, rc.getMapHeight() / 2));
-                    for (int k = 0; k < 4; k++) {
-                        temp = temp.rotateLeft();
-                        if (temp == d) {
-                            goLeft = true;
-                            break;
-                        }
-                    }
-                }
-                for(int i = 0; i < 8; ++i){
-                    if(rc.canMove(d) && d != lastDirection.opposite()){
-                        rc.move(d);
-                        lastDirection = d;
-                        return;
-                    }
-                    else{
-                        d = (goLeft) ? d.rotateLeft() : d.rotateRight();
-                    }
-                }
-                break;
+            }
         }
-//        Direction bugDir = rc.getLocation().directionTo(destination);
-//        if(goLeft == null){
-//            Direction d = rc.getLocation().directionTo(new MapLocation(rc.getMapWidth() / 2, rc.getMapHeight() / 2));
-//            Direction temp = bugDir;
-//            goLeft = false;
-//            for (int k = 0; k < 4; k++) {
-//                temp = temp.rotateLeft();
-//                if (temp == d) {
-//                    goLeft = true;
-//                    break;
-//                }
-//            }
-//        }
-//        if(rc.canMove(bugDir))
-//        {
-//            rc.move(bugDir);
-//        }
-//        else
-//        {
-//            for(int i = 0; i < 8; i++)
-//            {
-//                if(rc.canMove(bugDir))
-//                {
-//                    rc.move(bugDir);
-//                }
-//                else
-//                {
-//
-//                    bugDir = (goLeft) ? bugDir.rotateLeft() : bugDir.rotateRight();
-//                }
-//            }
-//        }
     }
 
     public static void bugNav2(RobotController rc, MapLocation destination) throws GameActionException {
@@ -634,58 +568,6 @@ public class Pathfinding
         {
             return;
         }
-        if(rc.getRoundNum() == 200 && obstacleStartDistance != 0) obstacleStartDistance = Integer.MAX_VALUE;
-        if(rc.getLocation().equals(destination)) return;
-        if(!destination.equals(previousDestination))
-        {
-            previousDestination = destination;
-            lineLocations = createLine(rc.getLocation(), destination);
-        }
-
-        if(bugState == 0)
-        {
-            bugDirection = rc.getLocation().directionTo(destination);
-            if(rc.canMove(bugDirection))
-            {
-                rc.move(bugDirection);
-            }
-            else
-            {
-                bugState = 1;
-                obstacleStartDistance = rc.getLocation().distanceSquaredTo(destination);
-                bugDirection = rc.getLocation().directionTo(destination);
-            }
-        }
-        else
-        {
-            rc.setIndicatorString(String.valueOf(obstacleStartDistance) + " vs " + rc.getLocation().distanceSquaredTo(destination));
-            if(lineLocations.contains(rc.getLocation()) && rc.getLocation().distanceSquaredTo(destination) < obstacleStartDistance)
-            {
-                bugState = 0;
-                return;
-            }
-            for (int i = 0; i < 9; i++)
-            {
-                if (rc.canMove(bugDirection))
-                {
-                    rc.move(bugDirection);
-                    bugDirection = bugDirection.rotateRight();
-                    bugDirection = bugDirection.rotateRight();
-                    break;
-                }
-                else
-                {
-                    bugDirection = bugDirection.rotateLeft();
-                }
-            }
-        }
-    }
-    public static void bugNavtutu(RobotController rc, MapLocation destination) throws GameActionException {
-        if(destination == null)
-        {
-            return;
-        }
-        if(rc.getLocation().equals(destination)) return;
         if(!destination.equals(previousDestination))
         {
             previousDestination = destination;

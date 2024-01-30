@@ -1,9 +1,6 @@
-package Version16.Util;
-
-import battlecode.common.MapInfo;
-
-import static Version16.RobotPlayer.seenLocations;
-
+package Version17;
+import battlecode.common.*;
+import static Version17.RobotPlayer.*;
 public class UnrolledScan
 {
     public static void updateSeenLocations(MapInfo[] locations)
