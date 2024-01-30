@@ -36,10 +36,10 @@ public class FlagSitter {
             //update where we want soldiers to spawn
             if (!Utilities.readBitSharedArray(rc, 1021)) {
                 int x;
-                if (Soldier.knowFlag(rc))
-                    x = RobotPlayer.findClosestSpawnLocationToCoordinatedTarget(rc);
-                else if (Utilities.getClosestCluster(rc) != null) {
+                if (Utilities.getClosestCluster(rc) != null)
                     x = RobotPlayer.findClosestSpawnLocationToCluster(rc);
+                else if (Soldier.knowFlag(rc)) {
+                    x = RobotPlayer.findClosestSpawnLocationToCoordinatedTarget(rc);
                 } else {
                     x = RobotPlayer.findClosestSpawnLocationToCoordinatedBroadcast(rc);
                 }
