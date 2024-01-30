@@ -239,10 +239,13 @@ public class Builder {
         for(Direction dir: Direction.allDirections())
         {
             //dig within a certain radius of the flag
-            if( rc.getLocation().add(dir).distanceSquaredTo(flags[0].getLocation()) < 10 && rc.getLocation().add(dir).distanceSquaredTo(flags[0].getLocation()) > 3)
+            if(Pathfinding.InBounds(rc, rc.getLocation().add(dir)))
             {
-                if(rc.canDig(rc.getLocation().add(dir)))
-                    rc.dig(rc.getLocation().add(dir));
+                if( rc.getLocation().add(dir).distanceSquaredTo(flags[0].getLocation()) < 10 && rc.getLocation().add(dir).distanceSquaredTo(flags[0].getLocation()) > 3)
+                {
+                    if(rc.canDig(rc.getLocation().add(dir)))
+                        rc.dig(rc.getLocation().add(dir));
+                }
             }
         }
     }
