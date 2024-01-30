@@ -1,6 +1,7 @@
 package Version18Final;
 
 import Version15MovingFlags.BFSKernel;
+import Version18Final.Soldier;
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;
@@ -16,6 +17,9 @@ public class Carrier {
 //        }
         if (rc.canFill(rc.getLocation().add(d))) {
             rc.fill(rc.getLocation().add(d));
+        }
+        if(rc.senseNearbyRobots(-1,rc.getTeam().opponent()).length>0){
+            Soldier.carrierRetreat(rc);
         }
         Pathfinding.combinedPathfinding(rc,closestSpawnLoc);
         //if(rc.getLocation().distanceSquaredTo(closestSpawnLoc) <= 25) BFSKernel.BFS(rc, closestSpawnLoc);

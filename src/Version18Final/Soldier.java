@@ -1,6 +1,8 @@
 package Version18Final;
 
 import battlecode.common.*;
+
+import static Version18.RobotPlayer.findClosestSpawnLocation;
 import static Version18Final.Utilities.*;
 import static Version18Final.RobotPlayer.*;
 
@@ -497,6 +499,32 @@ public class Soldier
         for(engagementMicroSquare square : options){
             if(square.passable){
                 float score = square.enemiesAttackRangedX * -5.0f + square.enemiesVisiondX * -3.0f + square.alliesVisiondX + square.alliesHealRangedX + square.potentialEnemiesAttackRangedX * -3 + square.hasTrap.compareTo(false) * 6.0f + square.potentialEnemiesPrepareAttackdX * -1.5f;
+                if(score > highScore){
+                    highScore = score;
+                    best = square;
+                }
+            }
+        }
+        if(best != null) {
+            if (best.enemiesAttackRangedX <= 0 && rc.canMove(rc.getLocation().directionTo(best.location))) {
+                rc.move(rc.getLocation().directionTo(best.location));
+            }
+        }
+    }
+    public static void carrierRetreat(RobotController rc) throws GameActionException {
+        Version18Final.engagementMicroSquare[] options = new Version18Final.engagementMicroSquare[8];
+        populateMicroArray(rc, options);
+        Version18Final.engagementMicroSquare best = null;
+        float highScore = Integer.MIN_VALUE;
+        for(Version18Final.engagementMicroSquare square : options){
+            if(square.passable){
+                float score = square.enemiesAttackRangedX * -5.0f + square.enemiesVisiondX * -3.0f + square.alliesVisiondX + square.alliesHealRangedX + square.potentialEnemiesAttackRangedX * -3 + square.hasTrap.compareTo(false) * 6.0f + square.potentialEnemiesPrepareAttackdX * -1.5f;
+                System.out.println("" + score);
+                if(square.location.distanceSquaredTo(findClosestSpawnLocation(rc)) < rc.getLocation().distanceSquaredTo(findClosestSpawnLocation(rc)))
+                {
+                    score += 3;
+                    System.out.println("|" + score);
+                }
                 if(score > highScore){
                     highScore = score;
                     best = square;
