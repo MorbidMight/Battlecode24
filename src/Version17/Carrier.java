@@ -17,9 +17,9 @@ public class Carrier {
         if (rc.canFill(rc.getLocation().add(d))) {
             rc.fill(rc.getLocation().add(d));
         }
-        BFSKernel9x9.BFS(rc,closestSpawnLoc);
-        //if(rc.getLocation().distanceSquaredTo(closestSpawnLoc) <= 25) BFSKernel.BFS(rc, closestSpawnLoc);
-        //else Pathfinding.combinedPathfinding(rc, findClosestSpawnLocation(rc));
+        ///BFSKernel9x9.BFS(rc,closestSpawnLoc);
+        if(rc.getLocation().distanceSquaredTo(closestSpawnLoc) <= 16) BFSKernel9x9.BFS(rc, closestSpawnLoc);
+        else Pathfinding.combinedPathfinding(rc, findClosestSpawnLocation(rc));
     }
 
 }
