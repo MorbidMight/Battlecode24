@@ -399,6 +399,7 @@ public class Soldier
             }
         }
         if(rc.isMovementReady()){
+            if(rc.isActionReady()) digWater(rc);
             //**CHANGE
             StolenFlag temp = new StolenFlag(escortee.getLocation(), false);
             //**CHANGE ^^^
@@ -999,6 +1000,12 @@ public class Soldier
                 return base + base * 0.6;
             default:
                 return base;
+        }
+    }
+    public static void digWater(RobotController rc) throws GameActionException {
+        MapInfo[] adjacentLocations = rc.senseNearbyMapInfos(GameConstants.INTERACT_RADIUS_SQUARED);
+        for(MapInfo m : adjacentLocations){
+            if(rc.canFill(m.getMapLocation())) rc.fill(m.getMapLocation());
         }
     }
 }
