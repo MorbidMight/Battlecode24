@@ -1,5 +1,6 @@
 package Version17;
 
+import Version15MovingFlags.BFSKernel;
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;
@@ -16,8 +17,9 @@ public class Carrier {
         if (rc.canFill(rc.getLocation().add(d))) {
             rc.fill(rc.getLocation().add(d));
         }
-        if(rc.getLocation().distanceSquaredTo(closestSpawnLoc) <= 25) BFSKernel.BFS(rc, closestSpawnLoc);
-        else Pathfinding.combinedPathfinding(rc, findClosestSpawnLocation(rc));
+        BFSKernel9x9.BFS(rc,closestSpawnLoc);
+        //if(rc.getLocation().distanceSquaredTo(closestSpawnLoc) <= 25) BFSKernel.BFS(rc, closestSpawnLoc);
+        //else Pathfinding.combinedPathfinding(rc, findClosestSpawnLocation(rc));
     }
 
 }

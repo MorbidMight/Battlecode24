@@ -30,6 +30,7 @@ public class Builder {
     static int radius = 0;
     static MapLocation closestCorner;
     static MapLocation dropped;
+    static boolean usingExplorerTarget = false;
 
     static final int EXPLORE_PERIOD = 65;
     static final int PLACEMENT_PERIOD = 140;
@@ -89,13 +90,36 @@ public class Builder {
         }
 
         if (rc.getRoundNum() > EXPLORE_PERIOD && rc.getRoundNum() < 180) {
-            //MapLocation target = scoredLocations.getFirst();
             assert scoredLocationsV2.peek() != null;
-            MapLocation target = scoredLocationsV2.peek().location;
-            //System.out.println(target);
+            PotentialFlag temp = scoredLocationsV2.peek();
+            MapLocation target = temp.location;
+            switch(spawnOrigin){
+                case -1:
+                    break;
+                case 0:
+                    if(rc.readSharedArray(44) > temp.score){
+                        target = Utilities.convertIntToLocation(rc.readSharedArray(43));
+                        //System.out.println(Utilities.convertIntToLocation(rc.readSharedArray(43)));
+                        usingExplorerTarget = true;
+                    }
+                    break;
+                case 1:
+                    if(rc.readSharedArray(46) > temp.score){
+                         target = Utilities.convertIntToLocation(rc.readSharedArray(45));
+                        //System.out.println(Utilities.convertIntToLocation(rc.readSharedArray(45)));
+                        usingExplorerTarget = true;
+                    }
+                    break;
+                case 2:
+                    if(rc.readSharedArray(48) > temp.score){
+                        target = Utilities.convertIntToLocation(rc.readSharedArray(47));
+                        //System.out.println(Utilities.convertIntToLocation(rc.readSharedArray(47)));
+                        usingExplorerTarget = true;
+                    }
+                    break;
+            }
             if (!rc.getLocation().equals(target))
                 BFSKernel9x9.BFS(rc, target);
-            //Pathfinding.combinedPathfinding(rc, target);
             if (rc.canSenseLocation(target) && rc.senseLegalStartingFlagPlacement(target)) {
                     if (rc.canDropFlag(target)) {
                         rc.dropFlag(target);
@@ -103,7 +127,6 @@ public class Builder {
                         if (rc.readSharedArray(40) == 0) {
                             rc.writeSharedArray(40, Utilities.convertLocationToInt(target));
                             dropped = target;
-                            //System.out.println(Utilities.convertIntToLocation(rc.readSharedArray(40)));
                         }
                         else if (rc.readSharedArray(41) == 0) {
                             rc.writeSharedArray(41, Utilities.convertLocationToInt(target));
@@ -119,13 +142,30 @@ public class Builder {
                         //role = roles.explorer;
                         role = roles.moat;
                     }
-            } else {
+            } else if(rc.canSenseLocation(target) && !rc.senseLegalStartingFlagPlacement(target)) {
                 while (rc.canSenseLocation(target) && !rc.senseLegalStartingFlagPlacement(target)) {
-                    //scoredLocations.removeFirst();
-                    //target = scoredLocations.getFirst();
-                    scoredLocationsV2.poll();
-                    assert scoredLocationsV2.peek() != null;
-                    target = scoredLocationsV2.peek().location;
+                    if (usingExplorerTarget) {
+                        switch (spawnOrigin) {
+                            case -1:
+                                break;
+                            case 0:
+                                rc.writeSharedArray(44, 0);
+                                break;
+                            case 1:
+                                rc.writeSharedArray(46, 0);
+                                break;
+                            case 2:
+                                rc.writeSharedArray(48, 0);
+                                break;
+                        }
+                        usingExplorerTarget = false;
+                        assert scoredLocationsV2.peek() != null;
+                        target = scoredLocationsV2.peek().location;
+                    } else {
+                        scoredLocationsV2.poll();
+                        assert scoredLocationsV2.peek() != null;
+                        target = scoredLocationsV2.peek().location;
+                    }
                 }
             }
             //buildMoat(rc);
@@ -368,28 +408,8 @@ public class Builder {
         int score = 0;
         int height = rc.getMapHeight();
         int width = rc.getMapWidth();
-        /*if(location.y < height/2) {
-            //bottom left
-            if(location.x < width/2){
-                score -= location.distanceSquaredTo(new MapLocation(0,0)) * 2;
-            }
-            //bottom right
-            else{
-                score -= location.distanceSquaredTo(new MapLocation(width - 1,0)) * 2;
-            }
-        }
-        else {
-            //top left
-            if(location.x < width/2){
-                score -= location.distanceSquaredTo(new MapLocation(0,height - 1))* 2;
-            }
-            //top right
-            else{
-                score -= location.distanceSquaredTo(new MapLocation(width - 1,height - 1))* 2;
-            }
-        }*/
         //decrease to score if close to map
-        score += ((location.distanceSquaredTo(centerOfMap) * 1.5) / (Math.sqrt(Math.pow(height, 1.5) + Math.pow(width, 1.5)))) * 250;
+        score += ((location.distanceSquaredTo(centerOfMap) * 1.5) / (Math.sqrt(Math.pow(height, 1.5) + Math.pow(width, 1.5)))) * 150;
 
         if (!rc.senseLegalStartingFlagPlacement(location)) {
             return -1000;
@@ -432,49 +452,18 @@ public class Builder {
                 if(M.isWater())
                     score+= 10;
                 if(M.isDam())
-                    score-= 500;
+                    score-= 700;
 
             } else {
                 if (M.isWall())
-                    score += 10;
+                    score += 15;
                 if (M.isWater())
                     score += 3;
                 if (M.isDam())
-                    score -= 175;
+                    score -= 190;
             }
         }
         return score;
-
-        /*MapInfo[] surroundingAreas = rc.senseNearbyMapInfos(location, 8);
-        int score = 0;
-        if(!rc.senseLegalStartingFlagPlacement(location)){
-            return -1000;
-        }
-        if (isMapEdge(rc, location)){
-            score += 100;
-        }
-        for(MapInfo m : surroundingAreas){
-            MapLocation temp = m.getMapLocation();
-            if(!m.isPassable() && !m.isDam()){
-                if(temp.isAdjacentTo(location)) {
-                    score = (m.isWater()) ? score + 3 : score + 60;
-                    if(Utilities.locationIsBehindWall(rc,centerOfMap, temp, 2)){
-                        score += 100;
-                    }
-                }
-                else {
-                    score = (m.isWater()) ? score + 1 : score + 20;
-                }
-            }
-            if(m.isDam())
-                score-= 200;
-            if(m.isDam() && temp.isAdjacentTo(location))
-                score -= 750;
-        }
-        score += location.distanceSquaredTo(centerOfMap) / 2;
-        score -= location.distanceSquaredTo(closestCorner) / 2;
-        return score;
-    */
     }
     public static boolean isMapEdge(RobotController rc, MapLocation loc){
         int width = rc.getMapWidth();
