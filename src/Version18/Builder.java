@@ -39,6 +39,7 @@ public class Builder {
 
     public static void runBuilder(RobotController rc) throws GameActionException {
         if(turnCount < 1)
+
             moveToSpawn = false;
         if(moveToSpawn)
         {
@@ -218,9 +219,9 @@ public class Builder {
         }
         MapLocation centerOfMap = new MapLocation(rc.getMapWidth() / 2, rc.getMapHeight() / 2);
         FlagInfo[] flags = rc.senseNearbyFlags(-1);
-        if(rc.canBuild(TrapType.WATER, flags[0].getLocation()))
-            rc.build(TrapType.WATER, flags[0].getLocation());
-        if(rc.getLocation().equals(flags[0].getLocation()))
+        if(rc.canBuild(TrapType.WATER, dropped))
+            rc.build(TrapType.WATER, dropped);
+        if(rc.getLocation().equals(dropped))
             if(rc.canBuild(TrapType.WATER, rc.getLocation()))
                rc.build(TrapType.WATER, rc.getLocation());
             rc.setIndicatorDot(rc.getLocation(), 100,100,0);
@@ -231,13 +232,13 @@ public class Builder {
             FlagSitter.home = dropped;
             return;
         }
-        if(rc.getLocation().distanceSquaredTo(flags[0].getLocation()) < 4)
+        if(rc.getLocation().distanceSquaredTo(dropped) < 4)
         {
             if(rc.canBuild(TrapType.EXPLOSIVE, rc.getLocation()))
                 rc.build(TrapType.EXPLOSIVE, rc.getLocation());
             rc.setIndicatorString("moving away from flag");
-            if(rc.canMove(rc.getLocation().directionTo(flags[0].getLocation()).opposite())) {
-                    rc.move(rc.getLocation().directionTo(flags[0].getLocation()).opposite());
+            if(rc.canMove(rc.getLocation().directionTo(dropped).opposite())) {
+                    rc.move(rc.getLocation().directionTo(dropped).opposite());
             }
             else if(rc.canMove(rc.getLocation().directionTo(centerOfMap))) {
                     rc.move(rc.getLocation().directionTo(centerOfMap));
@@ -253,7 +254,7 @@ public class Builder {
                 //moving in this direction is within a certain radius of flag
                 if(Pathfinding.InBounds(rc, rc.getLocation().add(dir)))
                 {
-                    if(rc.getLocation().add(dir).distanceSquaredTo(flags[0].getLocation()) >= 4 && rc.getLocation().add(dir).distanceSquaredTo(flags[0].getLocation()) <= 16)
+                    if(rc.getLocation().add(dir).distanceSquaredTo(dropped) >= 4 && rc.getLocation().add(dir).distanceSquaredTo(dropped) <= 16)
                     {
                         if(rc.canMove(dir))
                         {
@@ -286,7 +287,7 @@ public class Builder {
         for(Direction dir: Direction.allDirections())
         {
             //dig within a certain radius of the flag
-            if( rc.getLocation().add(dir).distanceSquaredTo(flags[0].getLocation()) < 10 && rc.getLocation().add(dir).distanceSquaredTo(flags[0].getLocation()) > 3)
+            if( rc.getLocation().add(dir).distanceSquaredTo(dropped) < 10 && rc.getLocation().add(dir).distanceSquaredTo(dropped) > 3)
             {
                 if(rc.canDig(rc.getLocation().add(dir)))
                     rc.dig(rc.getLocation().add(dir));
@@ -418,7 +419,14 @@ public class Builder {
             return -1000;
         }
         if (isMapEdge(rc, location)) {
-            score += 100;
+            score += 300;
+        }
+        for(Direction dir: Direction.allDirections())
+        {
+            if(isMapEdge(rc, location.add( dir)))
+            {
+                score += 200;
+            }
         }
         //decrease score if on or near spawn
         for(MapLocation curr: SpawnLocations)
